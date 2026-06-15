@@ -69,6 +69,16 @@ function Log() {
             <ExerciseCard
               key={exercise.id}
               exercise={exercise}
+              onDeleteSet={(setId) =>
+                setWorkout((prev) => ({
+                  ...prev,
+                  exercises: prev.exercises.map((e) =>
+                    e.id === exercise.id
+                      ? { ...e, sets: e.sets.filter((s) => s.id !== setId) }
+                      : e,
+                  ),
+                }))
+              }
               onAddSet={(data) =>
                 setWorkout((prev) => ({
                   ...prev,

@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-function Exercise({ exercise, onAddSet }) {
+function Exercise({ exercise, onAddSet, onDeleteSet }) {
   const [set, setSet] = useState({ weight: "", reps: "", rpe: "" });
 
   const addSet = (exerciseId) => {
@@ -15,6 +15,12 @@ function Exercise({ exercise, onAddSet }) {
 
         setSet({ weight: "", reps: "", rpe: "" });
       });
+  };
+
+  const deleteSet = (setId) => {
+    fetch(`http://localhost:3001/api/workouts/sets/${setId}`, {
+      method: "DELETE",
+    }).then(() => onDeleteSet(setId));
   };
 
   return (
@@ -49,6 +55,7 @@ function Exercise({ exercise, onAddSet }) {
       {exercise.sets?.map((s) => (
         <p key={s.id}>
           {s.weight}kg — {s.reps} reps @ RPE {s.rpe}
+          <button onClick={() => deleteSet(s.id)}>X</button>
         </p>
       ))}
     </>
