@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Workout {
+  id        Int        @id @default(autoincrement())
+  date      DateTime
+  exercises Exercise[]
+}
+
+model Exercise {
+  id        Int     @id @default(autoincrement())
+  name      String
+  workoutId Int
+  workout   Workout @relation(fields: [workoutId], references: [id])
+  sets      Set[]
+}
+
+model Set {
+  id         Int      @id @default(autoincrement())
+  weight     Float
+  reps       Int
+  rpe        Float?
+  exerciseId Int
+  exercise   Exercise @relation(fields: [exerciseId], references: [id])
+}
+
+model NutritionDay {
+  id    Int    @id @default(autoincrement())
+  date  DateTime @unique
+  meals Meal[]
+}
+
+model Meal {
+  id             Int          @id @default(autoincrement())
+  name           String
+  nutritionDayId Int
+  nutritionDay   NutritionDay @relation(fields: [nutritionDayId], references: [id])
+  items          FoodItem[]
+}
+
+model FoodItem {
+  id      Int    @id @default(autoincrement())
+  name    String
+  kcal    Float
+  protein Float
+  carbs   Float
+  fat     Float
+  mealId  Int
+  meal    Meal   @relation(fields: [mealId], references: [id])
+}
+
+model Settings {
+  id                  Int     @id @default(1)
+  showWorkoutWidget   Boolean @default(true)
+  showNutritionWidget Boolean @default(true)
+  showCalendarWidget  Boolean @default(true)
+  kcalGoal            Int     @default(2500)
+  proteinGoal         Int     @default(180)
+  trainingsPerWeek    Int     @default(4)
+}

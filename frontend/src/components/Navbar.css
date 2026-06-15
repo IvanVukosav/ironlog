@@ -1,0 +1,19 @@
+nav {
+  display: flex;
+  gap: 1.5rem;
+  padding: 1rem 1.5rem;
+  background-color: #111;
+  border-bottom: 1px solid #222;
+}
+
+nav a {
+  color: #f0f0f0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.0625rem;
+}
+
+nav a:hover {
+  color: #ff3b3b;
+}
