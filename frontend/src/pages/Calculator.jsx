@@ -4,16 +4,16 @@ function Calculator() {
   const [weight, setWeight] = useState("");
   const [reps, setReps] = useState("");
   const [oneRM, setOneRM] = useState(null);
-  const [step, setStep] = useState(null);
-  const [minPct, setminPct] = useState(null);
+  const [step, setStep] = useState(5);
+  const [minPct, setMinPct] = useState(70);
 
   const calculate = () => {
     const result = weight / (1.0278 - 0.0278 * reps);
-    setOneRM(result.toFixed(2));
+    setOneRM(parseFloat(result.toFixed(2)));
   };
 
   const percentages = [];
-  for (let pct = 100; pct >= (minPct || 70); pct -= step || 5) {
+  for (let pct = 100; pct >= minPct; pct -= step) {
     percentages.push(pct);
   }
 
@@ -44,7 +44,7 @@ function Calculator() {
         type="number"
         placeholder="Daj postotak(default do 70%)"
         value={minPct}
-        onChange={(e) => setminPct(e.target.value)}
+        onChange={(e) => setMinPct(e.target.value)}
       />
 
       {oneRM && (
