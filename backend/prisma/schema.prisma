@@ -63,4 +63,7 @@ model Settings {
   kcalGoal            Int     @default(2500)
   proteinGoal         Int     @default(180)
   trainingsPerWeek    Int     @default(4)
+  carbsGoal  Int @default(250)
+  fatGoal    Int @default(80)
+
 }
