@@ -2,6 +2,7 @@ import { useState } from "react";
 
 const BRZYCKI_A = 1.0278;
 const BRZYCKI_B = 0.0278;
+const BRZYCKI_MAX_REPS = 37;
 
 function Calculator() {
   const [weight, setWeight] = useState("");
@@ -9,8 +10,16 @@ function Calculator() {
   const [oneRM, setOneRM] = useState(null);
   const [step, setStep] = useState(5);
   const [minPct, setMinPct] = useState(70);
+  const [error, setError] = useState(null);
 
   const calculate = () => {
+    if (!weight || !reps || step <= 0) return;
+    if (reps >= BRZYCKI_MAX_REPS) {
+      setError("Brzycki formula does not work for 37+ reps");
+      return;
+    }
+    setError(null);
+
     const result = weight / (BRZYCKI_A - BRZYCKI_B * reps);
     setOneRM(parseFloat(result.toFixed(2)));
   };
@@ -35,7 +44,12 @@ function Calculator() {
         value={reps}
         onChange={(e) => setReps(e.target.value)}
       />
-      <button onClick={calculate}>Calculate</button>
+
+      <button onClick={calculate} disabled={!weight || !reps}>
+        Calculate
+      </button>
+
+      {error && <p>{error}</p>}
       {oneRM && <p>1RM: {oneRM} kg</p>}
       <input
         type="number"

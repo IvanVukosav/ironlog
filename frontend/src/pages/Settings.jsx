@@ -10,6 +10,12 @@ function Settings() {
   }, []);
 
   const save = () => {
+    const fields = [settings.kcalGoal, settings.proteinGoal, settings.trainingsPerWeek, settings.carbsGoal, settings.fatGoal];
+    if (fields.some((field) => !field && field !== 0)) {
+      alert("All fields must be filled in");
+      return;
+    }
+
     fetch("http://localhost:3001/api/settings", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -21,7 +27,10 @@ function Settings() {
         carbsGoal: parseInt(settings.carbsGoal),
         fatGoal: parseInt(settings.fatGoal),
       }),
-    });
+    })
+      .then((res) => res.json())
+      .then(() => alert("Settings saved!"))
+      .catch(() => alert("Error saving settings"));
   };
 
   return (
