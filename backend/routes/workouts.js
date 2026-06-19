@@ -17,6 +17,17 @@ router.get("/", async (req, res) => {
   }
 });
 
+router.get("/month", async (req, res) => {
+  const { year, month } = req.query;
+  const start = new Date(year, month - 1, 1);
+  const end = new Date(year, month, 1);
+  const workouts = await prisma.workout.findMany({
+    where: { date: { gte: start, lt: end } },
+    select: { date: true },
+  });
+  res.json(workouts.map((w) => w.date));
+});
+
 router.post("/", async (req, res) => {
   const { date } = req.body;
   const workout = await prisma.workout.create({
@@ -35,6 +46,7 @@ router.post("/:id/exercises", async (req, res) => {
   const exercise = await prisma.exercise.create({
     data: { name, workoutId: parseInt(req.params.id) },
   });
+
   res.json(exercise);
 });
 
@@ -48,6 +60,7 @@ router.post("/exercises/:id/sets", async (req, res) => {
       exercise: { connect: { id: parseInt(req.params.id) } },
     },
   });
+
   res.json(set);
 });
 
