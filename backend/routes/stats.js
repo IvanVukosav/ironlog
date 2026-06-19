@@ -23,7 +23,7 @@ router.get("/prs", async (req, res) => {
       });
     });
 
-    res.json(prs);
+    res.json(Object.entries(prs).map(([name, data]) => ({ name, ...data })));
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

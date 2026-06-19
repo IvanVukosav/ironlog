@@ -27,6 +27,11 @@ router.post("/", async (req, res) => {
 
 router.post("/:id/exercises", async (req, res) => {
   const { name } = req.body;
+
+  if (!name || name.trim() === "") {
+    return res.status(400).json({ error: "Exercise name is required" });
+  }
+
   const exercise = await prisma.exercise.create({
     data: { name, workoutId: parseInt(req.params.id) },
   });
@@ -36,7 +41,12 @@ router.post("/:id/exercises", async (req, res) => {
 router.post("/exercises/:id/sets", async (req, res) => {
   const { weight, reps, rpe } = req.body;
   const set = await prisma.set.create({
-    data: { weight: parseFloat(weight), reps: parseInt(reps), rpe: parseFloat(rpe), exercise: { connect: { id: parseInt(req.params.id) } } },
+    data: {
+      weight: parseFloat(weight),
+      reps: parseInt(reps),
+      rpe: parseFloat(rpe),
+      exercise: { connect: { id: parseInt(req.params.id) } },
+    },
   });
   res.json(set);
 });

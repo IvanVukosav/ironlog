@@ -24,6 +24,7 @@ function Log() {
 
   const addExercise = () => {
     if (workout.exercises?.some((e) => e.name === exerciseName)) return;
+    if (!exerciseName.trim()) return;
 
     fetch(`http://localhost:3001/api/workouts/${workout.id}/exercises`, {
       method: "POST",
