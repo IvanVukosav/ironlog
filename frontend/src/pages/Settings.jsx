@@ -13,7 +13,14 @@ function Settings() {
     fetch("http://localhost:3001/api/settings", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(settings),
+      body: JSON.stringify({
+        ...settings,
+        kcalGoal: parseInt(settings.kcalGoal),
+        proteinGoal: parseInt(settings.proteinGoal),
+        trainingsPerWeek: parseInt(settings.trainingsPerWeek),
+        carbsGoal: parseInt(settings.carbsGoal),
+        fatGoal: parseInt(settings.fatGoal),
+      }),
     });
   };
 
@@ -25,10 +32,7 @@ function Settings() {
         type="number"
         value={settings?.kcalGoal || ""}
         onChange={(e) =>
-          setSettings((prev) => ({
-            ...prev,
-            kcalGoal: parseInt(e.target.value),
-          }))
+          setSettings((prev) => ({ ...prev, kcalGoal: e.target.value }))
         }
       />
       <label>Protein cilj (g)</label>
@@ -36,10 +40,7 @@ function Settings() {
         type="number"
         value={settings?.proteinGoal || ""}
         onChange={(e) =>
-          setSettings((prev) => ({
-            ...prev,
-            proteinGoal: parseInt(e.target.value),
-          }))
+          setSettings((prev) => ({ ...prev, proteinGoal: e.target.value }))
         }
       />
       <label>Treninga tjedno</label>
@@ -47,10 +48,7 @@ function Settings() {
         type="number"
         value={settings?.trainingsPerWeek || ""}
         onChange={(e) =>
-          setSettings((prev) => ({
-            ...prev,
-            trainingsPerWeek: parseInt(e.target.value),
-          }))
+          setSettings((prev) => ({ ...prev, trainingsPerWeek: e.target.value }))
         }
       />
       <label>Carbs cilj (g)</label>
@@ -58,10 +56,7 @@ function Settings() {
         type="number"
         value={settings?.carbsGoal || ""}
         onChange={(e) =>
-          setSettings((prev) => ({
-            ...prev,
-            carbsGoal: parseInt(e.target.value),
-          }))
+          setSettings((prev) => ({ ...prev, carbsGoal: e.target.value }))
         }
       />
       <label>Fat cilj (g)</label>
@@ -69,10 +64,7 @@ function Settings() {
         type="number"
         value={settings?.fatGoal || ""}
         onChange={(e) =>
-          setSettings((prev) => ({
-            ...prev,
-            fatGoal: parseInt(e.target.value),
-          }))
+          setSettings((prev) => ({ ...prev, fatGoal: e.target.value }))
         }
       />
       <button onClick={save}>Spremi</button>

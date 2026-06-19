@@ -16,7 +16,7 @@ function Calendar() {
   const firstDay = new Date(currentYear, currentMonth - 1, 1).getDay();
   const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
   const workoutDayNumbers = workoutDates.map((date) =>
-    new Date(date).getDate(),
+    new Date(date).getUTCDate(),
   );
 
   const prevMonth = () => {

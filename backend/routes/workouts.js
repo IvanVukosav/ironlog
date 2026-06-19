@@ -18,14 +18,18 @@ router.get("/", async (req, res) => {
 });
 
 router.get("/month", async (req, res) => {
-  const { year, month } = req.query;
-  const start = new Date(year, month - 1, 1);
-  const end = new Date(year, month, 1);
-  const workouts = await prisma.workout.findMany({
-    where: { date: { gte: start, lt: end } },
-    select: { date: true },
-  });
-  res.json(workouts.map((w) => w.date));
+  try {
+    const { year, month } = req.query;
+    const start = new Date(year, month - 1, 1);
+    const end = new Date(year, month, 1);
+    const workouts = await prisma.workout.findMany({
+      where: { date: { gte: start, lt: end } },
+      select: { date: true },
+    });
+    res.json(workouts.map((w) => w.date));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 router.post("/", async (req, res) => {

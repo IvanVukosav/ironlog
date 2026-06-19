@@ -22,7 +22,7 @@ function Stats() {
         </thead>
         <tbody>
           {prs.map((pr) => (
-            <tr key={pr.name}>
+            <tr key={pr.name + pr.weight}>
               <td>{pr.name}</td>
               <td>{pr.weight}kg</td>
               <td>{pr.reps}</td>

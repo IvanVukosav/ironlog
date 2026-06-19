@@ -1,5 +1,8 @@
 import { useState } from "react";
 
+const BRZYCKI_A = 1.0278;
+const BRZYCKI_B = 0.0278;
+
 function Calculator() {
   const [weight, setWeight] = useState("");
   const [reps, setReps] = useState("");
@@ -8,7 +11,7 @@ function Calculator() {
   const [minPct, setMinPct] = useState(70);
 
   const calculate = () => {
-    const result = weight / (1.0278 - 0.0278 * reps);
+    const result = weight / (BRZYCKI_A - BRZYCKI_B * reps);
     setOneRM(parseFloat(result.toFixed(2)));
   };
 
@@ -38,13 +41,13 @@ function Calculator() {
         type="number"
         placeholder="Daj postotak skoka"
         value={step}
-        onChange={(e) => setStep(e.target.value)}
+        onChange={(e) => setStep(parseFloat(e.target.value))}
       />
       <input
         type="number"
         placeholder="Daj postotak(default do 70%)"
         value={minPct}
-        onChange={(e) => setMinPct(e.target.value)}
+        onChange={(e) => setMinPct(parseFloat(e.target.value))}
       />
 
       {oneRM && (
