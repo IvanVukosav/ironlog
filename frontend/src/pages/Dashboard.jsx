@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { fetchJson } from "../api";
+import styles from "./Dashboard.module.css";
 
 function Dashboard() {
   const [workout, setWorkout] = useState(null);
@@ -26,30 +27,35 @@ function Dashboard() {
   const totalKcal = allItems.reduce((sum, item) => sum + item.kcal, 0);
 
   return (
-    <div className="page">
-      <h1>Dashboard</h1>
-      {(settings?.showWorkoutWidget ?? true) && (
-        <div>
-          <h2>Trening danas</h2>
-          {workout ? (
-            <p>Vježbe: {workout.exercises?.length}</p>
-          ) : (
-            <p>Nema treninga</p>
-          )}
-        </div>
-      )}
-      {(settings?.showNutritionWidget ?? true) && (
-        <div>
-          <h2>Prehrana danas</h2>
-          <p>
-            {totalKcal} / {settings?.kcalGoal || "?"} kcal
+    <div className={styles.page}>
+      <h1 className={styles.heading}>Dashboard</h1>
+      <div className={styles.grid}>
+        {(settings?.showWorkoutWidget ?? true) && (
+          <div className={styles.card}>
+            <h2 className={styles.label}>Trening danas</h2>
+            {workout ? (
+              <p className={styles.value}>
+                Vježbe: {workout.exercises?.length}
+              </p>
+            ) : (
+              <p className={styles.value}>Nema treninga</p>
+            )}
+          </div>
+        )}
+        {(settings?.showNutritionWidget ?? true) && (
+          <div className={styles.card}>
+            <h2 className={styles.label}>Prehrana danas</h2>
+            <p className={styles.value}>
+              {totalKcal} / {settings?.kcalGoal || "?"} kcal
+            </p>
+          </div>
+        )}
+        <div className={`${styles.card} ${styles.fullWidth}`}>
+          <h2 className={styles.label}>Tjedni napredak</h2>
+          <p className={styles.value}>
+            Cilj: {settings?.trainingsPerWeek} treninga tjedno
           </p>
         </div>
-      )}
-
-      <div>
-        <h2>Tjedni napredak</h2>
-        <p>Cilj: {settings?.trainingsPerWeek} treninga tjedno</p>
       </div>
     </div>
   );
