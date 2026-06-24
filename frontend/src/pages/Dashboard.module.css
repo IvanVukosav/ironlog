@@ -1,0 +1,33 @@
+.page {
+  padding: 1.5rem;
+}
+
+.heading {
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 1rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.card {
+  composes: card from "../styles/shared.module.css";
+}
+
+.label {
+  composes: label from "../styles/shared.module.css";
+}
+
+.value {
+  composes: value from "../styles/shared.module.css";
+}
+
+.fullWidth {
+  grid-column: span 2;
+}
