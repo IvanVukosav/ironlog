@@ -1,76 +1,97 @@
 const express = require("express");
 const router = express.Router();
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const { getDayRange } = require("../utils/dateRange");
+const prisma = require("../prisma/client");
 
 router.get("/", async (req, res) => {
   try {
     const { date } = req.query;
     const workouts = await prisma.workout.findMany({
-      where: date ? { date: new Date(date) } : undefined,
+      where: date ? { date: getDayRange(date) } : undefined,
       include: { exercises: { include: { sets: true } } },
     });
     res.json(workouts);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
 router.get("/month", async (req, res) => {
   try {
     const { year, month } = req.query;
-    const start = new Date(year, month - 1, 1);
-    const end = new Date(year, month, 1);
+    const start = new Date(Date.UTC(year, month - 1, 1));
+    const end = new Date(Date.UTC(year, month, 1));
     const workouts = await prisma.workout.findMany({
       where: { date: { gte: start, lt: end } },
       select: { date: true },
     });
     res.json(workouts.map((w) => w.date));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
 router.post("/", async (req, res) => {
-  const { date } = req.body;
-  const workout = await prisma.workout.create({
-    data: { date: new Date(date) },
-  });
-  res.json(workout);
+  try {
+    const { date } = req.body;
+    const workout = await prisma.workout.create({
+      data: { date: new Date(date) },
+    });
+    res.json(workout);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 router.post("/:id/exercises", async (req, res) => {
-  const { name } = req.body;
+  try {
+    const { name } = req.body;
 
-  if (!name || name.trim() === "") {
-    return res.status(400).json({ error: "Exercise name is required" });
+    if (!name || name.trim() === "") {
+      return res.status(400).json({ error: "Exercise name is required" });
+    }
+
+    const exercise = await prisma.exercise.create({
+      data: { name, workoutId: parseInt(req.params.id) },
+    });
+
+    res.json(exercise);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
   }
-
-  const exercise = await prisma.exercise.create({
-    data: { name, workoutId: parseInt(req.params.id) },
-  });
-
-  res.json(exercise);
 });
 
 router.post("/exercises/:id/sets", async (req, res) => {
-  const { weight, reps, rpe } = req.body;
-  const set = await prisma.set.create({
-    data: {
-      weight: parseFloat(weight),
-      reps: parseInt(reps),
-      rpe: parseFloat(rpe),
-      exercise: { connect: { id: parseInt(req.params.id) } },
-    },
-  });
+  try {
+    const { weight, reps, rpe } = req.body;
+    const set = await prisma.set.create({
+      data: {
+        weight: parseFloat(weight),
+        reps: parseInt(reps),
+        rpe: parseFloat(rpe),
+        exercise: { connect: { id: parseInt(req.params.id) } },
+      },
+    });
 
-  res.json(set);
+    res.json(set);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 router.delete("/sets/:id", async (req, res) => {
-  await prisma.set.delete({ where: { id: parseInt(req.params.id) } });
-  res.json({ success: true });
+  try {
+    await prisma.set.delete({ where: { id: parseInt(req.params.id) } });
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 module.exports = router;

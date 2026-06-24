@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
+import { fetchJson } from "../api";
 
 function Stats() {
   const [prs, setPrs] = useState([]);
 
   useEffect(() => {
-    fetch("http://localhost:3001/api/stats/prs")
-      .then((res) => res.json())
-      .then((data) => setPrs(data));
+    fetchJson("/api/stats/prs")
+      .then((data) => setPrs(data))
+      .catch((err) => console.error(err));
   }, []);
 
   return (

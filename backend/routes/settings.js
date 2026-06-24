@@ -1,14 +1,14 @@
 const express = require("express");
 const router = express.Router();
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const prisma = require("../prisma/client");
 
 router.get("/", async (req, res) => {
   try {
     const settings = await prisma.settings.findUnique({ where: { id: 1 } });
     res.json(settings);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
@@ -21,7 +21,8 @@ router.put("/", async (req, res) => {
     });
     res.json(settings);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 

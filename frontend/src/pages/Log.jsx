@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import ExerciseCard from "../components/ExerciseCard";
+import { fetchJson } from "../api";
 
 function Log() {
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
@@ -7,38 +8,38 @@ function Log() {
   const [exerciseName, setExerciseName] = useState("");
 
   useEffect(() => {
-    fetch(`http://localhost:3001/api/workouts?date=${date}`)
-      .then((res) => res.json())
-      .then((data) => setWorkout(data[0] || null));
+    fetchJson(`/api/workouts?date=${date}`)
+      .then((data) => setWorkout(data[0] || null))
+      .catch((err) => console.error(err));
   }, [date]);
 
   const createWorkout = () => {
-    fetch("http://localhost:3001/api/workouts", {
+    fetchJson("/api/workouts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ date }),
     })
-      .then((res) => res.json())
-      .then((data) => setWorkout(data));
+      .then((data) => setWorkout(data))
+      .catch((err) => console.error(err));
   };
 
   const addExercise = () => {
     if (!exerciseName.trim()) return;
     if (workout.exercises?.some((e) => e.name === exerciseName)) return;
 
-    fetch(`http://localhost:3001/api/workouts/${workout.id}/exercises`, {
+    fetchJson(`/api/workouts/${workout.id}/exercises`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: exerciseName }),
     })
-      .then((res) => res.json())
       .then((data) => {
         setWorkout((prev) => ({
           ...prev,
           exercises: [...(prev.exercises || []), { ...data, sets: [] }],
         }));
         setExerciseName("");
-      });
+      })
+      .catch((err) => console.error(err));
   };
 
   return (
@@ -51,7 +52,9 @@ function Log() {
         onChange={(e) => setDate(e.target.value)}
       />
 
-      {!workout && <button onClick={createWorkout}>Započni trening</button>}
+      {!workout && (
+        <button onClick={createWorkout}>Započni trening</button>
+      )}
 
       {workout && <p>Workout ID: {workout.id}</p>}
 

@@ -1,22 +1,21 @@
 const express = require("express");
 const router = express.Router();
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const { getDayRange } = require("../utils/dateRange");
+const prisma = require("../prisma/client");
 
 // GET /api/nutrition?date=YYYY-MM-DD
 router.get("/", async (req, res) => {
   try {
     const { date } = req.query;
-    const where = date
-      ? { date: { gte: new Date(date), lt: new Date(new Date(date).getTime() + 86400000) } }
-      : undefined;
+    const where = date ? { date: getDayRange(date) } : undefined;
     const days = await prisma.nutritionDay.findMany({
       where,
       include: { meals: { include: { items: true } } },
     });
     res.json(days);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
@@ -32,7 +31,8 @@ router.post("/days", async (req, res) => {
     });
     res.json(day);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
@@ -40,13 +40,19 @@ router.post("/days", async (req, res) => {
 router.post("/meals", async (req, res) => {
   try {
     const { name, nutritionDayId } = req.body;
+
+    if (!name || name.trim() === "") {
+      return res.status(400).json({ error: "Meal name is required" });
+    }
+
     const meal = await prisma.meal.create({
       data: { name, nutritionDayId: parseInt(nutritionDayId) },
       include: { items: true },
     });
     res.json(meal);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
@@ -54,19 +60,38 @@ router.post("/meals", async (req, res) => {
 router.post("/meals/:id/items", async (req, res) => {
   try {
     const { name, kcal, protein, carbs, fat } = req.body;
+
+    if (!name || name.trim() === "") {
+      return res.status(400).json({ error: "Food item name is required" });
+    }
+
+    const parsedKcal = parseFloat(kcal);
+    const parsedProtein = parseFloat(protein);
+    const parsedCarbs = parseFloat(carbs);
+    const parsedFat = parseFloat(fat);
+
+    if (
+      [parsedKcal, parsedProtein, parsedCarbs, parsedFat].some(Number.isNaN)
+    ) {
+      return res
+        .status(400)
+        .json({ error: "Kcal, protein, carbs and fat must be valid numbers" });
+    }
+
     const item = await prisma.foodItem.create({
       data: {
         name,
-        kcal: parseFloat(kcal),
-        protein: parseFloat(protein),
-        carbs: parseFloat(carbs),
-        fat: parseFloat(fat),
+        kcal: parsedKcal,
+        protein: parsedProtein,
+        carbs: parsedCarbs,
+        fat: parsedFat,
         mealId: parseInt(req.params.id),
       },
     });
     res.json(item);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
@@ -76,7 +101,8 @@ router.delete("/items/:id", async (req, res) => {
     await prisma.foodItem.delete({ where: { id: parseInt(req.params.id) } });
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 

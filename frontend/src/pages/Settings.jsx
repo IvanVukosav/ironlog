@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
+import { fetchJson } from "../api";
 
 function Settings() {
   const [settings, setSettings] = useState(null);
 
   useEffect(() => {
-    fetch("http://localhost:3001/api/settings").then((response) =>
-      response.json().then((data) => setSettings(data)),
-    );
+    fetchJson("/api/settings")
+      .then((data) => setSettings(data))
+      .catch((err) => console.error(err));
   }, []);
 
   const save = () => {
@@ -16,7 +17,7 @@ function Settings() {
       return;
     }
 
-    fetch("http://localhost:3001/api/settings", {
+    fetchJson("/api/settings", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -28,7 +29,6 @@ function Settings() {
         fatGoal: parseInt(settings.fatGoal),
       }),
     })
-      .then((res) => res.json())
       .then(() => alert("Settings saved!"))
       .catch(() => alert("Error saving settings"));
   };
@@ -76,6 +76,35 @@ function Settings() {
           setSettings((prev) => ({ ...prev, fatGoal: e.target.value }))
         }
       />
+
+      <h2>Dashboard widgeti</h2>
+      <label>
+        <input
+          type="checkbox"
+          checked={settings?.showWorkoutWidget ?? true}
+          onChange={(e) =>
+            setSettings((prev) => ({
+              ...prev,
+              showWorkoutWidget: e.target.checked,
+            }))
+          }
+        />
+        Prikaži trening widget
+      </label>
+      <label>
+        <input
+          type="checkbox"
+          checked={settings?.showNutritionWidget ?? true}
+          onChange={(e) =>
+            setSettings((prev) => ({
+              ...prev,
+              showNutritionWidget: e.target.checked,
+            }))
+          }
+        />
+        Prikaži prehrana widget
+      </label>
+
       <button onClick={save}>Spremi</button>
     </div>
   );

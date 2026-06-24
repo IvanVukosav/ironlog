@@ -1,26 +1,29 @@
 import { useState } from "react";
+import { fetchJson } from "../api";
 
 function Exercise({ exercise, onAddSet, onDeleteSet }) {
   const [set, setSet] = useState({ weight: "", reps: "", rpe: "" });
 
   const addSet = (exerciseId) => {
-    fetch(`http://localhost:3001/api/workouts/exercises/${exerciseId}/sets`, {
+    fetchJson(`/api/workouts/exercises/${exerciseId}/sets`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(set),
     })
-      .then((res) => res.json())
       .then((data) => {
         onAddSet(data);
 
         setSet({ weight: "", reps: "", rpe: "" });
-      });
+      })
+      .catch((err) => console.error(err));
   };
 
   const deleteSet = (setId) => {
-    fetch(`http://localhost:3001/api/workouts/sets/${setId}`, {
+    fetchJson(`/api/workouts/sets/${setId}`, {
       method: "DELETE",
-    }).then(() => onDeleteSet(setId));
+    })
+      .then(() => onDeleteSet(setId))
+      .catch((err) => console.error(err));
   };
 
   return (

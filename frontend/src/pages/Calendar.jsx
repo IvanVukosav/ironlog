@@ -1,20 +1,21 @@
 import { useState, useEffect } from "react";
+import { fetchJson } from "../api";
 
 function Calendar() {
-  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
-  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
+  const [currentYear, setCurrentYear] = useState(new Date().getUTCFullYear());
+  const [currentMonth, setCurrentMonth] = useState(new Date().getUTCMonth() + 1);
   const [workoutDates, setWorkoutDates] = useState([]);
 
   useEffect(() => {
-    fetch(
-      `http://localhost:3001/api/workouts/month?year=${currentYear}&month=${currentMonth}`,
+    fetchJson(
+      `/api/workouts/month?year=${currentYear}&month=${currentMonth}`,
     )
-      .then((res) => res.json())
-      .then((data) => setWorkoutDates(data));
+      .then((data) => setWorkoutDates(data))
+      .catch((err) => console.error(err));
   }, [currentYear, currentMonth]);
 
-  const firstDay = new Date(currentYear, currentMonth - 1, 1).getDay();
-  const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
+  const firstDay = new Date(Date.UTC(currentYear, currentMonth - 1, 1)).getUTCDay();
+  const daysInMonth = new Date(Date.UTC(currentYear, currentMonth, 0)).getUTCDate();
   const workoutDayNumbers = workoutDates.map((date) =>
     new Date(date).getUTCDate(),
   );

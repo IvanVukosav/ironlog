@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { fetchJson } from "../api";
 
 function Dashboard() {
   const [workout, setWorkout] = useState(null);
@@ -8,17 +9,17 @@ function Dashboard() {
   const today = new Date().toISOString().split("T")[0];
 
   useEffect(() => {
-    fetch(`http://localhost:3001/api/workouts?date=${today}`)
-      .then((res) => res.json())
-      .then((data) => setWorkout(data[0] || null));
+    fetchJson(`/api/workouts?date=${today}`)
+      .then((data) => setWorkout(data[0] || null))
+      .catch((err) => console.error(err));
 
-    fetch(`http://localhost:3001/api/nutrition?date=${today}`)
-      .then((res) => res.json())
-      .then((data) => setNutritionDay(data[0] || null));
+    fetchJson(`/api/nutrition?date=${today}`)
+      .then((data) => setNutritionDay(data[0] || null))
+      .catch((err) => console.error(err));
 
-    fetch("http://localhost:3001/api/settings")
-      .then((res) => res.json())
-      .then((data) => setSettings(data));
+    fetchJson("/api/settings")
+      .then((data) => setSettings(data))
+      .catch((err) => console.error(err));
   }, []);
 
   const allItems = nutritionDay?.meals?.flatMap((m) => m.items) || [];
@@ -27,20 +28,24 @@ function Dashboard() {
   return (
     <div className="page">
       <h1>Dashboard</h1>
-      <div>
-        <h2>Trening danas</h2>
-        {workout ? (
-          <p>Vježbe: {workout.exercises?.length}</p>
-        ) : (
-          <p>Nema treninga</p>
-        )}
-      </div>
-      <div>
-        <h2>Prehrana danas</h2>
-        <p>
-          {totalKcal} / {settings?.kcalGoal || "?"} kcal
-        </p>
-      </div>
+      {(settings?.showWorkoutWidget ?? true) && (
+        <div>
+          <h2>Trening danas</h2>
+          {workout ? (
+            <p>Vježbe: {workout.exercises?.length}</p>
+          ) : (
+            <p>Nema treninga</p>
+          )}
+        </div>
+      )}
+      {(settings?.showNutritionWidget ?? true) && (
+        <div>
+          <h2>Prehrana danas</h2>
+          <p>
+            {totalKcal} / {settings?.kcalGoal || "?"} kcal
+          </p>
+        </div>
+      )}
 
       <div>
         <h2>Tjedni napredak</h2>

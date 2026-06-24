@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const prisma = require("../prisma/client");
 
 router.get("/prs", async (req, res) => {
   try {
@@ -25,7 +24,8 @@ router.get("/prs", async (req, res) => {
 
     res.json(Object.entries(prs).map(([name, data]) => ({ name, ...data })));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
@@ -44,7 +44,8 @@ router.get("/exercise/:name/history", async (req, res) => {
 
     res.json(history);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 

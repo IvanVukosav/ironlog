@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { fetchJson } from "../api";
 
 function Nutrition() {
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
@@ -13,41 +14,40 @@ function Nutrition() {
   });
 
   useEffect(() => {
-    fetch(`http://localhost:3001/api/nutrition?date=${date}`)
-      .then((res) => res.json())
-      .then((data) => setDay(data[0] || null));
+    fetchJson(`/api/nutrition?date=${date}`)
+      .then((data) => setDay(data[0] || null))
+      .catch((err) => console.error(err));
   }, [date]);
 
   const createDay = () => {
-    fetch("http://localhost:3001/api/nutrition/days", {
+    fetchJson("/api/nutrition/days", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ date }),
     })
-      .then((res) => res.json())
-      .then((data) => setDay(data));
+      .then((data) => setDay(data))
+      .catch((err) => console.error(err));
   };
 
   const addMeal = () => {
-    fetch("http://localhost:3001/api/nutrition/meals", {
+    fetchJson("/api/nutrition/meals", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: mealName, nutritionDayId: day.id }),
     })
-      .then((res) => res.json())
       .then((data) => {
         setDay((prev) => ({ ...prev, meals: [...(prev.meals || []), data] }));
         setMealName("");
-      });
+      })
+      .catch((err) => console.error(err));
   };
 
   const addFoodItem = (mealId) => {
-    fetch(`http://localhost:3001/api/nutrition/meals/${mealId}/items`, {
+    fetchJson(`/api/nutrition/meals/${mealId}/items`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(foodItem),
     })
-      .then((res) => res.json())
       .then((data) => {
         setDay((prev) => ({
           ...prev,
@@ -57,7 +57,8 @@ function Nutrition() {
         }));
 
         setFoodItem({ name: "", kcal: "", protein: "", carbs: "", fat: "" });
-      });
+      })
+      .catch((err) => console.error(err));
   };
 
   return (
