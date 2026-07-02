@@ -5,6 +5,8 @@
   --color-text: #f0f0f0;
   --color-text-dim: #666;
   --font-mono: ui-monospace, "Cascadia Code", "Consolas", monospace;
+  --color-border: #444;
+  --color-border-subtle: #222;
 }
 
 * {
