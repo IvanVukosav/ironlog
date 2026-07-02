@@ -18,6 +18,7 @@
   flex-wrap: wrap;
 }
 
+/* date inputs use browser-rendered date mask, not CSS ::placeholder */
 .dateInput {
   background: transparent;
   border: none;
