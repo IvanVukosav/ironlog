@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import ExerciseCard from "../components/ExerciseCard";
 import { fetchJson } from "../api";
+import styles from "./Log.module.css";
 
 function Log() {
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
@@ -25,7 +26,7 @@ function Log() {
 
   const addExercise = () => {
     if (!exerciseName.trim()) return;
-    if (workout.exercises?.some((e) => e.name === exerciseName)) return;
+    if (workout.exercises?.some((exercise) => exercise.name === exerciseName)) return;
 
     fetchJson(`/api/workouts/${workout.id}/exercises`, {
       method: "POST",
@@ -43,58 +44,78 @@ function Log() {
   };
 
   return (
-    <div className="page">
-      <h1>Log treninga</h1>
+    <div className={styles.page}>
+      <h1 className={styles.heading}>Log treninga</h1>
 
-      <input
-        type="date"
-        value={date}
-        onChange={(e) => setDate(e.target.value)}
-      />
+      <div className={styles.topRow}>
+        <input
+          type="date"
+          className={styles.dateInput}
+          value={date}
+          onChange={(event) => setDate(event.target.value)}
+        />
+        {workout && (
+          <span className={styles.meta}>Workout ID: {workout.id}</span>
+        )}
+      </div>
 
       {!workout && (
-        <button onClick={createWorkout}>Započni trening</button>
+        <button className={styles.startButton} onClick={createWorkout}>
+          Započni trening
+        </button>
       )}
-
-      {workout && <p>Workout ID: {workout.id}</p>}
 
       {workout && (
         <div>
-          <input
-            type="text"
-            placeholder="Ime vježbe"
-            value={exerciseName}
-            onChange={(e) => setExerciseName(e.target.value)}
-          />
-
-          <button onClick={addExercise}>Dodaj vježbu</button>
-
-          {workout.exercises?.map((exercise) => (
-            <ExerciseCard
-              key={exercise.id}
-              exercise={exercise}
-              onDeleteSet={(setId) =>
-                setWorkout((prev) => ({
-                  ...prev,
-                  exercises: prev.exercises.map((e) =>
-                    e.id === exercise.id
-                      ? { ...e, sets: e.sets.filter((s) => s.id !== setId) }
-                      : e,
-                  ),
-                }))
-              }
-              onAddSet={(data) =>
-                setWorkout((prev) => ({
-                  ...prev,
-                  exercises: prev.exercises.map((e) =>
-                    e.id === exercise.id
-                      ? { ...e, sets: [...(e.sets || []), data] }
-                      : e,
-                  ),
-                }))
-              }
+          <div className={styles.addRow}>
+            <input
+              type="text"
+              className={styles.exerciseInput}
+              placeholder="Ime vježbe"
+              value={exerciseName}
+              onChange={(event) => setExerciseName(event.target.value)}
             />
-          ))}
+            <button className={styles.addButton} onClick={addExercise}>
+              Dodaj vježbu
+            </button>
+          </div>
+
+          <div className={styles.cardList}>
+            {workout.exercises?.map((exercise) => (
+              <ExerciseCard
+                key={exercise.id}
+                exercise={exercise}
+                onDeleteSet={(setId) =>
+                  setWorkout((prev) => ({
+                    ...prev,
+                    exercises: prev.exercises.map((currentExercise) =>
+                      currentExercise.id === exercise.id
+                        ? {
+                            ...currentExercise,
+                            sets: currentExercise.sets.filter(
+                              (currentSet) => currentSet.id !== setId,
+                            ),
+                          }
+                        : currentExercise,
+                    ),
+                  }))
+                }
+                onAddSet={(data) =>
+                  setWorkout((prev) => ({
+                    ...prev,
+                    exercises: prev.exercises.map((currentExercise) =>
+                      currentExercise.id === exercise.id
+                        ? {
+                            ...currentExercise,
+                            sets: [...(currentExercise.sets || []), data],
+                          }
+                        : currentExercise,
+                    ),
+                  }))
+                }
+              />
+            ))}
+          </div>
         </div>
       )}
     </div>
