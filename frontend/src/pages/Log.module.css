@@ -1,0 +1,112 @@
+.page {
+  padding: 1.5rem;
+}
+
+.heading {
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 1rem;
+}
+
+.topRow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.dateInput {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  padding: 4px 2px;
+  outline: none;
+  width: 150px;
+}
+
+.dateInput:focus {
+  border-bottom-color: var(--color-accent);
+}
+
+.meta {
+  color: var(--color-text-dim);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.startButton {
+  background: transparent;
+  border: none;
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.startButton::before {
+  content: "[ ";
+}
+
+.startButton::after {
+  content: " ]";
+}
+
+.addRow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.exerciseInput {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  padding: 4px 2px;
+  outline: none;
+  width: 200px;
+}
+
+.exerciseInput:focus {
+  border-bottom-color: var(--color-accent);
+}
+
+.exerciseInput::placeholder {
+  color: var(--color-text-dim);
+}
+
+.addButton {
+  background: transparent;
+  border: none;
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.addButton::before {
+  content: "[ ";
+}
+
+.addButton::after {
+  content: " ]";
+}
+
+.cardList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
