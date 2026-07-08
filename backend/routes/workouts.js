@@ -5,7 +5,15 @@ const prisma = require("../prisma/client");
 
 router.get("/", async (req, res) => {
   try {
-    const { date } = req.query;
+    const { date, limit } = req.query;
+    if (limit) {
+      const workouts = await prisma.workout.findMany({
+        take: parseInt(limit),
+        orderBy: { date: "desc" },
+        include: { exercises: true },
+      });
+      return res.json(workouts);
+    }
     const workouts = await prisma.workout.findMany({
       where: date ? { date: getDayRange(date) } : undefined,
       include: { exercises: { include: { sets: true } } },

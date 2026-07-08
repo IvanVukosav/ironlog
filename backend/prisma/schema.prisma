@@ -67,3 +67,9 @@ model Settings {
   fatGoal    Int @default(80)
 
 }
+
+model Bodyweight {
+  id     Int      @id @default(autoincrement())
+  date   DateTime @unique
+  weight Float
+}

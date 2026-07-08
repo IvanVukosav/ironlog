@@ -15,11 +15,13 @@ const workoutsRouter = require("./routes/workouts");
 const nutritionRouter = require("./routes/nutrition");
 const settingsRouter = require("./routes/settings");
 const statsRouter = require("./routes/stats");
+const bodyweightRouter = require("./routes/bodyweight");
 
 app.use("/api/workouts", workoutsRouter);
 app.use("/api/nutrition", nutritionRouter);
 app.use("/api/settings", settingsRouter);
 app.use("/api/stats", statsRouter);
+app.use("/api/bodyweight", bodyweightRouter);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
