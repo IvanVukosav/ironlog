@@ -1,0 +1,181 @@
+.page {
+  padding: 1.5rem;
+}
+
+.heading {
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 1rem;
+}
+
+.topRow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+/* date inputs use browser-rendered date mask, not CSS ::placeholder */
+.dateInput {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  padding: 4px 2px;
+  outline: none;
+  width: 150px;
+}
+
+.dateInput:focus {
+  border-bottom-color: var(--color-accent);
+}
+
+.startButton {
+  background: transparent;
+  border: none;
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.startButton::before {
+  content: "[ ";
+}
+
+.startButton::after {
+  content: " ]";
+}
+
+.addMealRow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.mealInput {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  padding: 4px 2px;
+  outline: none;
+  width: 200px;
+}
+
+.mealInput:focus {
+  border-bottom-color: var(--color-accent);
+}
+
+.mealInput::placeholder {
+  color: var(--color-text-dim);
+}
+
+.addMealButton {
+  background: transparent;
+  border: none;
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.addMealButton::before {
+  content: "[ ";
+}
+
+.addMealButton::after {
+  content: " ]";
+}
+
+.mealList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.mealCard {
+  background-color: var(--color-bg-card);
+  border-left: 3px solid var(--color-accent);
+  padding: 1rem;
+  font-family: var(--font-mono);
+}
+
+.mealHeading {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 0.75rem;
+  letter-spacing: 0.03em;
+}
+
+.itemInputRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.itemInput {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  padding: 4px 2px;
+  outline: none;
+  width: 80px;
+}
+
+.itemInput:focus {
+  border-bottom-color: var(--color-accent);
+}
+
+.itemInput::placeholder {
+  color: var(--color-text-dim);
+}
+
+.addItemButton {
+  background: transparent;
+  border: none;
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.addItemButton::before {
+  content: "[ ";
+}
+
+.addItemButton::after {
+  content: " ]";
+}
+
+.itemList {
+  margin-top: 0.25rem;
+}
+
+.itemRow {
+  padding: 6px 0;
+  border-bottom: 1px solid var(--color-border-subtle);
+  font-size: 0.85rem;
+  color: var(--color-text-dim);
+}
+
+.itemRow:last-child {
+  border-bottom: none;
+}

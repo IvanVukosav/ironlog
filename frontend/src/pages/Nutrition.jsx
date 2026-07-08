@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { fetchJson } from "../api";
+import styles from "./Nutrition.module.css";
 
 function Nutrition() {
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
@@ -51,89 +52,133 @@ function Nutrition() {
       .then((data) => {
         setDay((prev) => ({
           ...prev,
-          meals: prev.meals.map((m) =>
-            m.id === mealId ? { ...m, items: [...(m.items || []), data] } : m,
+          meals: prev.meals.map((meal) =>
+            meal.id === mealId
+              ? { ...meal, items: [...(meal.items || []), data] }
+              : meal,
           ),
         }));
-
         setFoodItem({ name: "", kcal: "", protein: "", carbs: "", fat: "" });
       })
       .catch((err) => console.error(err));
   };
 
   return (
-    <div className="page">
-      <h1>Nutrition</h1>
-      <input
-        type="date"
-        value={date}
-        onChange={(e) => setDate(e.target.value)}
-      />
+    <div className={styles.page}>
+      <h1 className={styles.heading}>Nutrition</h1>
 
-      {!day && <button onClick={createDay}>Dodaj dan</button>}
+      <div className={styles.topRow}>
+        <input
+          type="date"
+          className={styles.dateInput}
+          value={date}
+          onChange={(event) => setDate(event.target.value)}
+        />
+      </div>
+
+      {!day && (
+        <button className={styles.startButton} onClick={createDay}>
+          Dodaj dan
+        </button>
+      )}
 
       {day && (
         <div>
-          <input
-            type="text"
-            placeholder="Ime obroka"
-            value={mealName}
-            onChange={(e) => setMealName(e.target.value)}
-          />
-          <button onClick={addMeal}>Dodaj obrok</button>
+          <div className={styles.addMealRow}>
+            <input
+              type="text"
+              className={styles.mealInput}
+              placeholder="Ime obroka"
+              value={mealName}
+              onChange={(event) => setMealName(event.target.value)}
+            />
+            <button className={styles.addMealButton} onClick={addMeal}>
+              Dodaj obrok
+            </button>
+          </div>
 
-          {day.meals?.map((meal) => (
-            <div key={meal.id}>
-              <h3>{meal.name}</h3>
-              <input
-                type="text"
-                placeholder="Naziv hrane"
-                value={foodItem.name}
-                onChange={(e) =>
-                  setFoodItem((prev) => ({ ...prev, name: e.target.value }))
-                }
-              />
-              <input
-                type="number"
-                placeholder="kcal"
-                value={foodItem.kcal}
-                onChange={(e) =>
-                  setFoodItem((prev) => ({ ...prev, kcal: e.target.value }))
-                }
-              />
-              <input
-                type="number"
-                placeholder="protein"
-                value={foodItem.protein}
-                onChange={(e) =>
-                  setFoodItem((prev) => ({ ...prev, protein: e.target.value }))
-                }
-              />
-              <input
-                type="number"
-                placeholder="carbs"
-                value={foodItem.carbs}
-                onChange={(e) =>
-                  setFoodItem((prev) => ({ ...prev, carbs: e.target.value }))
-                }
-              />
-              <input
-                type="number"
-                placeholder="fat"
-                value={foodItem.fat}
-                onChange={(e) =>
-                  setFoodItem((prev) => ({ ...prev, fat: e.target.value }))
-                }
-              />
-              <button onClick={() => addFoodItem(meal.id)}>Dodaj</button>
-
-              {meal.items?.map((item) => (
-                <p key={item.id}>
-                  {item.name} — {item.kcal} kcal
-                </p>
-              ))}
-            </div>
-          ))}
+          <div className={styles.mealList}>
+            {day.meals?.map((meal) => (
+              <div key={meal.id} className={styles.mealCard}>
+                <h3 className={styles.mealHeading}>{meal.name}</h3>
+                <div className={styles.itemInputRow}>
+                  <input
+                    type="text"
+                    className={styles.itemInput}
+                    placeholder="Naziv hrane"
+                    value={foodItem.name}
+                    onChange={(event) =>
+                      setFoodItem((prev) => ({
+                        ...prev,
+                        name: event.target.value,
+                      }))
+                    }
+                  />
+                  <input
+                    type="number"
+                    className={styles.itemInput}
+                    placeholder="kcal"
+                    value={foodItem.kcal}
+                    onChange={(event) =>
+                      setFoodItem((prev) => ({
+                        ...prev,
+                        kcal: event.target.value,
+                      }))
+                    }
+                  />
+                  <input
+                    type="number"
+                    className={styles.itemInput}
+                    placeholder="protein"
+                    value={foodItem.protein}
+                    onChange={(event) =>
+                      setFoodItem((prev) => ({
+                        ...prev,
+                        protein: event.target.value,
+                      }))
+                    }
+                  />
+                  <input
+                    type="number"
+                    className={styles.itemInput}
+                    placeholder="carbs"
+                    value={foodItem.carbs}
+                    onChange={(event) =>
+                      setFoodItem((prev) => ({
+                        ...prev,
+                        carbs: event.target.value,
+                      }))
+                    }
+                  />
+                  <input
+                    type="number"
+                    className={styles.itemInput}
+                    placeholder="fat"
+                    value={foodItem.fat}
+                    onChange={(event) =>
+                      setFoodItem((prev) => ({
+                        ...prev,
+                        fat: event.target.value,
+                      }))
+                    }
+                  />
+                  <button
+                    className={styles.addItemButton}
+                    onClick={() => addFoodItem(meal.id)}
+                  >
+                    Dodaj
+                  </button>
+                </div>
+                <div className={styles.itemList}>
+                  {meal.items?.map((item) => (
+                    <div key={item.id} className={styles.itemRow}>
+                      {item.name} — {item.kcal} kcal
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>
