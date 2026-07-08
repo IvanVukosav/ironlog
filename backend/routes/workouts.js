@@ -32,9 +32,9 @@ router.get("/month", async (req, res) => {
     const end = new Date(Date.UTC(year, month, 1));
     const workouts = await prisma.workout.findMany({
       where: { date: { gte: start, lt: end } },
-      select: { date: true },
+      select: { date: true, name: true },
     });
-    res.json(workouts.map((w) => w.date));
+    res.json(workouts);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal server error" });
@@ -43,9 +43,23 @@ router.get("/month", async (req, res) => {
 
 router.post("/", async (req, res) => {
   try {
-    const { date } = req.body;
+    const { date, name } = req.body;
     const workout = await prisma.workout.create({
-      data: { date: new Date(date) },
+      data: { date: new Date(date), name: name || null },
+    });
+    res.json(workout);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.patch("/:id", async (req, res) => {
+  try {
+    const { name } = req.body;
+    const workout = await prisma.workout.update({
+      where: { id: parseInt(req.params.id) },
+      data: { name: name || null },
     });
     res.json(workout);
   } catch (err) {

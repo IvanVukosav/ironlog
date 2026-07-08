@@ -10,6 +10,7 @@ datasource db {
 model Workout {
   id        Int        @id @default(autoincrement())
   date      DateTime
+  name      String?
   exercises Exercise[]
 }
 
@@ -72,4 +73,9 @@ model Bodyweight {
   id     Int      @id @default(autoincrement())
   date   DateTime @unique
   weight Float
+}
+
+model ExerciseTemplate {
+  id   Int    @id @default(autoincrement())
+  name String @unique
 }
