@@ -108,7 +108,15 @@ function Calendar() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ date: bwModalDate, weight: parsed }),
     })
-      .then(() => setBwModalDate(null))
+      .then((data) => {
+        setBwModalDate(null);
+        setMonthBwEntries((prev) => {
+          const filtered = prev.filter(
+            (entry) => new Date(entry.date).getUTCDate() !== new Date(data.date).getUTCDate()
+          );
+          return [...filtered, data];
+        });
+      })
       .catch((err) => console.error(err));
   };
 
