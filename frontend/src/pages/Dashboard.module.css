@@ -31,3 +31,39 @@
 .fullWidth {
   grid-column: span 2;
 }
+
+.kcalInlineInput {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: 1.2rem;
+  font-weight: 700;
+  padding: 0 2px;
+  outline: none;
+  width: 60px;
+}
+
+.kcalInlineInput:focus {
+  border-bottom-color: var(--color-accent);
+}
+
+.kcalSetButton {
+  background: transparent;
+  border: none;
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+}
+
+.kcalSetButton::before {
+  content: "[ ";
+}
+
+.kcalSetButton::after {
+  content: " ]";
+}
