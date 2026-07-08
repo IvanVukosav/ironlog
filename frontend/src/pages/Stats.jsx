@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { fetchJson } from "../api";
+import styles from "./Stats.module.css";
 
 function Stats() {
   const [prs, setPrs] = useState([]);
@@ -11,9 +12,9 @@ function Stats() {
   }, []);
 
   return (
-    <div className="page">
-      <h1>Stats</h1>
-      <table>
+    <div className={styles.page}>
+      <h1 className={styles.heading}>Stats</h1>
+      <table className={styles.table}>
         <thead>
           <tr>
             <th>Exercise</th>
