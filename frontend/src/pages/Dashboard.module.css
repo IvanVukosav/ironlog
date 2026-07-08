@@ -67,3 +67,68 @@
 .kcalSetButton::after {
   content: " ]";
 }
+
+.bwChartHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.bwRangeTabs {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.bwRangeTab {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-dim);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  padding: 3px 8px;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.bwRangeTabActive {
+  background: var(--color-accent);
+  border: 1px solid var(--color-accent);
+  color: var(--color-bg);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  padding: 3px 8px;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.recentWorkoutList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.recentWorkoutRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--color-border-subtle);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+}
+
+.recentWorkoutRow:last-child {
+  border-bottom: none;
+}
+
+.recentWorkoutDate {
+  color: var(--color-text);
+}
+
+.recentWorkoutExercises {
+  color: var(--color-text-dim);
+  font-size: 0.8rem;
+}
