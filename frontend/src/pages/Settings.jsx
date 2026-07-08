@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { fetchJson } from "../api";
+import styles from "./Settings.module.css";
 
 function Settings() {
   const [settings, setSettings] = useState(null);
@@ -34,78 +35,102 @@ function Settings() {
   };
 
   return (
-    <div className="page">
-      <h1>Settings</h1>
-      <label>Kcal cilj</label>
-      <input
-        type="number"
-        value={settings?.kcalGoal || ""}
-        onChange={(e) =>
-          setSettings((prev) => ({ ...prev, kcalGoal: e.target.value }))
-        }
-      />
-      <label>Protein cilj (g)</label>
-      <input
-        type="number"
-        value={settings?.proteinGoal || ""}
-        onChange={(e) =>
-          setSettings((prev) => ({ ...prev, proteinGoal: e.target.value }))
-        }
-      />
-      <label>Treninga tjedno</label>
-      <input
-        type="number"
-        value={settings?.trainingsPerWeek || ""}
-        onChange={(e) =>
-          setSettings((prev) => ({ ...prev, trainingsPerWeek: e.target.value }))
-        }
-      />
-      <label>Carbs cilj (g)</label>
-      <input
-        type="number"
-        value={settings?.carbsGoal || ""}
-        onChange={(e) =>
-          setSettings((prev) => ({ ...prev, carbsGoal: e.target.value }))
-        }
-      />
-      <label>Fat cilj (g)</label>
-      <input
-        type="number"
-        value={settings?.fatGoal || ""}
-        onChange={(e) =>
-          setSettings((prev) => ({ ...prev, fatGoal: e.target.value }))
-        }
-      />
+    <div className={styles.page}>
+      <h1 className={styles.heading}>Settings</h1>
 
-      <h2>Dashboard widgeti</h2>
-      <label>
+      <div className={styles.field}>
+        <span className={styles.fieldLabel}>Kcal cilj</span>
+        <input
+          type="number"
+          className={styles.fieldInput}
+          value={settings?.kcalGoal || ""}
+          onChange={(event) =>
+            setSettings((prev) => ({ ...prev, kcalGoal: event.target.value }))
+          }
+        />
+      </div>
+
+      <div className={styles.field}>
+        <span className={styles.fieldLabel}>Protein cilj (g)</span>
+        <input
+          type="number"
+          className={styles.fieldInput}
+          value={settings?.proteinGoal || ""}
+          onChange={(event) =>
+            setSettings((prev) => ({ ...prev, proteinGoal: event.target.value }))
+          }
+        />
+      </div>
+
+      <div className={styles.field}>
+        <span className={styles.fieldLabel}>Treninga tjedno</span>
+        <input
+          type="number"
+          className={styles.fieldInput}
+          value={settings?.trainingsPerWeek || ""}
+          onChange={(event) =>
+            setSettings((prev) => ({ ...prev, trainingsPerWeek: event.target.value }))
+          }
+        />
+      </div>
+
+      <div className={styles.field}>
+        <span className={styles.fieldLabel}>Carbs cilj (g)</span>
+        <input
+          type="number"
+          className={styles.fieldInput}
+          value={settings?.carbsGoal || ""}
+          onChange={(event) =>
+            setSettings((prev) => ({ ...prev, carbsGoal: event.target.value }))
+          }
+        />
+      </div>
+
+      <div className={styles.field}>
+        <span className={styles.fieldLabel}>Fat cilj (g)</span>
+        <input
+          type="number"
+          className={styles.fieldInput}
+          value={settings?.fatGoal || ""}
+          onChange={(event) =>
+            setSettings((prev) => ({ ...prev, fatGoal: event.target.value }))
+          }
+        />
+      </div>
+
+      <p className={styles.sectionLabel}>Dashboard widgeti</p>
+
+      <label className={styles.checkboxRow}>
         <input
           type="checkbox"
           checked={settings?.showWorkoutWidget ?? true}
-          onChange={(e) =>
+          onChange={(event) =>
             setSettings((prev) => ({
               ...prev,
-              showWorkoutWidget: e.target.checked,
+              showWorkoutWidget: event.target.checked,
             }))
           }
         />
         Prikaži trening widget
       </label>
-      <label>
+
+      <label className={styles.checkboxRow}>
         <input
           type="checkbox"
           checked={settings?.showNutritionWidget ?? true}
-          onChange={(e) =>
+          onChange={(event) =>
             setSettings((prev) => ({
               ...prev,
-              showNutritionWidget: e.target.checked,
+              showNutritionWidget: event.target.checked,
             }))
           }
         />
         Prikaži prehrana widget
       </label>
 
-      <button onClick={save}>Spremi</button>
+      <button className={styles.saveButton} onClick={save}>
+        Spremi
+      </button>
     </div>
   );
 }
