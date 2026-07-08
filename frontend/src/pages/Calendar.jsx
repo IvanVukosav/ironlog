@@ -49,15 +49,29 @@ function Calendar() {
 
   const firstDay = new Date(Date.UTC(currentYear, currentMonth - 1, 1)).getUTCDay();
   const daysInMonth = new Date(Date.UTC(currentYear, currentMonth, 0)).getUTCDate();
-  const workoutDayNumbers = workoutDates.map((entry) => new Date(entry.date).getUTCDate());
+  const matchesCurrentMonthDay = (dateString, day) => {
+    const date = new Date(dateString);
+    return (
+      date.getUTCFullYear() === currentYear &&
+      date.getUTCMonth() + 1 === currentMonth &&
+      date.getUTCDate() === day
+    );
+  };
+
+  const workoutDayNumbers = workoutDates
+    .filter((entry) => {
+      const date = new Date(entry.date);
+      return date.getUTCFullYear() === currentYear && date.getUTCMonth() + 1 === currentMonth;
+    })
+    .map((entry) => new Date(entry.date).getUTCDate());
 
   const getWorkoutName = (day) => {
-    const entry = workoutDates.find((workoutEntry) => new Date(workoutEntry.date).getUTCDate() === day);
+    const entry = workoutDates.find((workoutEntry) => matchesCurrentMonthDay(workoutEntry.date, day));
     return entry ? entry.name : null;
   };
 
   const getBwWeight = (day) => {
-    const entry = monthBwEntries.find((bwEntry) => new Date(bwEntry.date).getUTCDate() === day);
+    const entry = monthBwEntries.find((bwEntry) => matchesCurrentMonthDay(bwEntry.date, day));
     return entry ? entry.weight : null;
   };
 
@@ -114,9 +128,15 @@ function Calendar() {
       .then((data) => {
         setBwModalDate(null);
         setMonthBwEntries((prev) => {
-          const filtered = prev.filter(
-            (entry) => new Date(entry.date).getUTCDate() !== new Date(data.date).getUTCDate()
-          );
+          const savedDate = new Date(data.date);
+          const filtered = prev.filter((entry) => {
+            const entryDate = new Date(entry.date);
+            return !(
+              entryDate.getUTCFullYear() === savedDate.getUTCFullYear() &&
+              entryDate.getUTCMonth() === savedDate.getUTCMonth() &&
+              entryDate.getUTCDate() === savedDate.getUTCDate()
+            );
+          });
           return [...filtered, data];
         });
       })
