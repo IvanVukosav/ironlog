@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { fetchJson } from "../api";
+import styles from "./Calendar.module.css";
 
 function Calendar() {
   const [currentYear, setCurrentYear] = useState(new Date().getUTCFullYear());
@@ -39,37 +40,28 @@ function Calendar() {
   for (let day = 1; day <= daysInMonth; day++) cells.push(day);
 
   return (
-    <div className="page">
-      <h1>Calendar</h1>
-      <div>
-        <button onClick={prevMonth}>&lt;</button>
-        <span>
-          {" "}
-          {currentYear}-{String(currentMonth).padStart(2, "0")}{" "}
+    <div className={styles.page}>
+      <h1 className={styles.heading}>Calendar</h1>
+      <div className={styles.monthNav}>
+        <button className={styles.navButton} onClick={prevMonth}>&lt;</button>
+        <span className={styles.monthLabel}>
+          {currentYear}-{String(currentMonth).padStart(2, "0")}
         </span>
-        <button onClick={nextMonth}>&gt;</button>
+        <button className={styles.navButton} onClick={nextMonth}>&gt;</button>
       </div>
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(7, 1fr)",
-          gap: "4px",
-          marginTop: "16px",
-        }}>
+      <div className={styles.dayGrid}>
         {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-          <div key={day}>
-            <strong>{day}</strong>
-          </div>
+          <div key={day} className={styles.dayHeader}>{day}</div>
         ))}
-        {cells.map((day, i) => (
+        {cells.map((day, index) => (
           <div
-            key={i}
-            style={{
-              background:
-                day && workoutDayNumbers.includes(day)
-                  ? "green"
-                  : "transparent",
-            }}>
+            key={index}
+            className={
+              day && workoutDayNumbers.includes(day)
+                ? styles.dayCellWorkout
+                : styles.dayCell
+            }
+          >
             {day || ""}
           </div>
         ))}
