@@ -114,7 +114,8 @@ function Calendar() {
     const dateString = `${currentYear}-${String(currentMonth).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
     setActiveDropdown(null);
     setBwModalDate(dateString);
-    setBwWeight("");
+    const existingWeight = getBwWeight(day);
+    setBwWeight(existingWeight !== null ? String(existingWeight) : "");
   };
 
   const saveBw = () => {
