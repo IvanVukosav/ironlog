@@ -61,13 +61,20 @@
   background-color: #1a1a1a;
 }
 
-.dayCellEmpty {
-  background-color: var(--color-bg);
+.dayCellOverflow {
   cursor: default;
 }
 
-.dayCellEmpty:hover {
-  background-color: var(--color-bg);
+.dayCellOverflow:hover {
+  background-color: var(--color-bg-card);
+}
+
+.dayNumberOverflow {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--color-text-dim);
+  display: block;
+  opacity: 0.35;
 }
 
 .dayCellToday {

@@ -97,9 +97,18 @@ function Calendar() {
       .catch((err) => console.error(err));
   };
 
+  const prevMonthDays = new Date(Date.UTC(currentYear, currentMonth - 1, 0)).getUTCDate();
   const cells = [];
-  for (let i = 0; i < firstDay; i++) cells.push(null);
-  for (let day = 1; day <= daysInMonth; day++) cells.push(day);
+  for (let i = firstDay - 1; i >= 0; i--) {
+    cells.push({ day: prevMonthDays - i, overflow: true });
+  }
+  for (let day = 1; day <= daysInMonth; day++) {
+    cells.push({ day, overflow: false });
+  }
+  const remaining = (7 - (cells.length % 7)) % 7;
+  for (let i = 1; i <= remaining; i++) {
+    cells.push({ day: i, overflow: true });
+  }
 
   return (
     <div className={styles.page}>
@@ -115,45 +124,43 @@ function Calendar() {
         {["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map((day) => (
           <div key={day} className={styles.dayHeader}>{day}</div>
         ))}
-        {cells.map((day, index) => (
+        {cells.map((cell, index) => (
           <div
             key={index}
             className={[
               styles.dayCell,
-              !day ? styles.dayCellEmpty : "",
-              day && isToday(day) ? styles.dayCellToday : "",
+              cell.overflow ? styles.dayCellOverflow : "",
+              !cell.overflow && isToday(cell.day) ? styles.dayCellToday : "",
             ].filter(Boolean).join(" ")}
-            onClick={() => handleDayClick(day)}
+            onClick={() => !cell.overflow && handleDayClick(cell.day)}
           >
-            {day && (
-              <>
-                <span className={styles.dayNumber}>{day}</span>
-                {workoutDayNumbers.includes(day) && (
-                  <span className={styles.workoutDot} />
-                )}
-                {activeDropdown === day && (
-                  <div className={styles.dropdown} ref={dropdownRef}>
-                    <button
-                      className={styles.dropdownItem}
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        handleWorkoutClick(day);
-                      }}
-                    >
-                      Workout
-                    </button>
-                    <button
-                      className={styles.dropdownItem}
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        handleBwClick(day);
-                      }}
-                    >
-                      Bodyweight
-                    </button>
-                  </div>
-                )}
-              </>
+            <span className={cell.overflow ? styles.dayNumberOverflow : styles.dayNumber}>
+              {cell.day}
+            </span>
+            {!cell.overflow && workoutDayNumbers.includes(cell.day) && (
+              <span className={styles.workoutDot} />
+            )}
+            {!cell.overflow && activeDropdown === cell.day && (
+              <div className={styles.dropdown} ref={dropdownRef}>
+                <button
+                  className={styles.dropdownItem}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    handleWorkoutClick(cell.day);
+                  }}
+                >
+                  Workout
+                </button>
+                <button
+                  className={styles.dropdownItem}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    handleBwClick(cell.day);
+                  }}
+                >
+                  Bodyweight
+                </button>
+              </div>
             )}
           </div>
         ))}
