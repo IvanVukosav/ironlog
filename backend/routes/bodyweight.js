@@ -4,11 +4,19 @@ const prisma = require("../prisma/client");
 
 router.get("/", async (req, res) => {
   try {
-    const days = parseInt(req.query.days) || 30;
-    const since = new Date();
-    since.setDate(since.getDate() - days);
+    let where = {};
+    if (req.query.year && req.query.month) {
+      const start = new Date(Date.UTC(req.query.year, req.query.month - 1, 1));
+      const end = new Date(Date.UTC(req.query.year, req.query.month, 1));
+      where = { date: { gte: start, lt: end } };
+    } else {
+      const days = parseInt(req.query.days) || 30;
+      const since = new Date();
+      since.setDate(since.getDate() - days);
+      where = { date: { gte: since } };
+    }
     const entries = await prisma.bodyweight.findMany({
-      where: { date: { gte: since } },
+      where,
       orderBy: { date: "asc" },
     });
     res.json(entries);
