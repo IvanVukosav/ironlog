@@ -11,12 +11,25 @@ function Log() {
   );
   const [workout, setWorkout] = useState(null);
   const [exerciseName, setExerciseName] = useState("");
+  const [exerciseTemplates, setExerciseTemplates] = useState([]);
+  const [showExercisePicker, setShowExercisePicker] = useState(false);
+  const [savePromptName, setSavePromptName] = useState(null);
 
   useEffect(() => {
     fetchJson(`/api/workouts?date=${date}`)
       .then((data) => setWorkout(data[0] || null))
       .catch((err) => console.error(err));
+
+    fetchJson("/api/exercise-templates")
+      .then((data) => setExerciseTemplates(data))
+      .catch((err) => console.error(err));
   }, [date]);
+
+  useEffect(() => {
+    const handleClickOutside = () => setShowExercisePicker(false);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const createWorkout = () => {
     fetchJson("/api/workouts", {
@@ -32,6 +45,13 @@ function Log() {
     if (!exerciseName.trim()) return;
     if (workout.exercises?.some((exercise) => exercise.name === exerciseName)) return;
 
+    const isKnown = exerciseTemplates.some(
+      (template) => template.name.toLowerCase() === exerciseName.trim().toLowerCase()
+    );
+    if (!isKnown) {
+      setSavePromptName(exerciseName.trim());
+    }
+
     fetchJson(`/api/workouts/${workout.id}/exercises`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -43,9 +63,46 @@ function Log() {
           exercises: [...(prev.exercises || []), { ...data, sets: [] }],
         }));
         setExerciseName("");
+        setShowExercisePicker(false);
       })
       .catch((err) => console.error(err));
   };
+
+  const updateWorkoutName = (name) => {
+    if (!workout) return;
+    fetchJson(`/api/workouts/${workout.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    })
+      .then((data) => setWorkout((prev) => ({ ...prev, name: data.name })))
+      .catch((err) => console.error(err));
+  };
+
+  const saveExerciseTemplate = (name) => {
+    fetchJson("/api/exercise-templates", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    })
+      .then((data) => {
+        setExerciseTemplates((prev) => [...prev, data].sort((templateA, templateB) => templateA.name.localeCompare(templateB.name)));
+        setSavePromptName(null);
+      })
+      .catch((err) => console.error(err));
+  };
+
+  const removeExerciseTemplate = (id) => {
+    fetchJson(`/api/exercise-templates/${id}`, { method: "DELETE" })
+      .then(() => setExerciseTemplates((prev) => prev.filter((template) => template.id !== id)))
+      .catch((err) => console.error(err));
+  };
+
+  const filteredTemplates = exerciseName.trim()
+    ? exerciseTemplates.filter((template) =>
+        template.name.toLowerCase().includes(exerciseName.trim().toLowerCase())
+      )
+    : exerciseTemplates;
 
   return (
     <div className={styles.page}>
@@ -63,6 +120,19 @@ function Log() {
         )}
       </div>
 
+      {workout && (
+        <input
+          type="text"
+          className={styles.workoutNameInput}
+          placeholder="Naziv treninga (opcionalno)"
+          defaultValue={workout.name || ""}
+          onBlur={(event) => updateWorkoutName(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") event.target.blur();
+          }}
+        />
+      )}
+
       {!workout && (
         <button className={styles.startButton} onClick={createWorkout}>
           Započni trening
@@ -71,18 +141,70 @@ function Log() {
 
       {workout && (
         <div>
-          <div className={styles.addRow}>
+          <div className={styles.addRow} style={{ position: "relative" }}>
             <input
               type="text"
               className={styles.exerciseInput}
-              placeholder="Ime vježbe"
+              placeholder="Pretraži ili upiši vježbu"
               value={exerciseName}
-              onChange={(event) => setExerciseName(event.target.value)}
+              onChange={(event) => {
+                setExerciseName(event.target.value);
+                setShowExercisePicker(true);
+                setSavePromptName(null);
+              }}
+              onFocus={() => setShowExercisePicker(true)}
             />
             <button className={styles.addButton} onClick={addExercise}>
               Dodaj vježbu
             </button>
+            {showExercisePicker && (
+              <div className={styles.exercisePicker}>
+                {filteredTemplates.map((template) => (
+                  <div key={template.id} className={styles.exercisePickerItem}>
+                    <button
+                      className={styles.exercisePickerName}
+                      onClick={() => {
+                        setExerciseName(template.name);
+                        setShowExercisePicker(false);
+                      }}
+                    >
+                      {template.name}
+                    </button>
+                    <button
+                      className={styles.exercisePickerRemove}
+                      onClick={() => removeExerciseTemplate(template.id)}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+                {exerciseName.trim() && !exerciseTemplates.some((template) => template.name.toLowerCase() === exerciseName.trim().toLowerCase()) && (
+                  <div className={styles.exercisePickerCustom}>
+                    + Dodaj "{exerciseName.trim()}" kao vježbu
+                  </div>
+                )}
+              </div>
+            )}
           </div>
+          {savePromptName && (
+            <div className={styles.savePrompt}>
+              <span className={styles.savePromptText}>
+                Spremi "{savePromptName}" na listu vježbi?
+              </span>
+              <button
+                className={styles.savePromptYes}
+                onClick={() => saveExerciseTemplate(savePromptName)}
+              >
+                Da
+              </button>
+              <button
+                className={styles.savePromptNo}
+                onClick={() => setSavePromptName(null)}
+              >
+                Ne
+              </button>
+            </div>
+          )}
 
           <div className={styles.cardList}>
             {workout.exercises?.map((exercise) => (
