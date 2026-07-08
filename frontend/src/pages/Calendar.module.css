@@ -213,3 +213,34 @@
 .bwSaveButton::after {
   content: " ]";
 }
+
+.cellWorkout {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.65rem;
+  color: var(--color-accent);
+  margin-top: 4px;
+  width: 100%;
+}
+
+.cellWorkoutName {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: calc(100% - 20px);
+}
+
+.cellBw {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.65rem;
+  color: #4caf50;
+  margin-top: 2px;
+  width: 100%;
+}
+
+.cellBwWeight {
+  white-space: nowrap;
+}

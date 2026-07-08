@@ -13,6 +13,7 @@ function Calendar() {
   const [currentYear, setCurrentYear] = useState(new Date().getUTCFullYear());
   const [currentMonth, setCurrentMonth] = useState(new Date().getUTCMonth() + 1);
   const [workoutDates, setWorkoutDates] = useState([]);
+  const [monthBwEntries, setMonthBwEntries] = useState([]);
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [bwModalDate, setBwModalDate] = useState(null);
   const [bwWeight, setBwWeight] = useState("");
@@ -26,6 +27,10 @@ function Calendar() {
   useEffect(() => {
     fetchJson(`/api/workouts/month?year=${currentYear}&month=${currentMonth}`)
       .then((data) => setWorkoutDates(data))
+      .catch((err) => console.error(err));
+
+    fetchJson(`/api/bodyweight?year=${currentYear}&month=${currentMonth}`)
+      .then((data) => setMonthBwEntries(data))
       .catch((err) => console.error(err));
   }, [currentYear, currentMonth]);
 
@@ -41,7 +46,17 @@ function Calendar() {
 
   const firstDay = new Date(Date.UTC(currentYear, currentMonth - 1, 1)).getUTCDay();
   const daysInMonth = new Date(Date.UTC(currentYear, currentMonth, 0)).getUTCDate();
-  const workoutDayNumbers = workoutDates.map((date) => new Date(date).getUTCDate());
+  const workoutDayNumbers = workoutDates.map((entry) => new Date(entry.date).getUTCDate());
+
+  const getWorkoutName = (day) => {
+    const entry = workoutDates.find((workoutEntry) => new Date(workoutEntry.date).getUTCDate() === day);
+    return entry ? entry.name : null;
+  };
+
+  const getBwWeight = (day) => {
+    const entry = monthBwEntries.find((bwEntry) => new Date(bwEntry.date).getUTCDate() === day);
+    return entry ? entry.weight : null;
+  };
 
   const isToday = (day) =>
     day !== null &&
@@ -138,7 +153,18 @@ function Calendar() {
               {cell.day}
             </span>
             {!cell.overflow && workoutDayNumbers.includes(cell.day) && (
-              <span className={styles.workoutDot} />
+              <div className={styles.cellWorkout}>
+                <span>🏋</span>
+                {getWorkoutName(cell.day) && (
+                  <span className={styles.cellWorkoutName}>{getWorkoutName(cell.day)}</span>
+                )}
+              </div>
+            )}
+            {!cell.overflow && getBwWeight(cell.day) !== null && (
+              <div className={styles.cellBw}>
+                <span>⚖</span>
+                <span className={styles.cellBwWeight}>{getBwWeight(cell.day)} kg</span>
+              </div>
             )}
             {!cell.overflow && activeDropdown === cell.day && (
               <div className={styles.dropdown} ref={dropdownRef}>
