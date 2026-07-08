@@ -25,6 +25,9 @@ function Calendar() {
   const todayDay = today.getUTCDate();
 
   useEffect(() => {
+    setWorkoutDates([]);
+    setMonthBwEntries([]);
+
     fetchJson(`/api/workouts/month?year=${currentYear}&month=${currentMonth}`)
       .then((data) => setWorkoutDates(data))
       .catch((err) => console.error(err));
