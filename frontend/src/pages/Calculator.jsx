@@ -1,4 +1,5 @@
 import { useState } from "react";
+import styles from "./Calculator.module.css";
 
 const BRZYCKI_A = 1.0278;
 const BRZYCKI_B = 0.0278;
@@ -46,47 +47,60 @@ function Calculator() {
   }
 
   return (
-    <div className="page">
-      <h1>Calculator</h1>
-      <input
-        type="number"
-        min="0"
-        placeholder="Daj kilazicu"
-        value={weight}
-        onChange={(e) => setWeight(e.target.value)}
-      />
-      <input
-        type="number"
-        min="0"
-        placeholder="Daj ponavljanja"
-        value={reps}
-        onChange={(e) => setReps(e.target.value)}
-      />
+    <div className={styles.page}>
+      <h1 className={styles.heading}>Calculator</h1>
 
-      <button onClick={calculate} disabled={!weight || !reps}>
-        Calculate
-      </button>
+      <div className={styles.inputRow}>
+        <input
+          type="number"
+          min="0"
+          className={styles.input}
+          placeholder="Daj kilazicu"
+          value={weight}
+          onChange={(event) => setWeight(event.target.value)}
+        />
+        <input
+          type="number"
+          min="0"
+          className={styles.input}
+          placeholder="Daj ponavljanja"
+          value={reps}
+          onChange={(event) => setReps(event.target.value)}
+        />
+        <button
+          className={styles.calculateButton}
+          onClick={calculate}
+          disabled={!weight || !reps}
+        >
+          Calculate
+        </button>
+      </div>
 
-      {error && <p>{error}</p>}
-      {oneRM && <p>1RM: {oneRM} kg</p>}
-      <input
-        type="number"
-        min={MIN_STEP}
-        placeholder="Daj postotak skoka"
-        value={step}
-        onChange={(e) => setStep(parseFloat(e.target.value))}
-      />
-      <input
-        type="number"
-        min={MIN_PERCENTAGE}
-        max={MAX_PERCENTAGE}
-        placeholder="Daj postotak(default do 70%)"
-        value={minPct}
-        onChange={(e) => setMinPct(parseFloat(e.target.value))}
-      />
+      {error && <p className={styles.error}>{error}</p>}
+      {oneRM && <p className={styles.result}>1RM: {oneRM} kg</p>}
+
+      <div className={styles.optionsRow}>
+        <input
+          type="number"
+          min={MIN_STEP}
+          className={styles.input}
+          placeholder="Daj postotak skoka"
+          value={step}
+          onChange={(event) => setStep(parseFloat(event.target.value))}
+        />
+        <input
+          type="number"
+          min={MIN_PERCENTAGE}
+          max={MAX_PERCENTAGE}
+          className={styles.input}
+          placeholder="Daj postotak(default do 70%)"
+          value={minPct}
+          onChange={(event) => setMinPct(parseFloat(event.target.value))}
+        />
+      </div>
 
       {oneRM && (
-        <table>
+        <table className={styles.table}>
           <tbody>
             {percentages.map((pct) => (
               <tr key={pct}>
