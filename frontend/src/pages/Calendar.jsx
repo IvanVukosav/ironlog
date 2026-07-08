@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { fetchJson } from "../api";
 import styles from "./Calendar.module.css";
 
 function Calendar() {
+  const navigate = useNavigate();
   const [currentYear, setCurrentYear] = useState(new Date().getUTCFullYear());
   const [currentMonth, setCurrentMonth] = useState(new Date().getUTCMonth() + 1);
   const [workoutDates, setWorkoutDates] = useState([]);
@@ -35,6 +37,12 @@ function Calendar() {
     } else setCurrentMonth(currentMonth + 1);
   };
 
+  const handleDayClick = (day) => {
+    if (!day || !workoutDayNumbers.includes(day)) return;
+    const dateString = `${currentYear}-${String(currentMonth).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    navigate(`/log?date=${dateString}`);
+  };
+
   const cells = [];
   for (let i = 0; i < firstDay; i++) cells.push(null);
   for (let day = 1; day <= daysInMonth; day++) cells.push(day);
@@ -61,6 +69,7 @@ function Calendar() {
                 ? styles.dayCellWorkout
                 : styles.dayCell
             }
+            onClick={() => handleDayClick(day)}
           >
             {day || ""}
           </div>

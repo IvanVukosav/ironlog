@@ -1,10 +1,14 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import ExerciseCard from "../components/ExerciseCard";
 import { fetchJson } from "../api";
 import styles from "./Log.module.css";
 
 function Log() {
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [searchParams] = useSearchParams();
+  const [date, setDate] = useState(
+    searchParams.get("date") || new Date().toISOString().split("T")[0],
+  );
   const [workout, setWorkout] = useState(null);
   const [exerciseName, setExerciseName] = useState("");
 

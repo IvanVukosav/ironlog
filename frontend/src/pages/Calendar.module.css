@@ -62,8 +62,21 @@
 .dayCellWorkout {
   font-family: var(--font-mono);
   font-size: 0.85rem;
-  color: var(--color-accent);
-  padding: 6px 4px;
+  color: var(--color-text);
+  padding: 6px 4px 2px;
   min-height: 32px;
-  border: 1px solid rgba(255, 59, 59, 0.3);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.dayCellWorkout::after {
+  content: "";
+  display: block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: var(--color-accent);
+  margin-top: 3px;
 }
