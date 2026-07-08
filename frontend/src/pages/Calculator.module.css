@@ -1,0 +1,108 @@
+.page {
+  padding: 1.5rem;
+}
+
+.heading {
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 1rem;
+}
+
+.inputRow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.input {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  padding: 4px 2px;
+  outline: none;
+  width: 120px;
+}
+
+.input:focus {
+  border-bottom-color: var(--color-accent);
+}
+
+.input::placeholder {
+  color: var(--color-text-dim);
+}
+
+.calculateButton {
+  background: transparent;
+  border: none;
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.calculateButton:disabled {
+  color: var(--color-text-dim);
+  cursor: not-allowed;
+}
+
+.calculateButton:not(:disabled)::before {
+  content: "[ ";
+}
+
+.calculateButton:not(:disabled)::after {
+  content: " ]";
+}
+
+.error {
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  margin: 0.75rem 0;
+}
+
+.result {
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0.75rem 0 1.25rem;
+}
+
+.optionsRow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+.table td {
+  color: var(--color-text);
+  padding: 0.4rem 1.5rem 0.4rem 0;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.table td:first-child {
+  color: var(--color-text-dim);
+  width: 60px;
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
