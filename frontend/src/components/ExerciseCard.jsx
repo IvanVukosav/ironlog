@@ -2,8 +2,19 @@ import { useState } from "react";
 import { fetchJson } from "../api";
 import styles from "./ExerciseCard.module.css";
 
+const WEIGHT_STEP_KG = 1;
+const MINIMUM_WEIGHT_KG = 0;
+
 function Exercise({ exercise, onAddSet, onDeleteSet }) {
   const [set, setSet] = useState({ weight: "", reps: "", rpe: "" });
+
+  const adjustWeight = (amount) => {
+    setSet((prev) => {
+      const currentWeight = parseFloat(prev.weight) || 0;
+      const nextWeight = Math.max(currentWeight + amount, MINIMUM_WEIGHT_KG);
+      return { ...prev, weight: String(nextWeight) };
+    });
+  };
 
   const addSet = (exerciseId) => {
     fetchJson(`/api/workouts/exercises/${exerciseId}/sets`, {
@@ -30,15 +41,34 @@ function Exercise({ exercise, onAddSet, onDeleteSet }) {
     <div className={styles.card}>
       <h3 className={styles.heading}>{exercise.name}</h3>
       <div className={styles.inputRow}>
-        <input
-          type="text"
-          className={styles.setInput}
-          placeholder="Kilaza"
-          value={set.weight}
-          onChange={(event) =>
-            setSet((prev) => ({ ...prev, weight: event.target.value }))
-          }
-        />
+        <div className={styles.weightGroup}>
+          <button
+            type="button"
+            className={styles.stepButton}
+            onClick={() => adjustWeight(-WEIGHT_STEP_KG)}
+          >
+            −
+          </button>
+          <div className={styles.weightInputWrapper}>
+            <input
+              type="text"
+              className={styles.setInput}
+              placeholder="Kilaza"
+              value={set.weight}
+              onChange={(event) =>
+                setSet((prev) => ({ ...prev, weight: event.target.value }))
+              }
+            />
+            <span className={styles.weightUnit}>kg</span>
+          </div>
+          <button
+            type="button"
+            className={styles.stepButton}
+            onClick={() => adjustWeight(WEIGHT_STEP_KG)}
+          >
+            +
+          </button>
+        </div>
         <input
           type="text"
           className={styles.setInput}
