@@ -16,12 +16,15 @@ router.get("/", async (req, res) => {
 
 router.post("/", async (req, res) => {
   try {
-    const { name } = req.body;
+    const { name, muscleGroup } = req.body;
     if (!name || !name.trim()) {
       return res.status(400).json({ error: "Name is required" });
     }
+    if (!muscleGroup || !muscleGroup.trim()) {
+      return res.status(400).json({ error: "Muscle group is required" });
+    }
     const template = await prisma.exerciseTemplate.create({
-      data: { name: name.trim() },
+      data: { name: name.trim(), muscleGroup: muscleGroup.trim() },
     });
     res.json(template);
   } catch (err) {

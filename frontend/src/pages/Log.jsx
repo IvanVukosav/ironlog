@@ -1,8 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import ExerciseCard from "../components/ExerciseCard";
 import { fetchJson } from "../api";
 import styles from "./Log.module.css";
+
+const MUSCLE_GROUPS = [
+  "Leđa", "Prsa", "Kvadriceps", "Stražnja loža", "Ramena", "Gluteus", "Ruke", "Trbušnjaci",
+];
+const ALL_MUSCLE_GROUPS_FILTER = "Sve";
 
 function Log() {
   const [searchParams] = useSearchParams();
@@ -14,6 +19,11 @@ function Log() {
   const [exerciseTemplates, setExerciseTemplates] = useState([]);
   const [showExercisePicker, setShowExercisePicker] = useState(false);
   const [savePromptName, setSavePromptName] = useState(null);
+  const [savePromptMuscleGroup, setSavePromptMuscleGroup] = useState("");
+  const [muscleGroupFilter, setMuscleGroupFilter] = useState(ALL_MUSCLE_GROUPS_FILTER);
+  const [settings, setSettings] = useState(null);
+  const exercisePickerRef = useRef(null);
+  const pickerMode = settings?.exercisePickerMode ?? "chips";
 
   useEffect(() => {
     fetchJson(`/api/workouts?date=${date}`)
@@ -26,7 +36,17 @@ function Log() {
   }, [date]);
 
   useEffect(() => {
-    const handleClickOutside = () => setShowExercisePicker(false);
+    fetchJson("/api/settings")
+      .then((data) => setSettings(data))
+      .catch((err) => console.error(err));
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (exercisePickerRef.current && !exercisePickerRef.current.contains(event.target)) {
+        setShowExercisePicker(false);
+      }
+    };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
@@ -38,6 +58,16 @@ function Log() {
       body: JSON.stringify({ date }),
     })
       .then((data) => setWorkout(data))
+      .catch((err) => console.error(err));
+  };
+
+  const cancelWorkout = () => {
+    if (!workout) return;
+    if (!window.confirm("Odustati od treninga? Sve dodane vježbe i setovi će biti obrisani.")) {
+      return;
+    }
+    fetchJson(`/api/workouts/${workout.id}`, { method: "DELETE" })
+      .then(() => setWorkout(null))
       .catch((err) => console.error(err));
   };
 
@@ -79,15 +109,17 @@ function Log() {
       .catch((err) => console.error(err));
   };
 
-  const saveExerciseTemplate = (name) => {
+  const saveExerciseTemplate = (name, muscleGroup) => {
+    if (!muscleGroup) return;
     fetchJson("/api/exercise-templates", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name }),
+      body: JSON.stringify({ name, muscleGroup }),
     })
       .then((data) => {
         setExerciseTemplates((prev) => [...prev, data].sort((templateA, templateB) => templateA.name.localeCompare(templateB.name)));
         setSavePromptName(null);
+        setSavePromptMuscleGroup("");
       })
       .catch((err) => console.error(err));
   };
@@ -98,11 +130,13 @@ function Log() {
       .catch((err) => console.error(err));
   };
 
-  const filteredTemplates = exerciseName.trim()
-    ? exerciseTemplates.filter((template) =>
-        template.name.toLowerCase().includes(exerciseName.trim().toLowerCase())
-      )
-    : exerciseTemplates;
+  const filteredTemplates = exerciseTemplates.filter((template) => {
+    const matchesSearch = !exerciseName.trim()
+      || template.name.toLowerCase().includes(exerciseName.trim().toLowerCase());
+    const matchesGroup = muscleGroupFilter === ALL_MUSCLE_GROUPS_FILTER
+      || template.muscleGroup === muscleGroupFilter;
+    return matchesSearch && matchesGroup;
+  });
 
   return (
     <div className={styles.page}>
@@ -116,7 +150,12 @@ function Log() {
           onChange={(event) => setDate(event.target.value)}
         />
         {workout && (
-          <span className={styles.meta}>Workout ID: {workout.id}</span>
+          <>
+            <span className={styles.meta}>Workout ID: {workout.id}</span>
+            <button className={styles.cancelButton} onClick={cancelWorkout}>
+              Odustani
+            </button>
+          </>
         )}
       </div>
 
@@ -141,7 +180,7 @@ function Log() {
 
       {workout && (
         <div>
-          <div className={styles.addRow} style={{ position: "relative" }}>
+          <div className={styles.addRow} style={{ position: "relative" }} ref={exercisePickerRef}>
             <input
               type="text"
               className={styles.exerciseInput}
@@ -159,29 +198,73 @@ function Log() {
             </button>
             {showExercisePicker && (
               <div className={styles.exercisePicker}>
-                {filteredTemplates.map((template) => (
-                  <div key={template.id} className={styles.exercisePickerItem}>
-                    <button
-                      className={styles.exercisePickerName}
-                      onClick={() => {
-                        setExerciseName(template.name);
-                        setShowExercisePicker(false);
-                      }}
-                    >
-                      {template.name}
-                    </button>
-                    <button
-                      className={styles.exercisePickerRemove}
-                      onClick={() => removeExerciseTemplate(template.id)}
-                    >
-                      ✕
-                    </button>
+                {pickerMode === "chips" && (
+                  <div className={styles.muscleGroupChips}>
+                    {[ALL_MUSCLE_GROUPS_FILTER, ...MUSCLE_GROUPS].map((group) => (
+                      <button
+                        key={group}
+                        className={muscleGroupFilter === group ? styles.muscleGroupChipActive : styles.muscleGroupChip}
+                        onClick={() => setMuscleGroupFilter(group)}
+                      >
+                        {group}
+                      </button>
+                    ))}
                   </div>
-                ))}
-                {exerciseName.trim() && !exerciseTemplates.some((template) => template.name.toLowerCase() === exerciseName.trim().toLowerCase()) && (
-                  <div className={styles.exercisePickerCustom}>
-                    + Dodaj "{exerciseName.trim()}" kao vježbu
+                )}
+
+                {pickerMode === "twoStep" && !exerciseName.trim() && muscleGroupFilter === ALL_MUSCLE_GROUPS_FILTER && (
+                  <div className={styles.categoryList}>
+                    {MUSCLE_GROUPS.map((group) => (
+                      <button
+                        key={group}
+                        className={styles.categoryListItem}
+                        onClick={() => setMuscleGroupFilter(group)}
+                      >
+                        {group}
+                      </button>
+                    ))}
                   </div>
+                )}
+
+                {pickerMode === "twoStep" && !exerciseName.trim() && muscleGroupFilter !== ALL_MUSCLE_GROUPS_FILTER && (
+                  <button
+                    className={styles.backButton}
+                    onClick={() => setMuscleGroupFilter(ALL_MUSCLE_GROUPS_FILTER)}
+                  >
+                    ‹ Natrag
+                  </button>
+                )}
+
+                {(pickerMode === "chips" || exerciseName.trim() || muscleGroupFilter !== ALL_MUSCLE_GROUPS_FILTER) && (
+                  <>
+                    {filteredTemplates.map((template) => (
+                      <div key={template.id} className={styles.exercisePickerItem}>
+                        <button
+                          className={styles.exercisePickerName}
+                          onClick={() => {
+                            setExerciseName(template.name);
+                            setShowExercisePicker(false);
+                          }}
+                        >
+                          {template.name}
+                          {template.muscleGroup && (
+                            <span className={styles.exercisePickerGroup}>{template.muscleGroup}</span>
+                          )}
+                        </button>
+                        <button
+                          className={styles.exercisePickerRemove}
+                          onClick={() => removeExerciseTemplate(template.id)}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                    {exerciseName.trim() && !exerciseTemplates.some((template) => template.name.toLowerCase() === exerciseName.trim().toLowerCase()) && (
+                      <div className={styles.exercisePickerCustom}>
+                        + Dodaj "{exerciseName.trim()}" kao vježbu
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             )}
@@ -191,15 +274,29 @@ function Log() {
               <span className={styles.savePromptText}>
                 Spremi "{savePromptName}" na listu vježbi?
               </span>
+              <select
+                className={styles.savePromptSelect}
+                value={savePromptMuscleGroup}
+                onChange={(event) => setSavePromptMuscleGroup(event.target.value)}
+              >
+                <option value="">Mišićna skupina...</option>
+                {MUSCLE_GROUPS.map((group) => (
+                  <option key={group} value={group}>{group}</option>
+                ))}
+              </select>
               <button
                 className={styles.savePromptYes}
-                onClick={() => saveExerciseTemplate(savePromptName)}
+                disabled={!savePromptMuscleGroup}
+                onClick={() => saveExerciseTemplate(savePromptName, savePromptMuscleGroup)}
               >
-                Da
+                Spremi
               </button>
               <button
                 className={styles.savePromptNo}
-                onClick={() => setSavePromptName(null)}
+                onClick={() => {
+                  setSavePromptName(null);
+                  setSavePromptMuscleGroup("");
+                }}
               >
                 Ne
               </button>

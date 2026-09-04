@@ -66,6 +66,7 @@ model Settings {
   trainingsPerWeek    Int     @default(4)
   carbsGoal  Int @default(250)
   fatGoal    Int @default(80)
+  exercisePickerMode String @default("chips")
 
 }
 
@@ -76,6 +77,7 @@ model Bodyweight {
 }
 
 model ExerciseTemplate {
-  id   Int    @id @default(autoincrement())
-  name String @unique
+  id           Int     @id @default(autoincrement())
+  name         String  @unique
+  muscleGroup  String?
 }

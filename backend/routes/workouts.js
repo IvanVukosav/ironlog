@@ -102,6 +102,19 @@ router.patch("/:id", async (req, res) => {
   }
 });
 
+router.delete("/:id", async (req, res) => {
+  try {
+    const workoutId = parseInt(req.params.id);
+    await prisma.set.deleteMany({ where: { exercise: { workoutId } } });
+    await prisma.exercise.deleteMany({ where: { workoutId } });
+    await prisma.workout.delete({ where: { id: workoutId } });
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 router.post("/:id/exercises", async (req, res) => {
   try {
     const { name } = req.body;

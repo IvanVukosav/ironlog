@@ -128,6 +128,32 @@ function Settings() {
         Prikaži prehrana widget
       </label>
 
+      <p className={styles.sectionLabel}>Odabir vježbe u Logu</p>
+
+      <label className={styles.checkboxRow}>
+        <input
+          type="radio"
+          name="exercisePickerMode"
+          checked={(settings?.exercisePickerMode ?? "chips") === "chips"}
+          onChange={() =>
+            setSettings((prev) => ({ ...prev, exercisePickerMode: "chips" }))
+          }
+        />
+        Chips (filter iznad liste)
+      </label>
+
+      <label className={styles.checkboxRow}>
+        <input
+          type="radio"
+          name="exercisePickerMode"
+          checked={settings?.exercisePickerMode === "twoStep"}
+          onChange={() =>
+            setSettings((prev) => ({ ...prev, exercisePickerMode: "twoStep" }))
+          }
+        />
+        Dvokorak (prvo kategorija, pa vježba)
+      </label>
+
       <button className={styles.saveButton} onClick={save}>
         Spremi
       </button>
