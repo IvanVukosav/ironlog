@@ -75,12 +75,12 @@
   margin-bottom: 0.75rem;
 }
 
-.bwRangeTabs {
+.rangeTabs {
   display: flex;
   gap: 0.5rem;
 }
 
-.bwRangeTab {
+.rangeTab {
   background: transparent;
   border: 1px solid var(--color-border);
   color: var(--color-text-dim);
@@ -92,7 +92,7 @@
   letter-spacing: 0.05em;
 }
 
-.bwRangeTabActive {
+.rangeTabActive {
   background: var(--color-accent);
   border: 1px solid var(--color-accent);
   color: var(--color-bg);
@@ -102,6 +102,73 @@
   cursor: pointer;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+.weeklyProgressHeader {
+  margin-bottom: 0.75rem;
+}
+
+.progressTrack {
+  margin-top: 0.5rem;
+  height: 6px;
+  background: var(--color-border-subtle);
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--color-accent);
+}
+
+.weekDayList {
+  display: flex;
+  flex-direction: column;
+}
+
+.weekDayRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--color-border-subtle);
+  font-family: var(--font-mono);
+  font-size: 1.15rem;
+  cursor: pointer;
+}
+
+.weekDayRow:hover {
+  background-color: #1a1a1a;
+}
+
+.weekDayRow:last-child {
+  border-bottom: none;
+}
+
+.weekDayName {
+  color: var(--color-text-dim);
+}
+
+.weekDayNameToday {
+  color: var(--color-accent);
+  font-weight: 700;
+}
+
+.weekDayStatus {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.weekDayWorkoutName {
+  color: var(--color-text-dim);
+  font-size: 0.85rem;
+}
+
+.weekDayDot {
+  color: var(--color-border);
+}
+
+.weekDayDotTrained {
+  color: var(--color-accent);
 }
 
 .recentWorkoutList {

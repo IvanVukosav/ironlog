@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const { getDayRange } = require("../utils/dateRange");
+const { getDayRange, getWeekRange, getMonthRange, getYearRange } = require("../utils/dateRange");
+
+const RANGE_GETTERS = { month: getMonthRange, year: getYearRange };
 const prisma = require("../prisma/client");
 
 router.get("/", async (req, res) => {
@@ -19,6 +21,38 @@ router.get("/", async (req, res) => {
       include: { exercises: { include: { sets: true } } },
     });
     res.json(workouts);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.get("/week", async (req, res) => {
+  try {
+    const { date } = req.query;
+    const workouts = await prisma.workout.findMany({
+      where: { date: getWeekRange(date) },
+      select: { date: true, name: true },
+    });
+    res.json(workouts);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.get("/count", async (req, res) => {
+  try {
+    const { range, date } = req.query;
+    const getRange = RANGE_GETTERS[range];
+    if (!getRange) {
+      return res.status(400).json({ error: "Invalid range" });
+    }
+    const workouts = await prisma.workout.findMany({
+      where: { date: getRange(date) },
+      select: { id: true },
+    });
+    res.json({ count: workouts.length });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal server error" });
