@@ -7,6 +7,7 @@
   --font-mono: ui-monospace, "Cascadia Code", "Consolas", monospace;
   --color-border: #444;
   --color-border-subtle: #222;
+  --color-text-placeholder: #888;
 }
 
 * {

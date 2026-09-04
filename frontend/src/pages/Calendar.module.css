@@ -193,7 +193,7 @@
 }
 
 .bwInput::placeholder {
-  color: var(--color-text-dim);
+  color: var(--color-text-placeholder);
 }
 
 .bwSaveButton {
