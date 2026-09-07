@@ -5,12 +5,65 @@
   font-family: var(--font-mono);
 }
 
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
 .heading {
   font-size: 1rem;
   font-weight: 700;
   color: var(--color-text);
-  margin-bottom: 0.75rem;
   letter-spacing: 0.03em;
+}
+
+.menuWrapper {
+  position: relative;
+}
+
+.menuButton {
+  background: transparent;
+  border: none;
+  color: var(--color-text-dim);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.menuButton:hover {
+  color: var(--color-accent);
+}
+
+.menuDropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 20;
+  background-color: #1e1e1e;
+  border: 1px solid var(--color-border);
+  min-width: 160px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.menuItem {
+  display: block;
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  padding: 10px 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.menuItem:hover {
+  background-color: var(--color-bg-card);
+  color: var(--color-accent);
 }
 
 .inputRow {
@@ -126,5 +179,63 @@
 }
 
 .deleteSet:hover {
+  color: var(--color-accent);
+}
+
+.e1rmText {
+  color: var(--color-text-dim);
+  font-size: 0.8rem;
+}
+
+.setText {
+  cursor: pointer;
+}
+
+.setText:hover {
+  color: var(--color-text);
+}
+
+.setRowEditing {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.setRowEditing:last-child {
+  border-bottom: none;
+}
+
+.saveSetButton {
+  background: transparent;
+  border: none;
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.saveSetButton::before {
+  content: "[ ";
+}
+
+.saveSetButton::after {
+  content: " ]";
+}
+
+.cancelSetButton {
+  background: transparent;
+  border: none;
+  color: var(--color-text-dim);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.cancelSetButton:hover {
   color: var(--color-accent);
 }

@@ -134,6 +134,18 @@ router.post("/:id/exercises", async (req, res) => {
   }
 });
 
+router.delete("/exercises/:id", async (req, res) => {
+  try {
+    const exerciseId = parseInt(req.params.id);
+    await prisma.set.deleteMany({ where: { exerciseId } });
+    await prisma.exercise.delete({ where: { id: exerciseId } });
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 router.post("/exercises/:id/sets", async (req, res) => {
   try {
     const { weight, reps, rpe } = req.body;
@@ -146,6 +158,24 @@ router.post("/exercises/:id/sets", async (req, res) => {
       },
     });
 
+    res.json(set);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.patch("/sets/:id", async (req, res) => {
+  try {
+    const { weight, reps, rpe } = req.body;
+    const set = await prisma.set.update({
+      where: { id: parseInt(req.params.id) },
+      data: {
+        weight: parseFloat(weight),
+        reps: parseInt(reps),
+        rpe: parseFloat(rpe),
+      },
+    });
     res.json(set);
   } catch (err) {
     console.error(err);

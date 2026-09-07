@@ -308,6 +308,8 @@ function Log() {
               <ExerciseCard
                 key={exercise.id}
                 exercise={exercise}
+                showE1rm={settings?.showE1rm ?? true}
+                e1rmFormula={settings?.e1rmFormula ?? "brzycki"}
                 onDeleteSet={(setId) =>
                   setWorkout((prev) => ({
                     ...prev,
@@ -333,6 +335,29 @@ function Log() {
                             sets: [...(currentExercise.sets || []), data],
                           }
                         : currentExercise,
+                    ),
+                  }))
+                }
+                onUpdateSet={(updatedSet) =>
+                  setWorkout((prev) => ({
+                    ...prev,
+                    exercises: prev.exercises.map((currentExercise) =>
+                      currentExercise.id === exercise.id
+                        ? {
+                            ...currentExercise,
+                            sets: currentExercise.sets.map((currentSet) =>
+                              currentSet.id === updatedSet.id ? updatedSet : currentSet,
+                            ),
+                          }
+                        : currentExercise,
+                    ),
+                  }))
+                }
+                onDeleteExercise={(exerciseId) =>
+                  setWorkout((prev) => ({
+                    ...prev,
+                    exercises: prev.exercises.filter(
+                      (currentExercise) => currentExercise.id !== exerciseId,
                     ),
                   }))
                 }
