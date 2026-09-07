@@ -1,24 +1,30 @@
 import { useState, useEffect } from "react";
 import { fetchJson } from "../api";
+import MealCard from "../components/MealCard";
 import styles from "./Nutrition.module.css";
 
 function Nutrition() {
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [day, setDay] = useState(null);
   const [mealName, setMealName] = useState("");
-  const [foodItem, setFoodItem] = useState({
-    name: "",
-    kcal: "",
-    protein: "",
-    carbs: "",
-    fat: "",
-  });
+  const [foodItemTemplates, setFoodItemTemplates] = useState([]);
+  const [settings, setSettings] = useState(null);
 
   useEffect(() => {
     fetchJson(`/api/nutrition?date=${date}`)
       .then((data) => setDay(data[0] || null))
       .catch((err) => console.error(err));
   }, [date]);
+
+  useEffect(() => {
+    fetchJson("/api/food-item-templates")
+      .then((data) => setFoodItemTemplates(data))
+      .catch((err) => console.error(err));
+
+    fetchJson("/api/settings")
+      .then((data) => setSettings(data))
+      .catch((err) => console.error(err));
+  }, []);
 
   const createDay = () => {
     fetchJson("/api/nutrition/days", {
@@ -43,25 +49,30 @@ function Nutrition() {
       .catch((err) => console.error(err));
   };
 
-  const addFoodItem = (mealId) => {
-    fetchJson(`/api/nutrition/meals/${mealId}/items`, {
+  const saveFoodItemTemplate = (item) => {
+    fetchJson("/api/food-item-templates", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(foodItem),
+      body: JSON.stringify(item),
     })
       .then((data) => {
-        setDay((prev) => ({
-          ...prev,
-          meals: prev.meals.map((meal) =>
-            meal.id === mealId
-              ? { ...meal, items: [...(meal.items || []), data] }
-              : meal,
-          ),
-        }));
-        setFoodItem({ name: "", kcal: "", protein: "", carbs: "", fat: "" });
+        setFoodItemTemplates((prev) =>
+          [...prev, data].sort((templateA, templateB) => templateA.name.localeCompare(templateB.name)),
+        );
       })
       .catch((err) => console.error(err));
   };
+
+  const allItems = day?.meals?.flatMap((meal) => meal.items || []) || [];
+  const totals = allItems.reduce(
+    (sum, item) => ({
+      kcal: sum.kcal + item.kcal,
+      protein: sum.protein + item.protein,
+      carbs: sum.carbs + item.carbs,
+      fat: sum.fat + item.fat,
+    }),
+    { kcal: 0, protein: 0, carbs: 0, fat: 0 },
+  );
 
   return (
     <div className={styles.page}>
@@ -84,6 +95,27 @@ function Nutrition() {
 
       {day && (
         <div>
+          <div className={styles.totalsCard}>
+            <div className={styles.totalsGrid}>
+              <div className={styles.totalsStat}>
+                <span className={styles.totalsLabel}>Kcal</span>
+                <span className={`${styles.totalsValue} ${styles.totalsValueKcal}`}>{totals.kcal} / {settings?.kcalGoal ?? "—"}</span>
+              </div>
+              <div className={styles.totalsStat}>
+                <span className={styles.totalsLabel}>Protein</span>
+                <span className={`${styles.totalsValue} ${styles.totalsValueProtein}`}>{totals.protein}g / {settings?.proteinGoal ?? "—"}g</span>
+              </div>
+              <div className={styles.totalsStat}>
+                <span className={styles.totalsLabel}>Carbs</span>
+                <span className={`${styles.totalsValue} ${styles.totalsValueCarbs}`}>{totals.carbs}g / {settings?.carbsGoal ?? "—"}g</span>
+              </div>
+              <div className={styles.totalsStat}>
+                <span className={styles.totalsLabel}>Fat</span>
+                <span className={`${styles.totalsValue} ${styles.totalsValueFat}`}>{totals.fat}g / {settings?.fatGoal ?? "—"}g</span>
+              </div>
+            </div>
+          </div>
+
           <div className={styles.addMealRow}>
             <input
               type="text"
@@ -99,84 +131,56 @@ function Nutrition() {
 
           <div className={styles.mealList}>
             {day.meals?.map((meal) => (
-              <div key={meal.id} className={styles.mealCard}>
-                <h3 className={styles.mealHeading}>{meal.name}</h3>
-                <div className={styles.itemInputRow}>
-                  <input
-                    type="text"
-                    className={styles.itemInput}
-                    placeholder="Naziv hrane"
-                    value={foodItem.name}
-                    onChange={(event) =>
-                      setFoodItem((prev) => ({
-                        ...prev,
-                        name: event.target.value,
-                      }))
-                    }
-                  />
-                  <input
-                    type="number"
-                    className={styles.itemInput}
-                    placeholder="kcal"
-                    value={foodItem.kcal}
-                    onChange={(event) =>
-                      setFoodItem((prev) => ({
-                        ...prev,
-                        kcal: event.target.value,
-                      }))
-                    }
-                  />
-                  <input
-                    type="number"
-                    className={styles.itemInput}
-                    placeholder="protein"
-                    value={foodItem.protein}
-                    onChange={(event) =>
-                      setFoodItem((prev) => ({
-                        ...prev,
-                        protein: event.target.value,
-                      }))
-                    }
-                  />
-                  <input
-                    type="number"
-                    className={styles.itemInput}
-                    placeholder="carbs"
-                    value={foodItem.carbs}
-                    onChange={(event) =>
-                      setFoodItem((prev) => ({
-                        ...prev,
-                        carbs: event.target.value,
-                      }))
-                    }
-                  />
-                  <input
-                    type="number"
-                    className={styles.itemInput}
-                    placeholder="fat"
-                    value={foodItem.fat}
-                    onChange={(event) =>
-                      setFoodItem((prev) => ({
-                        ...prev,
-                        fat: event.target.value,
-                      }))
-                    }
-                  />
-                  <button
-                    className={styles.addItemButton}
-                    onClick={() => addFoodItem(meal.id)}
-                  >
-                    Dodaj
-                  </button>
-                </div>
-                <div className={styles.itemList}>
-                  {meal.items?.map((item) => (
-                    <div key={item.id} className={styles.itemRow}>
-                      {item.name} — {item.kcal} kcal
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <MealCard
+                key={meal.id}
+                meal={meal}
+                foodItemTemplates={foodItemTemplates}
+                onSaveTemplate={saveFoodItemTemplate}
+                onAddItem={(data) =>
+                  setDay((prev) => ({
+                    ...prev,
+                    meals: prev.meals.map((currentMeal) =>
+                      currentMeal.id === meal.id
+                        ? { ...currentMeal, items: [...(currentMeal.items || []), data] }
+                        : currentMeal,
+                    ),
+                  }))
+                }
+                onUpdateItem={(updatedItem) =>
+                  setDay((prev) => ({
+                    ...prev,
+                    meals: prev.meals.map((currentMeal) =>
+                      currentMeal.id === meal.id
+                        ? {
+                            ...currentMeal,
+                            items: currentMeal.items.map((currentItem) =>
+                              currentItem.id === updatedItem.id ? updatedItem : currentItem,
+                            ),
+                          }
+                        : currentMeal,
+                    ),
+                  }))
+                }
+                onDeleteItem={(itemId) =>
+                  setDay((prev) => ({
+                    ...prev,
+                    meals: prev.meals.map((currentMeal) =>
+                      currentMeal.id === meal.id
+                        ? {
+                            ...currentMeal,
+                            items: currentMeal.items.filter((currentItem) => currentItem.id !== itemId),
+                          }
+                        : currentMeal,
+                    ),
+                  }))
+                }
+                onDeleteMeal={(mealId) =>
+                  setDay((prev) => ({
+                    ...prev,
+                    meals: prev.meals.filter((currentMeal) => currentMeal.id !== mealId),
+                  }))
+                }
+              />
             ))}
           </div>
         </div>

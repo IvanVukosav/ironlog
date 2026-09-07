@@ -8,6 +8,9 @@
   --color-border: #444;
   --color-border-subtle: #222;
   --color-text-placeholder: #888;
+  --color-protein: #7fa8d9;
+  --color-carbs: #d99a5c;
+  --color-fat: #d9c25c;
 }
 
 * {

@@ -1,0 +1,294 @@
+.card {
+  background-color: var(--color-bg-card);
+  border-left: 3px solid var(--color-accent);
+  padding: 1rem;
+  font-family: var(--font-mono);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.heading {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: 0.03em;
+}
+
+.menuWrapper {
+  position: relative;
+}
+
+.menuButton {
+  background: transparent;
+  border: none;
+  color: var(--color-text-dim);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.menuButton:hover {
+  color: var(--color-accent);
+}
+
+.menuDropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 20;
+  background-color: #1e1e1e;
+  border: 1px solid var(--color-border);
+  min-width: 160px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.menuItem {
+  display: block;
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  padding: 10px 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.menuItem:hover {
+  background-color: var(--color-bg-card);
+  color: var(--color-accent);
+}
+
+.itemInputRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.itemInput {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  padding: 4px 2px;
+  outline: none;
+  width: 80px;
+}
+
+.itemInput:focus {
+  border-bottom-color: var(--color-accent);
+}
+
+.itemInput::placeholder {
+  color: var(--color-text-placeholder);
+}
+
+.itemNameInput {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  padding: 4px 2px;
+  outline: none;
+  width: 160px;
+}
+
+.itemNameInput:focus {
+  border-bottom-color: var(--color-accent);
+}
+
+.itemNameInput::placeholder {
+  color: var(--color-text-placeholder);
+}
+
+.addItemButton {
+  background: transparent;
+  border: none;
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.addItemButton::before {
+  content: "[ ";
+}
+
+.addItemButton::after {
+  content: " ]";
+}
+
+.itemPicker {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 20;
+  background-color: #1e1e1e;
+  border: 1px solid var(--color-border);
+  min-width: 220px;
+  max-height: 220px;
+  overflow-y: auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.itemPickerOption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 0.5rem;
+  background: transparent;
+  border: none;
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  padding: 10px 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.itemPickerOption:hover {
+  background-color: var(--color-bg-card);
+  color: var(--color-accent);
+}
+
+.itemPickerMacros {
+  color: var(--color-text-dim);
+  font-size: 0.7rem;
+}
+
+.savePrompt {
+  background-color: var(--color-bg);
+  border-left: 3px solid var(--color-accent);
+  padding: 10px 14px;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+
+.savePromptText {
+  color: var(--color-text);
+  flex: 1;
+}
+
+.savePromptYes {
+  background: transparent;
+  border: none;
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 0;
+}
+
+.savePromptYes::before { content: "[ "; }
+.savePromptYes::after { content: " ]"; }
+
+.savePromptNo {
+  background: transparent;
+  border: none;
+  color: var(--color-text-dim);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 0;
+}
+
+.itemList {
+  margin-top: 0.25rem;
+}
+
+.itemRow {
+  position: relative;
+  padding: 6px 28px 6px 0;
+  border-bottom: 1px solid var(--color-border-subtle);
+  font-size: 0.85rem;
+  color: var(--color-text-dim);
+}
+
+.itemRow:last-child {
+  border-bottom: none;
+}
+
+.itemText {
+  cursor: pointer;
+}
+
+.itemText:hover {
+  color: var(--color-text);
+}
+
+.deleteItem {
+  position: absolute;
+  top: 6px;
+  right: 0;
+  background: none;
+  border: none;
+  color: var(--color-text-dim);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.deleteItem:hover {
+  color: var(--color-accent);
+}
+
+.itemRowEditing {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.itemRowEditing:last-child {
+  border-bottom: none;
+}
+
+.saveItemButton {
+  background: transparent;
+  border: none;
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.saveItemButton::before { content: "[ "; }
+.saveItemButton::after { content: " ]"; }
+
+.cancelItemButton {
+  background: transparent;
+  border: none;
+  color: var(--color-text-dim);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.cancelItemButton:hover {
+  color: var(--color-accent);
+}

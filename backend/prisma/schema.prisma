@@ -83,3 +83,12 @@ model ExerciseTemplate {
   name         String  @unique
   muscleGroup  String?
 }
+
+model FoodItemTemplate {
+  id      Int    @id @default(autoincrement())
+  name    String @unique
+  kcal    Float
+  protein Float
+  carbs   Float
+  fat     Float
+}

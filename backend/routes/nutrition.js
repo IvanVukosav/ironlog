@@ -56,6 +56,19 @@ router.post("/meals", async (req, res) => {
   }
 });
 
+// DELETE /api/nutrition/meals/:id
+router.delete("/meals/:id", async (req, res) => {
+  try {
+    const mealId = parseInt(req.params.id);
+    await prisma.foodItem.deleteMany({ where: { mealId } });
+    await prisma.meal.delete({ where: { id: mealId } });
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // POST /api/nutrition/meals/:id/items
 router.post("/meals/:id/items", async (req, res) => {
   try {
@@ -86,6 +99,45 @@ router.post("/meals/:id/items", async (req, res) => {
         carbs: parsedCarbs,
         fat: parsedFat,
         mealId: parseInt(req.params.id),
+      },
+    });
+    res.json(item);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// PATCH /api/nutrition/items/:id
+router.patch("/items/:id", async (req, res) => {
+  try {
+    const { name, kcal, protein, carbs, fat } = req.body;
+
+    if (!name || name.trim() === "") {
+      return res.status(400).json({ error: "Food item name is required" });
+    }
+
+    const parsedKcal = parseFloat(kcal);
+    const parsedProtein = parseFloat(protein);
+    const parsedCarbs = parseFloat(carbs);
+    const parsedFat = parseFloat(fat);
+
+    if (
+      [parsedKcal, parsedProtein, parsedCarbs, parsedFat].some(Number.isNaN)
+    ) {
+      return res
+        .status(400)
+        .json({ error: "Kcal, protein, carbs and fat must be valid numbers" });
+    }
+
+    const item = await prisma.foodItem.update({
+      where: { id: parseInt(req.params.id) },
+      data: {
+        name,
+        kcal: parsedKcal,
+        protein: parsedProtein,
+        carbs: parsedCarbs,
+        fat: parsedFat,
       },
     });
     res.json(item);
