@@ -67,6 +67,8 @@ model Settings {
   carbsGoal  Int @default(250)
   fatGoal    Int @default(80)
   exercisePickerMode String @default("chips")
+  showE1rm   Boolean @default(true)
+  e1rmFormula String @default("brzycki")
 
 }
 

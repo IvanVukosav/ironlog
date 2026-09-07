@@ -1,6 +1,13 @@
 import { useState, useEffect } from "react";
 import { fetchJson } from "../api";
+import { ONE_REP_MAX_FORMULAS } from "../utils/oneRepMax";
 import styles from "./Settings.module.css";
+
+const E1RM_FORMULA_LABELS = {
+  [ONE_REP_MAX_FORMULAS.brzycki]: "Brzycki",
+  [ONE_REP_MAX_FORMULAS.epley]: "Epley",
+  [ONE_REP_MAX_FORMULAS.lombardi]: "Lombardi",
+};
 
 function Settings() {
   const [settings, setSettings] = useState(null);
@@ -153,6 +160,36 @@ function Settings() {
         />
         Dvokorak (prvo kategorija, pa vježba)
       </label>
+
+      <p className={styles.sectionLabel}>Setovi</p>
+
+      <label className={styles.checkboxRow}>
+        <input
+          type="checkbox"
+          checked={settings?.showE1rm ?? true}
+          onChange={(event) =>
+            setSettings((prev) => ({
+              ...prev,
+              showE1rm: event.target.checked,
+            }))
+          }
+        />
+        Prikaži e1RM uz svaki set
+      </label>
+
+      {Object.values(ONE_REP_MAX_FORMULAS).map((formula) => (
+        <label key={formula} className={styles.checkboxRow}>
+          <input
+            type="radio"
+            name="e1rmFormula"
+            checked={(settings?.e1rmFormula ?? "brzycki") === formula}
+            onChange={() =>
+              setSettings((prev) => ({ ...prev, e1rmFormula: formula }))
+            }
+          />
+          {E1RM_FORMULA_LABELS[formula]}
+        </label>
+      ))}
 
       <button className={styles.saveButton} onClick={save}>
         Spremi

@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { fetchJson } from "../api";
+import { calculateOneRepMax, ONE_REP_MAX_FORMULAS } from "../utils/oneRepMax";
 import styles from "./Calculator.module.css";
 
-const BRZYCKI_A = 1.0278;
-const BRZYCKI_B = 0.0278;
 const BRZYCKI_MAX_REPS = 37;
 const MIN_PERCENTAGE = 0;
 const MAX_PERCENTAGE = 100;
 const MIN_STEP = 1;
+const RESULT_DECIMAL_PLACES = 2;
 
 function Calculator() {
   const [weight, setWeight] = useState("");
@@ -15,6 +16,14 @@ function Calculator() {
   const [step, setStep] = useState(5);
   const [minPct, setMinPct] = useState(70);
   const [error, setError] = useState(null);
+  const [settings, setSettings] = useState(null);
+  const formula = settings?.e1rmFormula ?? ONE_REP_MAX_FORMULAS.brzycki;
+
+  useEffect(() => {
+    fetchJson("/api/settings")
+      .then((data) => setSettings(data))
+      .catch((err) => console.error(err));
+  }, []);
 
   const calculate = () => {
     if (!weight || !reps) return;
@@ -31,14 +40,14 @@ function Calculator() {
       setError(`Percentage must be between ${MIN_PERCENTAGE} and ${MAX_PERCENTAGE}`);
       return;
     }
-    if (reps >= BRZYCKI_MAX_REPS) {
+    if (formula === ONE_REP_MAX_FORMULAS.brzycki && reps >= BRZYCKI_MAX_REPS) {
       setError("Brzycki formula does not work for 37+ reps");
       return;
     }
     setError(null);
 
-    const result = weight / (BRZYCKI_A - BRZYCKI_B * reps);
-    setOneRM(parseFloat(result.toFixed(2)));
+    const result = calculateOneRepMax(parseFloat(weight), parseFloat(reps), formula);
+    setOneRM(parseFloat(result.toFixed(RESULT_DECIMAL_PLACES)));
   };
 
   const percentages = [];
@@ -77,7 +86,7 @@ function Calculator() {
       </div>
 
       {error && <p className={styles.error}>{error}</p>}
-      {oneRM && <p className={styles.result}>1RM: {oneRM} kg</p>}
+      {oneRM && <p className={styles.result}>e1RM: {oneRM} kg</p>}
 
       <div className={styles.optionsRow}>
         <input
