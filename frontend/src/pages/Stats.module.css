@@ -115,6 +115,10 @@
   background-color: rgba(255, 59, 59, 0.08);
 }
 
+.recentPrRowActive:hover {
+  background-color: rgba(255, 59, 59, 0.14);
+}
+
 .recentPrName {
   color: var(--color-text);
   font-size: 0.9rem;
