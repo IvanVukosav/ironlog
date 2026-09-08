@@ -5,24 +5,23 @@ const prisma = require("../prisma/client");
 router.get("/prs", async (req, res) => {
   try {
     const exercises = await prisma.exercise.findMany({
-      include: { sets: true },
+      include: { sets: true, workout: true },
     });
 
-    const prs = {};
+    const setsByExerciseName = {};
     exercises.forEach((exercise) => {
-      exercise.sets.forEach((set) => {
-        const current = prs[exercise.name];
-        if (!current || set.weight > current.weight) {
-          prs[exercise.name] = {
-            weight: set.weight,
-            reps: set.reps,
-            rpe: set.rpe,
-          };
-        }
-      });
+      const sets = exercise.sets.map((set) => ({
+        date: exercise.workout.date,
+        weight: set.weight,
+        reps: set.reps,
+        rpe: set.rpe,
+      }));
+      setsByExerciseName[exercise.name] = (setsByExerciseName[exercise.name] || []).concat(sets);
     });
 
-    res.json(Object.entries(prs).map(([name, data]) => ({ name, ...data })));
+    res.json(
+      Object.entries(setsByExerciseName).map(([name, sets]) => ({ name, sets })),
+    );
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal server error" });
