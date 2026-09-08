@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ToastProvider } from "./context/ToastContext";
 import ToastContainer from "./components/ToastContainer";
+import RestTimer from "./components/RestTimer";
 import NavBar from "./components/NavBar";
 import Dashboard from "./pages/Dashboard";
 import Log from "./pages/Log";
@@ -26,6 +27,7 @@ function App() {
         </Routes>
       </BrowserRouter>
       <ToastContainer />
+      <RestTimer />
     </ToastProvider>
   );
 }
