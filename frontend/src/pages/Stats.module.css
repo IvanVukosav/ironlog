@@ -71,3 +71,64 @@
   font-family: var(--font-mono);
   font-size: 0.85rem;
 }
+
+.recentPrSection {
+  margin-bottom: 2rem;
+}
+
+.recentPrHeading {
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: 0.03em;
+  margin-bottom: 0.75rem;
+}
+
+.recentPrList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.recentPrRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  background-color: var(--color-bg-card);
+  border: none;
+  border-left: 3px solid var(--color-accent);
+  padding: 0.6rem 1rem;
+  font-family: var(--font-mono);
+  cursor: pointer;
+  text-align: left;
+}
+
+.recentPrRow:hover {
+  background-color: #1a1a1a;
+}
+
+.recentPrRowActive {
+  border-left-width: 6px;
+  background-color: #1a1a1a;
+}
+
+.recentPrName {
+  color: var(--color-text);
+  font-size: 0.9rem;
+  font-weight: 700;
+  flex: 1;
+}
+
+.recentPrDetail {
+  color: var(--color-text-dim);
+  font-size: 0.8rem;
+}
+
+.recentPrDate {
+  color: var(--color-text-dim);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
