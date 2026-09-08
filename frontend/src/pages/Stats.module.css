@@ -112,7 +112,7 @@
 
 .recentPrRowActive {
   border-left-width: 6px;
-  background-color: #1a1a1a;
+  background-color: rgba(255, 59, 59, 0.08);
 }
 
 .recentPrName {
