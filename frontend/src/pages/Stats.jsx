@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { fetchJson } from "../api";
 import { calculateEstimatedOneRepMax, ONE_REP_MAX_FORMULAS } from "../utils/oneRepMax";
@@ -36,6 +36,7 @@ function Stats() {
   const [settings, setSettings] = useState(null);
   const [selectedExercise, setSelectedExercise] = useState("");
   const [history, setHistory] = useState([]);
+  const chartSectionRef = useRef(null);
   const formula = settings?.e1rmFormula ?? ONE_REP_MAX_FORMULAS.brzycki;
 
   useEffect(() => {
@@ -98,8 +99,11 @@ function Stats() {
             {recentPrRows.map((row) => (
               <button
                 key={row.name}
-                className={styles.recentPrRow}
-                onClick={() => setSelectedExercise(row.name)}
+                className={row.name === selectedExercise ? `${styles.recentPrRow} ${styles.recentPrRowActive}` : styles.recentPrRow}
+                onClick={() => {
+                  setSelectedExercise(row.name);
+                  chartSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+                }}
               >
                 <span className={styles.recentPrName}>{row.name}</span>
                 <span className={styles.recentPrDetail}>
@@ -132,7 +136,7 @@ function Stats() {
         </tbody>
       </table>
 
-      <div className={styles.chartSection}>
+      <div className={styles.chartSection} ref={chartSectionRef}>
         <div className={styles.chartHeader}>
           <h2 className={styles.chartHeading}>Napredak</h2>
           {prs.length > 0 && (
