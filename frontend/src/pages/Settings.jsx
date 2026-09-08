@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { fetchJson } from "../api";
 import { ONE_REP_MAX_FORMULAS } from "../utils/oneRepMax";
+import { useToast } from "../context/useToast";
 import styles from "./Settings.module.css";
 
 const E1RM_FORMULA_LABELS = {
@@ -10,18 +11,22 @@ const E1RM_FORMULA_LABELS = {
 };
 
 function Settings() {
+  const { showError, showSuccess } = useToast();
   const [settings, setSettings] = useState(null);
 
   useEffect(() => {
     fetchJson("/api/settings")
       .then((data) => setSettings(data))
-      .catch((err) => console.error(err));
-  }, []);
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
+  }, [showError]);
 
   const save = () => {
     const fields = [settings.kcalGoal, settings.proteinGoal, settings.trainingsPerWeek, settings.carbsGoal, settings.fatGoal];
     if (fields.some((field) => !field && field !== 0)) {
-      alert("All fields must be filled in");
+      showError("All fields must be filled in");
       return;
     }
 
@@ -37,8 +42,11 @@ function Settings() {
         fatGoal: parseInt(settings.fatGoal),
       }),
     })
-      .then(() => alert("Settings saved!"))
-      .catch(() => alert("Error saving settings"));
+      .then(() => showSuccess("Settings saved!"))
+      .catch((err) => {
+        console.error(err);
+        showError(err.message || "Error saving settings");
+      });
   };
 
   return (

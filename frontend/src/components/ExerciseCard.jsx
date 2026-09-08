@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { fetchJson } from "../api";
 import { calculateEstimatedOneRepMax } from "../utils/oneRepMax";
+import { useToast } from "../context/useToast";
 import styles from "./ExerciseCard.module.css";
 
 const WEIGHT_STEP_KG = 1;
@@ -37,6 +38,7 @@ function WeightInput({ value, onChange }) {
 }
 
 function Exercise({ exercise, onAddSet, onDeleteSet, onDeleteExercise, onUpdateSet, showE1rm, e1rmFormula }) {
+  const { showError } = useToast();
   const [set, setSet] = useState({ weight: "", reps: "", rpe: "" });
   const [showMenu, setShowMenu] = useState(false);
   const [editingSetId, setEditingSetId] = useState(null);
@@ -64,7 +66,10 @@ function Exercise({ exercise, onAddSet, onDeleteSet, onDeleteExercise, onUpdateS
         onAddSet(data);
         setSet({ weight: "", reps: "", rpe: "" });
       })
-      .catch((err) => console.error(err));
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
   };
 
   const deleteSet = (setId) => {
@@ -72,7 +77,10 @@ function Exercise({ exercise, onAddSet, onDeleteSet, onDeleteExercise, onUpdateS
       method: "DELETE",
     })
       .then(() => onDeleteSet(setId))
-      .catch((err) => console.error(err));
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
   };
 
   const deleteExercise = () => {
@@ -82,7 +90,10 @@ function Exercise({ exercise, onAddSet, onDeleteSet, onDeleteExercise, onUpdateS
     }
     fetchJson(`/api/workouts/exercises/${exercise.id}`, { method: "DELETE" })
       .then(() => onDeleteExercise(exercise.id))
-      .catch((err) => console.error(err));
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
   };
 
   const startEditingSet = (workoutSet) => {
@@ -104,7 +115,10 @@ function Exercise({ exercise, onAddSet, onDeleteSet, onDeleteExercise, onUpdateS
         onUpdateSet(data);
         setEditingSetId(null);
       })
-      .catch((err) => console.error(err));
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
   };
 
   return (

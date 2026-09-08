@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { fetchJson } from "../api";
+import { useToast } from "../context/useToast";
 import styles from "./MealCard.module.css";
 
 const EMPTY_FOOD_ITEM = { name: "", kcal: "", protein: "", carbs: "", fat: "" };
@@ -15,6 +16,7 @@ function foodItemToFormValues(item) {
 }
 
 function MealCard({ meal, foodItemTemplates, onAddItem, onUpdateItem, onDeleteItem, onDeleteMeal, onSaveTemplate }) {
+  const { showError } = useToast();
   const [foodItem, setFoodItem] = useState(EMPTY_FOOD_ITEM);
   const [showPicker, setShowPicker] = useState(false);
   const [savePromptItem, setSavePromptItem] = useState(null);
@@ -77,13 +79,19 @@ function MealCard({ meal, foodItemTemplates, onAddItem, onUpdateItem, onDeleteIt
         setFoodItem(EMPTY_FOOD_ITEM);
         setShowPicker(false);
       })
-      .catch((err) => console.error(err));
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
   };
 
   const deleteItem = (itemId) => {
     fetchJson(`/api/nutrition/items/${itemId}`, { method: "DELETE" })
       .then(() => onDeleteItem(itemId))
-      .catch((err) => console.error(err));
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
   };
 
   const deleteMeal = () => {
@@ -93,7 +101,10 @@ function MealCard({ meal, foodItemTemplates, onAddItem, onUpdateItem, onDeleteIt
     }
     fetchJson(`/api/nutrition/meals/${meal.id}`, { method: "DELETE" })
       .then(() => onDeleteMeal(meal.id))
-      .catch((err) => console.error(err));
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
   };
 
   const startEditingItem = (item) => {
@@ -111,7 +122,10 @@ function MealCard({ meal, foodItemTemplates, onAddItem, onUpdateItem, onDeleteIt
         onUpdateItem(data);
         setEditingItemId(null);
       })
-      .catch((err) => console.error(err));
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
   };
 
   return (

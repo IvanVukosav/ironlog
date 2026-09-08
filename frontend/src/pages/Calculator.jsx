@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { fetchJson } from "../api";
 import { calculateOneRepMax, ONE_REP_MAX_FORMULAS } from "../utils/oneRepMax";
+import { useToast } from "../context/useToast";
 import styles from "./Calculator.module.css";
 
 const BRZYCKI_MAX_REPS = 37;
@@ -10,6 +11,7 @@ const MIN_STEP = 1;
 const RESULT_DECIMAL_PLACES = 2;
 
 function Calculator() {
+  const { showError } = useToast();
   const [weight, setWeight] = useState("");
   const [reps, setReps] = useState("");
   const [oneRM, setOneRM] = useState(null);
@@ -22,8 +24,11 @@ function Calculator() {
   useEffect(() => {
     fetchJson("/api/settings")
       .then((data) => setSettings(data))
-      .catch((err) => console.error(err));
-  }, []);
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
+  }, [showError]);
 
   const calculate = () => {
     if (!weight || !reps) return;

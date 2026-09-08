@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { fetchJson } from "../api";
 import { calculateEstimatedOneRepMax, ONE_REP_MAX_FORMULAS } from "../utils/oneRepMax";
+import { useToast } from "../context/useToast";
 import styles from "./Stats.module.css";
 
 const E1RM_DECIMAL_PLACES = 1;
@@ -32,6 +33,7 @@ function formatChartDate(dateString) {
 }
 
 function Stats() {
+  const { showError } = useToast();
   const [prs, setPrs] = useState([]);
   const [settings, setSettings] = useState(null);
   const [selectedExercise, setSelectedExercise] = useState("");
@@ -47,19 +49,28 @@ function Stats() {
           setSelectedExercise(data[0].name);
         }
       })
-      .catch((err) => console.error(err));
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
 
     fetchJson("/api/settings")
       .then((data) => setSettings(data))
-      .catch((err) => console.error(err));
-  }, []);
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
+  }, [showError]);
 
   useEffect(() => {
     if (!selectedExercise) return;
     fetchJson(`/api/stats/exercise/${encodeURIComponent(selectedExercise)}/history`)
       .then((data) => setHistory(data))
-      .catch((err) => console.error(err));
-  }, [selectedExercise]);
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
+  }, [selectedExercise, showError]);
 
   const prRows = prs
     .map((pr) => {

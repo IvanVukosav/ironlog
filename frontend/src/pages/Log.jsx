@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import ExerciseCard from "../components/ExerciseCard";
 import { fetchJson } from "../api";
+import { useToast } from "../context/useToast";
 import styles from "./Log.module.css";
 
 const MUSCLE_GROUPS = [
@@ -10,6 +11,7 @@ const MUSCLE_GROUPS = [
 const ALL_MUSCLE_GROUPS_FILTER = "Sve";
 
 function Log() {
+  const { showError } = useToast();
   const [searchParams] = useSearchParams();
   const [date, setDate] = useState(
     searchParams.get("date") || new Date().toISOString().split("T")[0],
@@ -28,18 +30,27 @@ function Log() {
   useEffect(() => {
     fetchJson(`/api/workouts?date=${date}`)
       .then((data) => setWorkout(data[0] || null))
-      .catch((err) => console.error(err));
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
 
     fetchJson("/api/exercise-templates")
       .then((data) => setExerciseTemplates(data))
-      .catch((err) => console.error(err));
-  }, [date]);
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
+  }, [date, showError]);
 
   useEffect(() => {
     fetchJson("/api/settings")
       .then((data) => setSettings(data))
-      .catch((err) => console.error(err));
-  }, []);
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
+  }, [showError]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -58,7 +69,10 @@ function Log() {
       body: JSON.stringify({ date }),
     })
       .then((data) => setWorkout(data))
-      .catch((err) => console.error(err));
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
   };
 
   const cancelWorkout = () => {
@@ -68,7 +82,10 @@ function Log() {
     }
     fetchJson(`/api/workouts/${workout.id}`, { method: "DELETE" })
       .then(() => setWorkout(null))
-      .catch((err) => console.error(err));
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
   };
 
   const addExercise = () => {
@@ -95,7 +112,10 @@ function Log() {
         setExerciseName("");
         setShowExercisePicker(false);
       })
-      .catch((err) => console.error(err));
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
   };
 
   const updateWorkoutName = (name) => {
@@ -106,7 +126,10 @@ function Log() {
       body: JSON.stringify({ name }),
     })
       .then((data) => setWorkout((prev) => ({ ...prev, name: data.name })))
-      .catch((err) => console.error(err));
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
   };
 
   const saveExerciseTemplate = (name, muscleGroup) => {
@@ -121,13 +144,19 @@ function Log() {
         setSavePromptName(null);
         setSavePromptMuscleGroup("");
       })
-      .catch((err) => console.error(err));
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
   };
 
   const removeExerciseTemplate = (id) => {
     fetchJson(`/api/exercise-templates/${id}`, { method: "DELETE" })
       .then(() => setExerciseTemplates((prev) => prev.filter((template) => template.id !== id)))
-      .catch((err) => console.error(err));
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
   };
 
   const filteredTemplates = exerciseTemplates.filter((template) => {

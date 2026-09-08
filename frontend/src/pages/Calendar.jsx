@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchJson } from "../api";
+import { useToast } from "../context/useToast";
 import styles from "./Calendar.module.css";
 
 const MONTH_NAMES = [
@@ -10,6 +11,7 @@ const MONTH_NAMES = [
 
 function Calendar() {
   const navigate = useNavigate();
+  const { showError } = useToast();
   const [currentYear, setCurrentYear] = useState(new Date().getUTCFullYear());
   const [currentMonth, setCurrentMonth] = useState(new Date().getUTCMonth() + 1);
   const [workoutDates, setWorkoutDates] = useState([]);
@@ -30,12 +32,18 @@ function Calendar() {
 
     fetchJson(`/api/workouts/month?year=${currentYear}&month=${currentMonth}`)
       .then((data) => setWorkoutDates(data))
-      .catch((err) => console.error(err));
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
 
     fetchJson(`/api/bodyweight?year=${currentYear}&month=${currentMonth}`)
       .then((data) => setMonthBwEntries(data))
-      .catch((err) => console.error(err));
-  }, [currentYear, currentMonth]);
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
+  }, [currentYear, currentMonth, showError]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -141,7 +149,10 @@ function Calendar() {
           return [...filtered, data];
         });
       })
-      .catch((err) => console.error(err));
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
   };
 
   const prevMonthDays = new Date(Date.UTC(currentYear, currentMonth - 1, 0)).getUTCDate();

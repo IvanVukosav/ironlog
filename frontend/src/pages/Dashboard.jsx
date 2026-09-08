@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchJson } from "../api";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { useToast } from "../context/useToast";
 import styles from "./Dashboard.module.css";
 
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -45,6 +46,7 @@ function getWeekDates(anchorDateString) {
 
 function Dashboard() {
   const navigate = useNavigate();
+  const { showError } = useToast();
   const [workout, setWorkout] = useState(null);
   const [nutritionDay, setNutritionDay] = useState(null);
   const [settings, setSettings] = useState(null);
@@ -61,28 +63,46 @@ function Dashboard() {
   useEffect(() => {
     fetchJson(`/api/workouts?date=${today}`)
       .then((data) => setWorkout(data[0] || null))
-      .catch((err) => console.error(err));
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
 
     fetchJson(`/api/nutrition?date=${today}`)
       .then((data) => setNutritionDay(data[0] || null))
-      .catch((err) => console.error(err));
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
 
     fetchJson("/api/settings")
       .then((data) => setSettings(data))
-      .catch((err) => console.error(err));
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
 
     fetchJson("/api/bodyweight?days=7")
       .then((data) => setBodyweightData(data))
-      .catch((err) => console.error(err));
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
 
     fetchJson("/api/workouts?limit=5")
       .then((data) => setRecentWorkouts(data))
-      .catch((err) => console.error(err));
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
 
     fetchJson(`/api/workouts/week?date=${today}`)
       .then((data) => setWeeklyWorkouts(data))
-      .catch((err) => console.error(err));
-  }, []);
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
+  }, [today, showError]);
 
   const saveKcalGoal = () => {
     const parsed = parseInt(kcalGoalInput);
@@ -99,7 +119,10 @@ function Dashboard() {
         setSettings((prev) => ({ ...prev, kcalGoal: parsed }));
         setKcalGoalInput(null);
       })
-      .catch((err) => console.error(err));
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
   };
 
   const handleWorkoutRangeChange = (range) => {
@@ -107,11 +130,17 @@ function Dashboard() {
     if (range === "week") {
       fetchJson(`/api/workouts/week?date=${today}`)
         .then((data) => setWeeklyWorkouts(data))
-        .catch((err) => console.error(err));
+        .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
     } else {
       fetchJson(`/api/workouts/count?range=${range}&date=${today}`)
         .then((data) => setRangeWorkoutCount(data.count))
-        .catch((err) => console.error(err));
+        .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
     }
   };
 
@@ -119,7 +148,10 @@ function Dashboard() {
     setBwRange(days);
     fetchJson(`/api/bodyweight?days=${days}`)
       .then((data) => setBodyweightData(data))
-      .catch((err) => console.error(err));
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
   };
 
   const formatBwDate = (dateString) => {

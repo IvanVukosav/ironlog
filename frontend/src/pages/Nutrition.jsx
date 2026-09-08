@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { fetchJson } from "../api";
 import MealCard from "../components/MealCard";
+import { useToast } from "../context/useToast";
 import styles from "./Nutrition.module.css";
 
 function Nutrition() {
+  const { showError } = useToast();
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [day, setDay] = useState(null);
   const [mealName, setMealName] = useState("");
@@ -13,18 +15,27 @@ function Nutrition() {
   useEffect(() => {
     fetchJson(`/api/nutrition?date=${date}`)
       .then((data) => setDay(data[0] || null))
-      .catch((err) => console.error(err));
-  }, [date]);
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
+  }, [date, showError]);
 
   useEffect(() => {
     fetchJson("/api/food-item-templates")
       .then((data) => setFoodItemTemplates(data))
-      .catch((err) => console.error(err));
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
 
     fetchJson("/api/settings")
       .then((data) => setSettings(data))
-      .catch((err) => console.error(err));
-  }, []);
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
+  }, [showError]);
 
   const createDay = () => {
     fetchJson("/api/nutrition/days", {
@@ -33,7 +44,10 @@ function Nutrition() {
       body: JSON.stringify({ date }),
     })
       .then((data) => setDay(data))
-      .catch((err) => console.error(err));
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
   };
 
   const addMeal = () => {
@@ -46,7 +60,10 @@ function Nutrition() {
         setDay((prev) => ({ ...prev, meals: [...(prev.meals || []), data] }));
         setMealName("");
       })
-      .catch((err) => console.error(err));
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
   };
 
   const saveFoodItemTemplate = (item) => {
@@ -60,7 +77,10 @@ function Nutrition() {
           [...prev, data].sort((templateA, templateB) => templateA.name.localeCompare(templateB.name)),
         );
       })
-      .catch((err) => console.error(err));
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
   };
 
   const allItems = day?.meals?.flatMap((meal) => meal.items || []) || [];
