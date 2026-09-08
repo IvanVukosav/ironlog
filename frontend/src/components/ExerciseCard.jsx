@@ -1,18 +1,11 @@
 import { useState, useRef, useEffect } from "react";
 import { fetchJson } from "../api";
-import { calculateOneRepMax } from "../utils/oneRepMax";
+import { calculateEstimatedOneRepMax } from "../utils/oneRepMax";
 import styles from "./ExerciseCard.module.css";
 
 const WEIGHT_STEP_KG = 1;
 const MINIMUM_WEIGHT_KG = 0;
-const RPE_SCALE_MAX = 10;
 const E1RM_DECIMAL_PLACES = 1;
-
-function calculateEstimatedOneRepMax(weight, reps, rpe, formula) {
-  const repsInReserve = RPE_SCALE_MAX - rpe;
-  const repsToFailure = reps + repsInReserve;
-  return calculateOneRepMax(weight, repsToFailure, formula);
-}
 
 function WeightInput({ value, onChange }) {
   const adjust = (amount) => {
