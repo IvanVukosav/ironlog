@@ -16,6 +16,16 @@ function findBestSetByE1rm(sets, formula) {
   }, null);
 }
 
+function getRecentPr(sets, formula) {
+  if (sets.length === 0) return null;
+  const bestOverall = findBestSetByE1rm(sets, formula);
+  const latestDate = sets.reduce(
+    (latest, set) => (!latest || set.date > latest ? set.date : latest),
+    null,
+  );
+  return bestOverall.date === latestDate ? bestOverall : null;
+}
+
 function formatChartDate(dateString) {
   const date = new Date(dateString);
   return `${date.getUTCDate()}/${date.getUTCMonth() + 1}`;
@@ -58,6 +68,14 @@ function Stats() {
     .filter(Boolean)
     .sort((rowA, rowB) => rowB.e1rm - rowA.e1rm);
 
+  const recentPrRows = prs
+    .map((pr) => {
+      const recentPr = getRecentPr(pr.sets, formula);
+      return recentPr ? { name: pr.name, ...recentPr } : null;
+    })
+    .filter(Boolean)
+    .sort((rowA, rowB) => (rowA.date < rowB.date ? 1 : -1));
+
   const chartData = history
     .map((entry) => {
       const bestSet = findBestSetByE1rm(entry.sets, formula);
@@ -73,6 +91,26 @@ function Stats() {
   return (
     <div className={styles.page}>
       <h1 className={styles.heading}>Stats</h1>
+      {recentPrRows.length > 0 && (
+        <div className={styles.recentPrSection}>
+          <h2 className={styles.recentPrHeading}>Nedavno oboreni rekordi</h2>
+          <div className={styles.recentPrList}>
+            {recentPrRows.map((row) => (
+              <button
+                key={row.name}
+                className={styles.recentPrRow}
+                onClick={() => setSelectedExercise(row.name)}
+              >
+                <span className={styles.recentPrName}>{row.name}</span>
+                <span className={styles.recentPrDetail}>
+                  {row.e1rm.toFixed(E1RM_DECIMAL_PLACES)}kg e1RM — {row.weight}kg × {row.reps} @ RPE {row.rpe ?? "—"}
+                </span>
+                <span className={styles.recentPrDate}>{formatChartDate(row.date)}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       <table className={styles.table}>
         <thead>
           <tr>
