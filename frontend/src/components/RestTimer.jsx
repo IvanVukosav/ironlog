@@ -13,6 +13,7 @@ function formatTime(totalSeconds) {
 
 function RestTimer() {
   const [secondsRemaining, setSecondsRemaining] = useState(null);
+  const [isMinimized, setIsMinimized] = useState(false);
 
   useEffect(() => {
     if (secondsRemaining === null || secondsRemaining <= 0) return undefined;
@@ -29,45 +30,53 @@ function RestTimer() {
 
   return (
     <div className={styles.container}>
-      {secondsRemaining === null ? (
-        <div className={styles.presetRow}>
-          {REST_PRESETS_SECONDS.map((duration) => (
-            <button
-              key={duration}
-              className={styles.presetButton}
-              onClick={() => startRest(duration)}
-            >
-              {duration}s
-            </button>
-          ))}
-        </div>
-      ) : (
-        <div
-          className={
-            secondsRemaining <= 0
-              ? `${styles.timerCard} ${styles.timerExpired}`
-              : styles.timerCard
-          }
-        >
-          <span className={styles.time}>{formatTime(secondsRemaining)}</span>
-          <div className={styles.controls}>
-            <button
-              className={styles.adjustButton}
-              onClick={() => adjustRest(-REST_ADJUST_STEP_SECONDS)}
-            >
-              −15s
-            </button>
-            <button
-              className={styles.adjustButton}
-              onClick={() => adjustRest(REST_ADJUST_STEP_SECONDS)}
-            >
-              +15s
-            </button>
-            <button className={styles.resetButton} onClick={resetRest}>
-              ✕
-            </button>
+      <button
+        className={styles.toggleBar}
+        onClick={() => setIsMinimized((prev) => !prev)}
+      >
+        {isMinimized ? "▲" : "▼"}
+      </button>
+      {!isMinimized && (
+        secondsRemaining === null ? (
+          <div className={styles.presetRow}>
+            {REST_PRESETS_SECONDS.map((duration) => (
+              <button
+                key={duration}
+                className={styles.presetButton}
+                onClick={() => startRest(duration)}
+              >
+                {duration}s
+              </button>
+            ))}
           </div>
-        </div>
+        ) : (
+          <div
+            className={
+              secondsRemaining <= 0
+                ? `${styles.timerCard} ${styles.timerExpired}`
+                : styles.timerCard
+            }
+          >
+            <span className={styles.time}>{formatTime(secondsRemaining)}</span>
+            <div className={styles.controls}>
+              <button
+                className={styles.adjustButton}
+                onClick={() => adjustRest(-REST_ADJUST_STEP_SECONDS)}
+              >
+                −15s
+              </button>
+              <button
+                className={styles.adjustButton}
+                onClick={() => adjustRest(REST_ADJUST_STEP_SECONDS)}
+              >
+                +15s
+              </button>
+              <button className={styles.resetButton} onClick={resetRest}>
+                ✕
+              </button>
+            </div>
+          </div>
+        )
       )}
     </div>
   );
