@@ -92,3 +92,26 @@ model FoodItemTemplate {
   carbs   Float
   fat     Float
 }
+
+model WorkoutTemplate {
+  id        Int                       @id @default(autoincrement())
+  name      String                    @unique
+  exercises WorkoutTemplateExercise[]
+}
+
+model WorkoutTemplateExercise {
+  id                Int                  @id @default(autoincrement())
+  name              String
+  workoutTemplateId Int
+  workoutTemplate   WorkoutTemplate      @relation(fields: [workoutTemplateId], references: [id])
+  sets              WorkoutTemplateSet[]
+}
+
+model WorkoutTemplateSet {
+  id                        Int                     @id @default(autoincrement())
+  weight                    Float
+  reps                      Int
+  rpe                       Float?
+  workoutTemplateExerciseId Int
+  workoutTemplateExercise   WorkoutTemplateExercise @relation(fields: [workoutTemplateExerciseId], references: [id])
+}

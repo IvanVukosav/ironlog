@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import ExerciseCard from "../components/ExerciseCard";
+import DatePicker from "../components/DatePicker";
 import { fetchJson } from "../api";
 import { useToast } from "../context/useToast";
 import styles from "./Log.module.css";
@@ -24,7 +25,11 @@ function Log() {
   const [savePromptMuscleGroup, setSavePromptMuscleGroup] = useState("");
   const [muscleGroupFilter, setMuscleGroupFilter] = useState(ALL_MUSCLE_GROUPS_FILTER);
   const [settings, setSettings] = useState(null);
+  const [workoutTemplates, setWorkoutTemplates] = useState([]);
+  const [showTemplatePicker, setShowTemplatePicker] = useState(false);
+  const [saveTemplateName, setSaveTemplateName] = useState(null);
   const exercisePickerRef = useRef(null);
+  const templatePickerRef = useRef(null);
   const pickerMode = settings?.exercisePickerMode ?? "chips";
 
   useEffect(() => {
@@ -50,12 +55,22 @@ function Log() {
         console.error(err);
         showError(err.message);
       });
+
+    fetchJson("/api/workout-templates")
+      .then((data) => setWorkoutTemplates(data))
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
   }, [showError]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (exercisePickerRef.current && !exercisePickerRef.current.contains(event.target)) {
         setShowExercisePicker(false);
+      }
+      if (templatePickerRef.current && !templatePickerRef.current.contains(event.target)) {
+        setShowTemplatePicker(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -90,13 +105,20 @@ function Log() {
 
   const addExercise = () => {
     if (!exerciseName.trim()) return;
-    if (workout.exercises?.some((exercise) => exercise.name === exerciseName)) return;
 
     const isKnown = exerciseTemplates.some(
       (template) => template.name.toLowerCase() === exerciseName.trim().toLowerCase()
     );
     if (!isKnown) {
       setSavePromptName(exerciseName.trim());
+    }
+
+    const alreadyInWorkout = workout.exercises?.some(
+      (exercise) => exercise.name.toLowerCase() === exerciseName.trim().toLowerCase()
+    );
+    if (alreadyInWorkout) {
+      showError(`"${exerciseName.trim()}" je već dodana u ovaj trening`);
+      return;
     }
 
     fetchJson(`/api/workouts/${workout.id}/exercises`, {
@@ -150,6 +172,65 @@ function Log() {
       });
   };
 
+  const saveWorkoutTemplate = () => {
+    if (!saveTemplateName || !saveTemplateName.trim() || !workout) return;
+    fetchJson("/api/workout-templates", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: saveTemplateName.trim(),
+        exercises: workout.exercises.map((exercise) => ({
+          name: exercise.name,
+          sets: exercise.sets.map((set) => ({
+            weight: set.weight,
+            reps: set.reps,
+            rpe: set.rpe,
+          })),
+        })),
+      }),
+    })
+      .then((data) => {
+        setWorkoutTemplates((prev) =>
+          [...prev, data].sort((templateA, templateB) => templateA.name.localeCompare(templateB.name)),
+        );
+        setSaveTemplateName(null);
+      })
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
+  };
+
+  const applyWorkoutTemplate = (templateId) => {
+    fetchJson(`/api/workout-templates/${templateId}/apply`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ workoutId: workout.id }),
+    })
+      .then((createdExercises) => {
+        setWorkout((prev) => ({
+          ...prev,
+          exercises: [...(prev.exercises || []), ...createdExercises],
+        }));
+        setShowTemplatePicker(false);
+      })
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
+  };
+
+  const deleteWorkoutTemplate = (templateId) => {
+    fetchJson(`/api/workout-templates/${templateId}`, { method: "DELETE" })
+      .then(() =>
+        setWorkoutTemplates((prev) => prev.filter((template) => template.id !== templateId)),
+      )
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
+  };
+
   const removeExerciseTemplate = (id) => {
     fetchJson(`/api/exercise-templates/${id}`, { method: "DELETE" })
       .then(() => setExerciseTemplates((prev) => prev.filter((template) => template.id !== id)))
@@ -172,21 +253,51 @@ function Log() {
       <h1 className={styles.heading}>Log treninga</h1>
 
       <div className={styles.topRow}>
-        <input
-          type="date"
-          className={styles.dateInput}
-          value={date}
-          onChange={(event) => setDate(event.target.value)}
-        />
+        <DatePicker value={date} onChange={setDate} />
         {workout && (
           <>
             <span className={styles.meta}>Workout ID: {workout.id}</span>
             <button className={styles.cancelButton} onClick={cancelWorkout}>
               Odustani
             </button>
+            {workout.exercises?.length > 0 && (
+              <button
+                className={styles.cancelButton}
+                onClick={() => setSaveTemplateName("")}
+              >
+                Spremi kao predložak
+              </button>
+            )}
           </>
         )}
       </div>
+
+      {saveTemplateName !== null && (
+        <div className={styles.savePrompt}>
+          <span className={styles.savePromptText}>Naziv predloška:</span>
+          <input
+            type="text"
+            className={styles.savePromptSelect}
+            autoFocus
+            value={saveTemplateName}
+            onChange={(event) => setSaveTemplateName(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") saveWorkoutTemplate();
+              if (event.key === "Escape") setSaveTemplateName(null);
+            }}
+          />
+          <button
+            className={styles.savePromptYes}
+            disabled={!saveTemplateName.trim()}
+            onClick={saveWorkoutTemplate}
+          >
+            Spremi
+          </button>
+          <button className={styles.savePromptNo} onClick={() => setSaveTemplateName(null)}>
+            Ne
+          </button>
+        </div>
+      )}
 
       {workout && (
         <input
@@ -225,6 +336,39 @@ function Log() {
             <button className={styles.addButton} onClick={addExercise}>
               Dodaj vježbu
             </button>
+            {workoutTemplates.length > 0 && (
+              <div style={{ position: "relative", display: "inline-block" }} ref={templatePickerRef}>
+                <button
+                  className={styles.addButton}
+                  onClick={() => setShowTemplatePicker((prev) => !prev)}
+                >
+                  Učitaj predložak
+                </button>
+                {showTemplatePicker && (
+                  <div className={styles.exercisePicker}>
+                    {workoutTemplates.map((template) => (
+                      <div key={template.id} className={styles.exercisePickerItem}>
+                        <button
+                          className={styles.exercisePickerName}
+                          onClick={() => applyWorkoutTemplate(template.id)}
+                        >
+                          {template.name}
+                          <span className={styles.exercisePickerGroup}>
+                            {template.exercises.length} vježbi
+                          </span>
+                        </button>
+                        <button
+                          className={styles.exercisePickerRemove}
+                          onClick={() => deleteWorkoutTemplate(template.id)}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
             {showExercisePicker && (
               <div className={styles.exercisePicker}>
                 {pickerMode === "chips" && (
@@ -289,9 +433,13 @@ function Log() {
                       </div>
                     ))}
                     {exerciseName.trim() && !exerciseTemplates.some((template) => template.name.toLowerCase() === exerciseName.trim().toLowerCase()) && (
-                      <div className={styles.exercisePickerCustom}>
+                      <button
+                        type="button"
+                        className={styles.exercisePickerCustom}
+                        onClick={addExercise}
+                      >
                         + Dodaj "{exerciseName.trim()}" kao vježbu
-                      </div>
+                      </button>
                     )}
                   </>
                 )}
