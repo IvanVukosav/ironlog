@@ -72,6 +72,14 @@
   font-size: 0.85rem;
 }
 
+.volumeSection {
+  margin-top: 2rem;
+}
+
+.volumeSection .chartHeading {
+  margin-bottom: 0.75rem;
+}
+
 .recentPrSection {
   margin-bottom: 2rem;
 }

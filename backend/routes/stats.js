@@ -1,6 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const prisma = require("../prisma/client");
+const { getWeekRange, getMonthRange, getYearRange } = require("../utils/dateRange");
+
+const UNCATEGORIZED_MUSCLE_GROUP = "Ostalo";
+const VOLUME_RANGE_GETTERS = { week: getWeekRange, month: getMonthRange, year: getYearRange };
 
 router.get("/prs", async (req, res) => {
   try {
@@ -42,6 +46,43 @@ router.get("/exercise/:name/history", async (req, res) => {
     }));
 
     res.json(history);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.get("/volume", async (req, res) => {
+  try {
+    const { range, date } = req.query;
+    const getRange = VOLUME_RANGE_GETTERS[range];
+    if (!getRange) {
+      return res.status(400).json({ error: "Invalid range" });
+    }
+
+    const sets = await prisma.set.findMany({
+      where: { exercise: { workout: { date: getRange(date) } } },
+      include: { exercise: true },
+    });
+
+    const templates = await prisma.exerciseTemplate.findMany();
+    const muscleGroupByExerciseName = {};
+    templates.forEach((template) => {
+      muscleGroupByExerciseName[template.name] = template.muscleGroup || UNCATEGORIZED_MUSCLE_GROUP;
+    });
+
+    const volumeByMuscleGroup = {};
+    sets.forEach((set) => {
+      const muscleGroup = muscleGroupByExerciseName[set.exercise.name] || UNCATEGORIZED_MUSCLE_GROUP;
+      const volume = set.weight * set.reps;
+      volumeByMuscleGroup[muscleGroup] = (volumeByMuscleGroup[muscleGroup] || 0) + volume;
+    });
+
+    const result = Object.entries(volumeByMuscleGroup)
+      .map(([muscleGroup, volume]) => ({ muscleGroup, volume }))
+      .sort((entryA, entryB) => entryB.volume - entryA.volume);
+
+    res.json(result);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal server error" });

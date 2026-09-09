@@ -32,6 +32,14 @@
   grid-column: span 2;
 }
 
+.clickableCard {
+  cursor: pointer;
+}
+
+.clickableCard:hover {
+  background-color: #1a1a1a;
+}
+
 .kcalInlineInput {
   background: transparent;
   border: none;

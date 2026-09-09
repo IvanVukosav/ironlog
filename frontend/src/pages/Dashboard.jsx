@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { fetchJson } from "../api";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { useToast } from "../context/useToast";
+import MuscleGroupVolumeChart from "../components/MuscleGroupVolumeChart";
 import styles from "./Dashboard.module.css";
 
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -184,14 +185,17 @@ function Dashboard() {
       <h1 className={styles.heading}>Dashboard</h1>
       <div className={styles.grid}>
         {(settings?.showWorkoutWidget ?? true) && (
-          <div className={styles.card}>
+          <div
+            className={`${styles.card} ${styles.clickableCard}`}
+            onClick={() => navigate(`/log?date=${today}`)}
+          >
             <h2 className={styles.label}>Trening danas</h2>
             {workout ? (
               <p className={styles.value}>
-                Vježbe: {workout.exercises?.length}
+                {workout.name || "Trening"} — {workout.exercises?.length} vježbi
               </p>
             ) : (
-              <p className={styles.value}>Nema treninga</p>
+              <p className={styles.value}>Nema treninga — klikni za početak</p>
             )}
           </div>
         )}
@@ -294,7 +298,7 @@ function Dashboard() {
           )}
         </div>
 
-        <div className={`${styles.card} ${styles.fullWidth}`}>
+        <div className={styles.card}>
           <div className={styles.bwChartHeader}>
             <h2 className={styles.label}>Tjelesna težina</h2>
             <div className={styles.rangeTabs}>
@@ -329,6 +333,11 @@ function Dashboard() {
           ) : (
             <p className={styles.value}>Nema podataka</p>
           )}
+        </div>
+
+        <div className={styles.card}>
+          <h2 className={styles.label}>Volumen po mišićnoj skupini</h2>
+          <MuscleGroupVolumeChart />
         </div>
 
         <div className={`${styles.card} ${styles.fullWidth}`}>

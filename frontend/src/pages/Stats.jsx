@@ -3,6 +3,7 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "rec
 import { fetchJson } from "../api";
 import { calculateEstimatedOneRepMax, ONE_REP_MAX_FORMULAS } from "../utils/oneRepMax";
 import { useToast } from "../context/useToast";
+import MuscleGroupVolumeChart from "../components/MuscleGroupVolumeChart";
 import styles from "./Stats.module.css";
 
 const E1RM_DECIMAL_PLACES = 1;
@@ -181,6 +182,11 @@ function Stats() {
         ) : (
           <p className={styles.emptyState}>Nema podataka</p>
         )}
+      </div>
+
+      <div className={styles.volumeSection}>
+        <h2 className={styles.chartHeading}>Volumen po mišićnoj skupini</h2>
+        <MuscleGroupVolumeChart />
       </div>
     </div>
   );
