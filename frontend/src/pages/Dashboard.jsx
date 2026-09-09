@@ -200,7 +200,10 @@ function Dashboard() {
           </div>
         )}
         {(settings?.showNutritionWidget ?? true) && (
-          <div className={styles.card}>
+          <div
+            className={`${styles.card} ${styles.clickableCard}`}
+            onClick={() => navigate(`/nutrition?date=${today}`)}
+          >
             <h2 className={styles.label}>Prehrana danas</h2>
             <p className={styles.value}>
               {totalKcal} /{" "}
@@ -213,6 +216,7 @@ function Dashboard() {
                     type="number"
                     autoFocus
                     value={kcalGoalInput}
+                    onClick={(event) => event.stopPropagation()}
                     onChange={(event) => setKcalGoalInput(event.target.value)}
                     onKeyDown={(event) => {
                       if (event.key === "Enter") saveKcalGoal();
@@ -226,7 +230,10 @@ function Dashboard() {
                 <>
                   <button
                     className={styles.kcalSetButton}
-                    onClick={() => setKcalGoalInput("")}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setKcalGoalInput("");
+                    }}
                   >
                     Postavi
                   </button>{" "}

@@ -26,3 +26,13 @@ export function calculateEstimatedOneRepMax(weight, reps, rpe, formula) {
   const repsToFailure = reps + repsInReserve;
   return calculateOneRepMax(weight, repsToFailure, formula);
 }
+
+export function findBestSetByE1rm(sets, formula) {
+  return sets.reduce((best, set) => {
+    const e1rm = calculateEstimatedOneRepMax(set.weight, set.reps, set.rpe, formula);
+    if (!best || e1rm > best.e1rm) {
+      return { ...set, e1rm };
+    }
+    return best;
+  }, null);
+}

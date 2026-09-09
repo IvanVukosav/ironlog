@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { fetchJson } from "../api";
-import { calculateEstimatedOneRepMax } from "../utils/oneRepMax";
+import { calculateEstimatedOneRepMax, findBestSetByE1rm } from "../utils/oneRepMax";
 import { useToast } from "../context/useToast";
 import styles from "./ExerciseCard.module.css";
 
@@ -38,7 +38,7 @@ function WeightInput({ value, onChange }) {
 }
 
 function Exercise({ exercise, onAddSet, onDeleteSet, onDeleteExercise, onUpdateSet, showE1rm, e1rmFormula }) {
-  const { showError } = useToast();
+  const { showError, showSuccess } = useToast();
   const [set, setSet] = useState({ weight: "", reps: "", rpe: "" });
   const [showMenu, setShowMenu] = useState(false);
   const [editingSetId, setEditingSetId] = useState(null);
@@ -57,14 +57,26 @@ function Exercise({ exercise, onAddSet, onDeleteSet, onDeleteExercise, onUpdateS
   }, [showMenu]);
 
   const addSet = (exerciseId) => {
-    fetchJson(`/api/workouts/exercises/${exerciseId}/sets`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(set),
-    })
-      .then((data) => {
-        onAddSet(data);
-        setSet({ weight: "", reps: "", rpe: "" });
+    fetchJson(`/api/stats/exercise/${encodeURIComponent(exercise.name)}/history`)
+      .then((historyEntries) => {
+        const previousSets = historyEntries.flatMap((entry) => entry.sets);
+        const previousBest = previousSets.length > 0
+          ? findBestSetByE1rm(previousSets, e1rmFormula)
+          : null;
+
+        return fetchJson(`/api/workouts/exercises/${exerciseId}/sets`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(set),
+        }).then((data) => {
+          onAddSet(data);
+          setSet({ weight: "", reps: "", rpe: "" });
+
+          const newSetE1rm = calculateEstimatedOneRepMax(data.weight, data.reps, data.rpe, e1rmFormula);
+          if (!previousBest || newSetE1rm > previousBest.e1rm) {
+            showSuccess(`🎉 Novi PR! ${exercise.name} ${newSetE1rm.toFixed(E1RM_DECIMAL_PLACES)}kg e1RM`);
+          }
+        });
       })
       .catch((err) => {
         console.error(err);
