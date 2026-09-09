@@ -134,6 +134,20 @@ router.post("/:id/exercises", async (req, res) => {
   }
 });
 
+router.delete("/exercises/by-name/:name", async (req, res) => {
+  try {
+    const exerciseName = req.params.name;
+    const exercises = await prisma.exercise.findMany({ where: { name: exerciseName } });
+    const exerciseIds = exercises.map((exercise) => exercise.id);
+    await prisma.set.deleteMany({ where: { exerciseId: { in: exerciseIds } } });
+    await prisma.exercise.deleteMany({ where: { name: exerciseName } });
+    res.json({ success: true, deletedCount: exerciseIds.length });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 router.delete("/exercises/:id", async (req, res) => {
   try {
     const exerciseId = parseInt(req.params.id);

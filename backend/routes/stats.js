@@ -41,6 +41,7 @@ router.get("/exercise/:name/history", async (req, res) => {
     });
 
     const history = exercises.map((e) => ({
+      id: e.id,
       date: e.workout.date,
       sets: e.sets,
     }));
