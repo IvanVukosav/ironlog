@@ -1,4 +1,7 @@
+import { useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import i18n from "./i18n";
+import { fetchJson } from "./api";
 import { ToastProvider } from "./context/ToastContext";
 import ToastContainer from "./components/ToastContainer";
 import RestTimer from "./components/RestTimer";
@@ -12,6 +15,16 @@ import Stats from "./pages/Stats";
 import Settings from "./pages/Settings";
 
 function App() {
+  useEffect(() => {
+    fetchJson("/api/settings")
+      .then((data) => {
+        if (data?.language && data.language !== i18n.language) {
+          i18n.changeLanguage(data.language);
+        }
+      })
+      .catch((err) => console.error(err));
+  }, []);
+
   return (
     <ToastProvider>
       <BrowserRouter>
