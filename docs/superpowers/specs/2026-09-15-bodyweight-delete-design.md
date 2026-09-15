@@ -31,13 +31,13 @@ Matches the existing delete pattern used in `workouts.js` (e.g. `DELETE /exercis
 In `frontend/src/pages/Calendar.jsx`:
 
 - The bodyweight modal already knows whether it's editing an existing entry (`getBwWeight(day)` returns non-null when `handleBwClick` opens it). Track the entry's `id` alongside `bwWeight` when opening the modal for an existing date (e.g. a new `bwEntryId` state, set from the matching entry in `monthBwEntries`, reset to `null` for a fresh day).
-- Render a delete button ("Obriši") next to "Spremi" only when `bwEntryId` is not null.
+- Render a small "✕" delete control, positioned opposite "Spremi" in the modal footer, only when `bwEntryId` is not null.
 - `deleteBw()`: `fetchJson(`/api/bodyweight/${bwEntryId}`, { method: "DELETE" })`, on success remove the entry from `monthBwEntries` (filter by id), close the modal (`setBwModalDate(null)`). On error, `showError` via the existing toast context, same as other handlers in this file.
-- No `window.confirm` — matches the quiet, no-dialog pattern of individual set deletion elsewhere in the app (per user decision).
+- No `window.confirm` — matches the quiet, no-dialog pattern of individual set deletion elsewhere in the app (per user decision), and precedented by `deleteHistoryEntry` in Stats.jsx which also skips confirmation.
 
 ## Styling
 
-Reuse existing button primitives/classes from `Calendar.module.css` (the modal already has `bwSaveButton`); add a sibling style for the delete button rather than introducing a new pattern. Exact look (e.g. red text like other destructive actions) left to implementation — should read as clearly destructive but not require new design tokens.
+Match the app's existing delete-control convention, not the primary-action bracket style: `deleteSet` (`ExerciseCard.module.css`) and `historyEntryDelete` (`Stats.module.css`) both render as plain "✕" text, `color-text-dim` by default, `color-accent` on hover, no brackets, no background/border. Add a new `.bwDeleteButton` class in `Calendar.module.css` following that exact pattern, placed in the modal footer opposite `bwSaveButton` (`[ Spremi ]` stays bracketed and unchanged — it's the primary action). Keeping delete visually quiet avoids it reading as equally-weighted with Save, and matches every other delete affordance already in the app.
 
 ## Testing
 
