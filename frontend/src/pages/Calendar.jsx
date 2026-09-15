@@ -286,7 +286,7 @@ function Calendar() {
             <div className={styles.bwModalFooter}>
               {bwEntryId !== null && (
                 <button className={styles.bwDeleteButton} onClick={deleteBw}>
-                  ✕
+                  Obriši
                 </button>
               )}
               <button className={styles.bwSaveButton} onClick={saveBw}>
