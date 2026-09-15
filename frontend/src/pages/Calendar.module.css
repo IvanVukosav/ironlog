@@ -214,6 +214,27 @@
   content: " ]";
 }
 
+.bwModalFooter {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.bwDeleteButton {
+  background: none;
+  border: none;
+  color: var(--color-text-dim);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 4px 0;
+  margin-right: auto;
+}
+
+.bwDeleteButton:hover {
+  color: var(--color-accent);
+}
+
 .cellWorkout {
   display: flex;
   align-items: center;

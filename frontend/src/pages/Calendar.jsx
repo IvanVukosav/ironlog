@@ -19,6 +19,7 @@ function Calendar() {
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [bwModalDate, setBwModalDate] = useState(null);
   const [bwWeight, setBwWeight] = useState("");
+  const [bwEntryId, setBwEntryId] = useState(null);
   const dropdownRef = useRef(null);
 
   const today = new Date();
@@ -78,8 +79,12 @@ function Calendar() {
     return entry ? entry.name : null;
   };
 
+  const getBwEntry = (day) => {
+    return monthBwEntries.find((bwEntry) => matchesCurrentMonthDay(bwEntry.date, day)) || null;
+  };
+
   const getBwWeight = (day) => {
-    const entry = monthBwEntries.find((bwEntry) => matchesCurrentMonthDay(bwEntry.date, day));
+    const entry = getBwEntry(day);
     return entry ? entry.weight : null;
   };
 
@@ -122,8 +127,9 @@ function Calendar() {
     const dateString = `${currentYear}-${String(currentMonth).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
     setActiveDropdown(null);
     setBwModalDate(dateString);
-    const existingWeight = getBwWeight(day);
-    setBwWeight(existingWeight !== null ? String(existingWeight) : "");
+    const existingEntry = getBwEntry(day);
+    setBwWeight(existingEntry ? String(existingEntry.weight) : "");
+    setBwEntryId(existingEntry ? existingEntry.id : null);
   };
 
   const saveBw = () => {
@@ -148,6 +154,19 @@ function Calendar() {
           });
           return [...filtered, data];
         });
+      })
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
+  };
+
+  const deleteBw = () => {
+    if (bwEntryId === null) return;
+    fetchJson(`/api/bodyweight/${bwEntryId}`, { method: "DELETE" })
+      .then(() => {
+        setBwModalDate(null);
+        setMonthBwEntries((prev) => prev.filter((entry) => entry.id !== bwEntryId));
       })
       .catch((err) => {
         console.error(err);
@@ -264,9 +283,16 @@ function Calendar() {
                 if (event.key === "Escape") setBwModalDate(null);
               }}
             />
-            <button className={styles.bwSaveButton} onClick={saveBw}>
-              Spremi
-            </button>
+            <div className={styles.bwModalFooter}>
+              {bwEntryId !== null && (
+                <button className={styles.bwDeleteButton} onClick={deleteBw}>
+                  ✕
+                </button>
+              )}
+              <button className={styles.bwSaveButton} onClick={saveBw}>
+                Spremi
+              </button>
+            </div>
           </div>
         </div>
       )}
