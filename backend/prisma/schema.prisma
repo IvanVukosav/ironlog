@@ -69,6 +69,7 @@ model Settings {
   exercisePickerMode String @default("chips")
   showE1rm   Boolean @default(true)
   e1rmFormula String @default("brzycki")
+  language   String @default("hr")
 
 }
 
