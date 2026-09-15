@@ -39,6 +39,8 @@ In `frontend/src/pages/Calendar.jsx`:
 
 Match the app's existing delete-control convention, not the primary-action bracket style: `deleteSet` (`ExerciseCard.module.css`) and `historyEntryDelete` (`Stats.module.css`) both render as plain "✕" text, `color-text-dim` by default, `color-accent` on hover, no brackets, no background/border. Add a new `.bwDeleteButton` class in `Calendar.module.css` following that exact pattern, placed in the modal footer opposite `bwSaveButton` (`[ Spremi ]` stays bracketed and unchanged — it's the primary action). Keeping delete visually quiet avoids it reading as equally-weighted with Save, and matches every other delete affordance already in the app.
 
+The modal currently has no footer row — `.bwInput` (with `margin-bottom: 1rem`) is followed directly by the single `.bwSaveButton`, so there's nothing to align a second control against. Introduce a `.bwModalFooter` wrapper (`display: flex; align-items: center; justify-content: space-between`) around both buttons: `.bwDeleteButton` on the left (rendered only when `bwEntryId` is set), `.bwSaveButton` on the right, always rendered. When there's no delete button, `justify-content: flex-end` would be needed instead to keep Spremi right-aligned — simplest is to always reserve the left slot (render nothing but keep the flex container) rather than conditionally switching justify-content.
+
 ## Testing
 
 No automated tests in this codebase for routes/components (verified via `npm run build` only, per project convention). Manual check: open a day with a logged weight, delete it, confirm it disappears from the calendar cell and a re-open of that day's modal shows an empty (create) state, not a prefilled one.
