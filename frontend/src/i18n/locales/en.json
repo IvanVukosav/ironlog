@@ -1,0 +1,32 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "log": "Log",
+    "nutrition": "Nutrition",
+    "calendar": "Calendar",
+    "calculator": "Calculator",
+    "stats": "Stats",
+    "settings": "Settings"
+  },
+  "settings": {
+    "title": "Settings",
+    "kcalGoal": "Calorie goal",
+    "proteinGoal": "Protein goal (g)",
+    "trainingsPerWeek": "Trainings per week",
+    "carbsGoal": "Carb goal (g)",
+    "fatGoal": "Fat goal (g)",
+    "dashboardWidgets": "Dashboard widgets",
+    "showWorkoutWidget": "Show workout widget",
+    "showNutritionWidget": "Show nutrition widget",
+    "exercisePickerSection": "Exercise picker in Log",
+    "exercisePickerChips": "Chips (filter above list)",
+    "exercisePickerTwoStep": "Two-step (category first, then exercise)",
+    "setsSection": "Sets",
+    "showE1rm": "Show e1RM next to each set",
+    "language": "Language",
+    "save": "Save",
+    "allFieldsRequired": "All fields must be filled in",
+    "saved": "Settings saved!",
+    "saveError": "Error saving settings"
+  }
+}

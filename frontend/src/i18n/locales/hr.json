@@ -1,0 +1,32 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "log": "Log",
+    "nutrition": "Prehrana",
+    "calendar": "Kalendar",
+    "calculator": "Kalkulator",
+    "stats": "Statistika",
+    "settings": "Postavke"
+  },
+  "settings": {
+    "title": "Postavke",
+    "kcalGoal": "Kcal cilj",
+    "proteinGoal": "Protein cilj (g)",
+    "trainingsPerWeek": "Treninga tjedno",
+    "carbsGoal": "Carbs cilj (g)",
+    "fatGoal": "Fat cilj (g)",
+    "dashboardWidgets": "Dashboard widgeti",
+    "showWorkoutWidget": "Prikaži trening widget",
+    "showNutritionWidget": "Prikaži prehrana widget",
+    "exercisePickerSection": "Odabir vježbe u Logu",
+    "exercisePickerChips": "Chips (filter iznad liste)",
+    "exercisePickerTwoStep": "Dvokorak (prvo kategorija, pa vježba)",
+    "setsSection": "Setovi",
+    "showE1rm": "Prikaži e1RM uz svaki set",
+    "language": "Jezik",
+    "save": "Spremi",
+    "allFieldsRequired": "Sva polja moraju biti popunjena",
+    "saved": "Postavke spremljene!",
+    "saveError": "Greška kod spremanja postavki"
+  }
+}
