@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { fetchJson } from "../api";
 import { ONE_REP_MAX_FORMULAS } from "../utils/oneRepMax";
 import { useToast } from "../context/useToast";
@@ -11,6 +12,7 @@ const E1RM_FORMULA_LABELS = {
 };
 
 function Settings() {
+  const { t, i18n } = useTranslation();
   const { showError, showSuccess } = useToast();
   const [settings, setSettings] = useState(null);
 
@@ -23,10 +25,23 @@ function Settings() {
       });
   }, [showError]);
 
+  const changeLanguage = (lang) => {
+    i18n.changeLanguage(lang);
+    setSettings((prev) => ({ ...prev, language: lang }));
+    fetchJson("/api/settings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ language: lang }),
+    }).catch((err) => {
+      console.error(err);
+      showError(err.message);
+    });
+  };
+
   const save = () => {
     const fields = [settings.kcalGoal, settings.proteinGoal, settings.trainingsPerWeek, settings.carbsGoal, settings.fatGoal];
     if (fields.some((field) => !field && field !== 0)) {
-      showError("All fields must be filled in");
+      showError(t("settings.allFieldsRequired"));
       return;
     }
 
@@ -42,19 +57,31 @@ function Settings() {
         fatGoal: parseInt(settings.fatGoal),
       }),
     })
-      .then(() => showSuccess("Settings saved!"))
+      .then(() => showSuccess(t("settings.saved")))
       .catch((err) => {
         console.error(err);
-        showError(err.message || "Error saving settings");
+        showError(err.message || t("settings.saveError"));
       });
   };
 
   return (
     <div className={styles.page}>
-      <h1 className={styles.heading}>Settings</h1>
+      <h1 className={styles.heading}>{t("settings.title")}</h1>
 
       <div className={styles.field}>
-        <span className={styles.fieldLabel}>Kcal cilj</span>
+        <span className={styles.fieldLabel}>{t("settings.language")}</span>
+        <select
+          className={styles.languageSelect}
+          value={settings?.language || "hr"}
+          onChange={(event) => changeLanguage(event.target.value)}
+        >
+          <option value="hr">Hrvatski</option>
+          <option value="en">English</option>
+        </select>
+      </div>
+
+      <div className={styles.field}>
+        <span className={styles.fieldLabel}>{t("settings.kcalGoal")}</span>
         <input
           type="number"
           className={styles.fieldInput}
@@ -66,7 +93,7 @@ function Settings() {
       </div>
 
       <div className={styles.field}>
-        <span className={styles.fieldLabel}>Protein cilj (g)</span>
+        <span className={styles.fieldLabel}>{t("settings.proteinGoal")}</span>
         <input
           type="number"
           className={styles.fieldInput}
@@ -78,7 +105,7 @@ function Settings() {
       </div>
 
       <div className={styles.field}>
-        <span className={styles.fieldLabel}>Treninga tjedno</span>
+        <span className={styles.fieldLabel}>{t("settings.trainingsPerWeek")}</span>
         <input
           type="number"
           className={styles.fieldInput}
@@ -90,7 +117,7 @@ function Settings() {
       </div>
 
       <div className={styles.field}>
-        <span className={styles.fieldLabel}>Carbs cilj (g)</span>
+        <span className={styles.fieldLabel}>{t("settings.carbsGoal")}</span>
         <input
           type="number"
           className={styles.fieldInput}
@@ -102,7 +129,7 @@ function Settings() {
       </div>
 
       <div className={styles.field}>
-        <span className={styles.fieldLabel}>Fat cilj (g)</span>
+        <span className={styles.fieldLabel}>{t("settings.fatGoal")}</span>
         <input
           type="number"
           className={styles.fieldInput}
@@ -113,7 +140,7 @@ function Settings() {
         />
       </div>
 
-      <p className={styles.sectionLabel}>Dashboard widgeti</p>
+      <p className={styles.sectionLabel}>{t("settings.dashboardWidgets")}</p>
 
       <label className={styles.checkboxRow}>
         <input
@@ -126,7 +153,7 @@ function Settings() {
             }))
           }
         />
-        Prikaži trening widget
+        {t("settings.showWorkoutWidget")}
       </label>
 
       <label className={styles.checkboxRow}>
@@ -140,10 +167,10 @@ function Settings() {
             }))
           }
         />
-        Prikaži prehrana widget
+        {t("settings.showNutritionWidget")}
       </label>
 
-      <p className={styles.sectionLabel}>Odabir vježbe u Logu</p>
+      <p className={styles.sectionLabel}>{t("settings.exercisePickerSection")}</p>
 
       <label className={styles.checkboxRow}>
         <input
@@ -154,7 +181,7 @@ function Settings() {
             setSettings((prev) => ({ ...prev, exercisePickerMode: "chips" }))
           }
         />
-        Chips (filter iznad liste)
+        {t("settings.exercisePickerChips")}
       </label>
 
       <label className={styles.checkboxRow}>
@@ -166,10 +193,10 @@ function Settings() {
             setSettings((prev) => ({ ...prev, exercisePickerMode: "twoStep" }))
           }
         />
-        Dvokorak (prvo kategorija, pa vježba)
+        {t("settings.exercisePickerTwoStep")}
       </label>
 
-      <p className={styles.sectionLabel}>Setovi</p>
+      <p className={styles.sectionLabel}>{t("settings.setsSection")}</p>
 
       <label className={styles.checkboxRow}>
         <input
@@ -182,7 +209,7 @@ function Settings() {
             }))
           }
         />
-        Prikaži e1RM uz svaki set
+        {t("settings.showE1rm")}
       </label>
 
       {Object.values(ONE_REP_MAX_FORMULAS).map((formula) => (
@@ -200,7 +227,7 @@ function Settings() {
       ))}
 
       <button className={styles.saveButton} onClick={save}>
-        Spremi
+        {t("settings.save")}
       </button>
     </div>
   );
