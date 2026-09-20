@@ -1,7 +1,11 @@
 :root {
   --color-bg: #0d0d0d;
   --color-bg-card: #141414;
+  --color-bg-elevated: #1e1e1e;
+  --color-bg-hover: #1a1a1a;
+  --color-nav-bg: #111;
   --color-accent: #ff3b3b;
+  --color-accent-rgb: 255, 59, 59;
   --color-text: #f0f0f0;
   --color-text-dim: #666;
   --font-mono: ui-monospace, "Cascadia Code", "Consolas", monospace;
@@ -12,6 +16,81 @@
   --color-carbs: #d99a5c;
   --color-fat: #d9c25c;
   --color-success: #5cb87a;
+}
+
+[data-theme="light"] {
+  --color-bg: #f4f2ee;
+  --color-bg-card: #ffffff;
+  --color-bg-elevated: #ffffff;
+  --color-bg-hover: #e8e6e0;
+  --color-nav-bg: #ffffff;
+  --color-accent: #c62828;
+  --color-accent-rgb: 198, 40, 40;
+  --color-text: #1a1a1a;
+  --color-text-dim: #767676;
+  --color-text-placeholder: #999999;
+  --color-border: #d8d5cf;
+  --color-border-subtle: #e8e6e0;
+}
+
+[data-theme="dark-blue"] {
+  --color-bg: #0a0e14;
+  --color-bg-card: #111823;
+  --color-bg-elevated: #182233;
+  --color-bg-hover: #16202e;
+  --color-nav-bg: #0d131c;
+  --color-accent: #3ba7ff;
+  --color-accent-rgb: 59, 167, 255;
+  --color-text: #e8edf4;
+  --color-text-dim: #5a6b7d;
+  --color-text-placeholder: #6f8194;
+  --color-border: #2c3b4d;
+  --color-border-subtle: #1a2530;
+}
+
+[data-theme="dark-green"] {
+  --color-bg: #0a0f0a;
+  --color-bg-card: #111a11;
+  --color-bg-elevated: #182618;
+  --color-bg-hover: #162016;
+  --color-nav-bg: #0d130d;
+  --color-accent: #3ec95c;
+  --color-accent-rgb: 62, 201, 92;
+  --color-text: #e8f4e8;
+  --color-text-dim: #5c7d5c;
+  --color-text-placeholder: #729172;
+  --color-border: #2c4a2c;
+  --color-border-subtle: #1a2a1a;
+}
+
+[data-theme="amber"] {
+  --color-bg: #120e08;
+  --color-bg-card: #1c1710;
+  --color-bg-elevated: #241d13;
+  --color-bg-hover: #20190f;
+  --color-nav-bg: #16110a;
+  --color-accent: #ffb020;
+  --color-accent-rgb: 255, 176, 32;
+  --color-text: #f4ecd9;
+  --color-text-dim: #8a7355;
+  --color-text-placeholder: #a08a6a;
+  --color-border: #4a3d28;
+  --color-border-subtle: #241d13;
+}
+
+[data-theme="pure-black"] {
+  --color-bg: #000000;
+  --color-bg-card: #0a0a0a;
+  --color-bg-elevated: #141414;
+  --color-bg-hover: #111111;
+  --color-nav-bg: #000000;
+  --color-accent: #ffffff;
+  --color-accent-rgb: 255, 255, 255;
+  --color-text: #ffffff;
+  --color-text-dim: #777777;
+  --color-text-placeholder: #999999;
+  --color-border: #333333;
+  --color-border-subtle: #1a1a1a;
 }
 
 * {
