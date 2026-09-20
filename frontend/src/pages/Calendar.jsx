@@ -1,15 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { fetchJson } from "../api";
 import { useToast } from "../context/useToast";
 import styles from "./Calendar.module.css";
 
-const MONTH_NAMES = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
-];
-
 function Calendar() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { showError } = useToast();
   const [currentYear, setCurrentYear] = useState(new Date().getUTCFullYear());
@@ -192,13 +189,13 @@ function Calendar() {
       <div className={styles.monthNav}>
         <button className={styles.navButton} onClick={prevMonth}>&lt;</button>
         <h1 className={styles.monthHeading}>
-          {MONTH_NAMES[currentMonth - 1]} {currentYear}
+          {t("common.months", { returnObjects: true })[currentMonth - 1]} {currentYear}
         </h1>
         <button className={styles.navButton} onClick={nextMonth}>&gt;</button>
       </div>
 
       <div className={styles.calendarGrid}>
-        {["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map((day) => (
+        {t("calendar.weekdays", { returnObjects: true }).map((day) => (
           <div key={day} className={styles.dayHeader}>{day}</div>
         ))}
         {cells.map((cell, index) => (
@@ -237,7 +234,7 @@ function Calendar() {
                     handleWorkoutClick(cell.day);
                   }}
                 >
-                  Workout
+                  {t("calendar.workoutOption")}
                 </button>
                 <button
                   className={styles.dropdownItem}
@@ -246,7 +243,7 @@ function Calendar() {
                     handleBwClick(cell.day);
                   }}
                 >
-                  Bodyweight
+                  {t("calendar.bodyweightOption")}
                 </button>
               </div>
             )}
@@ -262,7 +259,7 @@ function Calendar() {
           >
             <div className={styles.bwModalHeader}>
               <span className={styles.bwModalTitle}>
-                Bodyweight {bwModalDate}
+                {t("calendar.bodyweightModalTitle", { date: bwModalDate })}
               </span>
               <button
                 className={styles.bwModalClose}
@@ -286,11 +283,11 @@ function Calendar() {
             <div className={styles.bwModalFooter}>
               {bwEntryId !== null && (
                 <button className={styles.bwDeleteButton} onClick={deleteBw}>
-                  Obriši
+                  {t("common.delete")}
                 </button>
               )}
               <button className={styles.bwSaveButton} onClick={saveBw}>
-                Spremi
+                {t("common.save")}
               </button>
             </div>
           </div>
