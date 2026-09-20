@@ -28,5 +28,22 @@
     "allFieldsRequired": "Sva polja moraju biti popunjena",
     "saved": "Postavke spremljene!",
     "saveError": "Greška kod spremanja postavki"
+  },
+  "common": {
+    "save": "Spremi",
+    "delete": "Obriši",
+    "months": [
+      "Siječanj", "Veljača", "Ožujak", "Travanj", "Svibanj", "Lipanj",
+      "Srpanj", "Kolovoz", "Rujan", "Listopad", "Studeni", "Prosinac"
+    ]
+  },
+  "calendar": {
+    "weekdays": ["Nedjelja", "Ponedjeljak", "Utorak", "Srijeda", "Četvrtak", "Petak", "Subota"],
+    "workoutOption": "Trening",
+    "bodyweightOption": "Tjelesna težina",
+    "bodyweightModalTitle": "Tjelesna težina {{date}}"
+  },
+  "datePicker": {
+    "weekdays": ["Po", "Ut", "Sr", "Če", "Pe", "Su", "Ne"]
   }
 }

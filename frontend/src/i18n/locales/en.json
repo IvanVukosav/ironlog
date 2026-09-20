@@ -28,5 +28,22 @@
     "allFieldsRequired": "All fields must be filled in",
     "saved": "Settings saved!",
     "saveError": "Error saving settings"
+  },
+  "common": {
+    "save": "Save",
+    "delete": "Delete",
+    "months": [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ]
+  },
+  "calendar": {
+    "weekdays": ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+    "workoutOption": "Workout",
+    "bodyweightOption": "Bodyweight",
+    "bodyweightModalTitle": "Bodyweight {{date}}"
+  },
+  "datePicker": {
+    "weekdays": ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"]
   }
 }
