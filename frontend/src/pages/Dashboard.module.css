@@ -37,7 +37,7 @@
 }
 
 .clickableCard:hover {
-  background-color: #1a1a1a;
+  background-color: var(--color-bg-hover);
 }
 
 .kcalInlineInput {
@@ -144,7 +144,7 @@
 }
 
 .weekDayRow:hover {
-  background-color: #1a1a1a;
+  background-color: var(--color-bg-hover);
 }
 
 .weekDayRow:last-child {

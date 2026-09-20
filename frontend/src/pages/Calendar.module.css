@@ -58,7 +58,7 @@
 }
 
 .dayCell:hover {
-  background-color: #1a1a1a;
+  background-color: var(--color-bg-hover);
 }
 
 .dayCellOverflow {
@@ -103,7 +103,7 @@
   top: 100%;
   left: 0;
   z-index: 50;
-  background-color: #1e1e1e;
+  background-color: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
   min-width: 130px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
@@ -257,7 +257,7 @@
   align-items: center;
   gap: 4px;
   font-size: 0.65rem;
-  color: #4caf50;
+  color: var(--color-success);
   margin-top: 2px;
   width: 100%;
 }
