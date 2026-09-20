@@ -170,78 +170,66 @@
   margin-bottom: 0.75rem;
 }
 
-.tabRow {
+.recentPrSection {
+  margin-bottom: 2rem;
+}
+
+.recentPrHeading {
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: 0.03em;
+  margin-bottom: 0.75rem;
+}
+
+.recentPrList {
   display: flex;
+  flex-direction: column;
   gap: 0.5rem;
-  margin-bottom: 1rem;
 }
 
-.tab {
-  background: transparent;
-  border: 1px solid var(--color-border);
-  color: var(--color-text-dim);
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  padding: 3px 8px;
-  cursor: pointer;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+.recentPrRow {
   display: flex;
   align-items: center;
-  gap: 6px;
-}
-
-.tabActive {
-  background: var(--color-accent);
-  border: 1px solid var(--color-accent);
-  color: var(--color-bg);
+  gap: 1rem;
+  width: 100%;
+  background-color: var(--color-bg-card);
+  border: none;
+  border-left: 3px solid var(--color-accent);
+  padding: 0.6rem 1rem;
   font-family: var(--font-mono);
-  font-size: 0.7rem;
-  padding: 3px 8px;
   cursor: pointer;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  text-align: left;
 }
 
-.tabBadge {
-  background: rgba(0, 0, 0, 0.25);
-  color: inherit;
-  font-size: 0.65rem;
-  padding: 0 5px;
-  border-radius: 8px;
-  line-height: 1.4;
-}
-
-.dataRow {
-  cursor: pointer;
-}
-
-.dataRow:hover {
+.recentPrRow:hover {
   background-color: #1a1a1a;
 }
 
-.rowRecent {
+.recentPrRowActive {
+  border-left-width: 6px;
   background-color: rgba(255, 59, 59, 0.08);
-  box-shadow: inset 3px 0 0 var(--color-accent);
 }
 
-.rowRecent:hover {
+.recentPrRowActive:hover {
   background-color: rgba(255, 59, 59, 0.14);
 }
 
-.novoBadge {
-  background: var(--color-accent);
-  color: var(--color-bg);
-  font-size: 0.6rem;
+.recentPrName {
+  color: var(--color-text);
+  font-size: 0.9rem;
   font-weight: 700;
-  padding: 1px 5px;
-  margin-left: 8px;
-  letter-spacing: 0.03em;
+  flex: 0 0 160px;
 }
 
-.dateCell {
+.recentPrDetail {
   color: var(--color-text-dim);
+  font-size: 0.8rem;
+}
+
+.recentPrDate {
+  color: var(--color-text-dim);
+  font-size: 0.8rem;
+  white-space: nowrap;
 }
