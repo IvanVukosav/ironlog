@@ -196,7 +196,7 @@ function Stats() {
       <table className={styles.table}>
         <thead>
           <tr>
-            <th>Exercise</th>
+            <th>All exercises</th>
             <th>e1RM</th>
             <th>Best set</th>
             <th></th>
