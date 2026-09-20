@@ -11,10 +11,20 @@ const E1RM_FORMULA_LABELS = {
   [ONE_REP_MAX_FORMULAS.lombardi]: "Lombardi",
 };
 
+const THEMES = [
+  { value: "dark-red", label: "Dark Red", swatch: "#ff3b3b" },
+  { value: "light", label: "Light", swatch: "#c62828" },
+  { value: "dark-blue", label: "Dark Blue", swatch: "#3ba7ff" },
+  { value: "dark-green", label: "Dark Green", swatch: "#3ec95c" },
+  { value: "amber", label: "Amber", swatch: "#ffb020" },
+  { value: "pure-black", label: "Pure Black", swatch: "#ffffff" },
+];
+
 function Settings() {
   const { t, i18n } = useTranslation();
   const { showError, showSuccess } = useToast();
   const [settings, setSettings] = useState(null);
+  const [themeMenuOpen, setThemeMenuOpen] = useState(false);
 
   useEffect(() => {
     fetchJson("/api/settings")
@@ -25,6 +35,17 @@ function Settings() {
       });
   }, [showError]);
 
+  useEffect(() => {
+    if (!themeMenuOpen) return undefined;
+    const handleClickOutside = (event) => {
+      if (!event.target.closest("[data-theme-menu]")) {
+        setThemeMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [themeMenuOpen]);
+
   const changeLanguage = (lang) => {
     i18n.changeLanguage(lang);
     setSettings((prev) => ({ ...prev, language: lang }));
@@ -32,6 +53,24 @@ function Settings() {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ language: lang }),
+    }).catch((err) => {
+      console.error(err);
+      showError(err.message);
+    });
+  };
+
+  const changeTheme = (theme) => {
+    if (theme === "dark-red") {
+      document.documentElement.removeAttribute("data-theme");
+    } else {
+      document.documentElement.setAttribute("data-theme", theme);
+    }
+    setSettings((prev) => ({ ...prev, theme }));
+    setThemeMenuOpen(false);
+    fetchJson("/api/settings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ theme }),
     }).catch((err) => {
       console.error(err);
       showError(err.message);
@@ -78,6 +117,43 @@ function Settings() {
           <option value="hr">Hrvatski</option>
           <option value="en">English</option>
         </select>
+      </div>
+
+      <div className={styles.field}>
+        <span className={styles.fieldLabel}>{t("settings.theme")}</span>
+        <div className={styles.themePicker} data-theme-menu>
+          <button
+            type="button"
+            className={styles.themeTrigger}
+            onClick={() => setThemeMenuOpen((prev) => !prev)}
+          >
+            <span
+              className={styles.themeDot}
+              style={{ backgroundColor: THEMES.find((theme) => theme.value === (settings?.theme || "dark-red"))?.swatch }}
+            />
+            <span>{THEMES.find((theme) => theme.value === (settings?.theme || "dark-red"))?.label}</span>
+            <span className={styles.themeCaret}>{themeMenuOpen ? "▴" : "▾"}</span>
+          </button>
+          {themeMenuOpen && (
+            <div className={styles.themeDropdown}>
+              {THEMES.map((theme) => (
+                <button
+                  type="button"
+                  key={theme.value}
+                  className={
+                    theme.value === (settings?.theme || "dark-red")
+                      ? `${styles.themeOption} ${styles.themeOptionActive}`
+                      : styles.themeOption
+                  }
+                  onClick={() => changeTheme(theme.value)}
+                >
+                  <span className={styles.themeDot} style={{ backgroundColor: theme.swatch }} />
+                  <span>{theme.label}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       <div className={styles.field}>
