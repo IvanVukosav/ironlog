@@ -3,6 +3,7 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "rec
 import { fetchJson } from "../api";
 import { findBestSetByE1rm, ONE_REP_MAX_FORMULAS } from "../utils/oneRepMax";
 import { useToast } from "../context/useToast";
+import { getCssVar } from "../utils/theme";
 import MuscleGroupVolumeChart from "../components/MuscleGroupVolumeChart";
 import styles from "./Stats.module.css";
 
@@ -25,6 +26,11 @@ function formatChartDate(dateString) {
 
 function Stats() {
   const { showError } = useToast();
+  const chartAccentColor = getCssVar("--color-accent");
+  const chartTextDimColor = getCssVar("--color-text-dim");
+  const chartBgCardColor = getCssVar("--color-bg-card");
+  const chartBorderColor = getCssVar("--color-border");
+  const chartTextColor = getCssVar("--color-text");
   const [prs, setPrs] = useState([]);
   const [settings, setSettings] = useState(null);
   const [selectedExercise, setSelectedExercise] = useState("");
@@ -277,15 +283,15 @@ function Stats() {
         {chartData.length > 0 ? (
           <ResponsiveContainer width="100%" height={220}>
             <LineChart data={chartData}>
-              <XAxis dataKey="label" tick={{ fill: "#666", fontFamily: "ui-monospace", fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: "#666", fontFamily: "ui-monospace", fontSize: 11 }} axisLine={false} tickLine={false} domain={["auto", "auto"]} />
+              <XAxis dataKey="label" tick={{ fill: chartTextDimColor, fontFamily: "ui-monospace", fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: chartTextDimColor, fontFamily: "ui-monospace", fontSize: 11 }} axisLine={false} tickLine={false} domain={["auto", "auto"]} />
               <Tooltip
-                contentStyle={{ background: "#141414", border: "1px solid #444", fontFamily: "ui-monospace", fontSize: 12 }}
-                labelStyle={{ color: "#666" }}
-                itemStyle={{ color: "#f0f0f0" }}
+                contentStyle={{ background: chartBgCardColor, border: `1px solid ${chartBorderColor}`, fontFamily: "ui-monospace", fontSize: 12 }}
+                labelStyle={{ color: chartTextDimColor }}
+                itemStyle={{ color: chartTextColor }}
                 formatter={(value) => [`${value}kg`, "e1RM"]}
               />
-              <Line type="monotone" dataKey="e1rm" stroke="#ff3b3b" strokeWidth={2} dot={{ fill: "#ff3b3b", r: 3 }} activeDot={{ r: 5 }} />
+              <Line type="monotone" dataKey="e1rm" stroke={chartAccentColor} strokeWidth={2} dot={{ fill: chartAccentColor, r: 3 }} activeDot={{ r: 5 }} />
             </LineChart>
           </ResponsiveContainer>
         ) : (
