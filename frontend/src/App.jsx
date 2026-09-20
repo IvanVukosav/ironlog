@@ -21,6 +21,9 @@ function App() {
         if (data?.language && data.language !== i18n.language) {
           i18n.changeLanguage(data.language);
         }
+        if (data?.theme && data.theme !== "dark-red") {
+          document.documentElement.setAttribute("data-theme", data.theme);
+        }
       })
       .catch((err) => console.error(err));
   }, []);
