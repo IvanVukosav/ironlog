@@ -32,6 +32,7 @@ function Stats() {
   const [manageMenuFor, setManageMenuFor] = useState(null);
   const [expandedHistoryFor, setExpandedHistoryFor] = useState(null);
   const [expandedHistoryEntries, setExpandedHistoryEntries] = useState([]);
+  const [activeTab, setActiveTab] = useState("all");
   const chartSectionRef = useRef(null);
   const formula = settings?.e1rmFormula ?? ONE_REP_MAX_FORMULAS.brzycki;
 
@@ -133,6 +134,11 @@ function Stats() {
       });
   };
 
+  const selectAndScrollToChart = (name) => {
+    setSelectedExercise(name);
+    chartSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   const prRows = prs
     .map((pr) => {
       const bestSet = findBestSetByE1rm(pr.sets, formula);
@@ -149,6 +155,9 @@ function Stats() {
     .filter(Boolean)
     .sort((rowA, rowB) => (rowA.date < rowB.date ? 1 : -1));
 
+  const recentPrNames = new Set(recentPrRows.map((row) => row.name));
+  const displayedRows = activeTab === "recent" ? recentPrRows : prRows;
+
   const chartData = history
     .map((entry) => {
       const bestSet = findBestSetByE1rm(entry.sets, formula);
@@ -164,96 +173,103 @@ function Stats() {
   return (
     <div className={styles.page}>
       <h1 className={styles.heading}>Stats</h1>
-      {recentPrRows.length > 0 && (
-        <div className={styles.recentPrSection}>
-          <h2 className={styles.recentPrHeading}>Nedavno oboreni rekordi</h2>
-          <div className={styles.recentPrList}>
-            {recentPrRows.map((row) => (
-              <button
-                key={row.name}
-                className={row.name === selectedExercise ? `${styles.recentPrRow} ${styles.recentPrRowActive}` : styles.recentPrRow}
-                onClick={() => {
-                  setSelectedExercise(row.name);
-                  chartSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-                }}
-              >
-                <span className={styles.recentPrName}>{row.name}</span>
-                <span className={styles.recentPrDetail}>
-                  {row.e1rm.toFixed(E1RM_DECIMAL_PLACES)}kg e1RM — {row.weight}kg × {row.reps} @ RPE {row.rpe ?? "—"}
-                </span>
-                <span className={styles.recentPrDate}>{formatChartDate(row.date)}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+
+      <div className={styles.tabRow}>
+        <button
+          className={activeTab === "all" ? styles.tabActive : styles.tab}
+          onClick={() => setActiveTab("all")}
+        >
+          Svi rekordi
+        </button>
+        <button
+          className={activeTab === "recent" ? styles.tabActive : styles.tab}
+          onClick={() => setActiveTab("recent")}
+        >
+          Nedavno oboreni
+          {recentPrRows.length > 0 && (
+            <span className={styles.tabBadge}>{recentPrRows.length}</span>
+          )}
+        </button>
+      </div>
+
       <table className={styles.table}>
         <thead>
           <tr>
             <th>Exercise</th>
             <th>e1RM</th>
             <th>Best set</th>
+            <th>Date</th>
             <th></th>
           </tr>
         </thead>
         <tbody>
-          {prRows.map((row) => (
-            <Fragment key={row.name}>
-              <tr>
-                <td>{row.name}</td>
-                <td>{row.e1rm.toFixed(E1RM_DECIMAL_PLACES)}kg</td>
-                <td>
-                  {row.weight}kg × {row.reps} @ RPE {row.rpe ?? "—"}
-                </td>
-                <td className={styles.manageCell} data-manage-menu>
-                  <button
-                    className={styles.manageMenuButton}
-                    onClick={() => setManageMenuFor(manageMenuFor === row.name ? null : row.name)}
-                  >
-                    ⋮
-                  </button>
-                  {manageMenuFor === row.name && (
-                    <div className={styles.manageMenuDropdown}>
-                      <button
-                        className={styles.manageMenuItem}
-                        onClick={() => toggleHistoryPanel(row.name)}
-                      >
-                        Prikaži po datumima
-                      </button>
-                      <button
-                        className={styles.manageMenuItem}
-                        onClick={() => deleteAllRecordsForExercise(row.name)}
-                      >
-                        Obriši sve zapise
-                      </button>
-                    </div>
-                  )}
-                </td>
-              </tr>
-              {expandedHistoryFor === row.name && (
-                <tr>
-                  <td colSpan={4} className={styles.historyPanel}>
-                    {expandedHistoryEntries.map((entry) => (
-                      <div key={entry.id} className={styles.historyEntryRow}>
-                        <span className={styles.historyEntryDate}>{formatChartDate(entry.date)}</span>
-                        <span className={styles.historyEntryDetail}>
-                          {entry.sets.length > 0
-                            ? entry.sets.map((set) => `${set.weight}kg×${set.reps}`).join(", ")
-                            : "bez setova"}
-                        </span>
+          {displayedRows.map((row) => {
+            const isRecent = recentPrNames.has(row.name);
+            return (
+              <Fragment key={row.name}>
+                <tr
+                  className={isRecent ? `${styles.dataRow} ${styles.rowRecent}` : styles.dataRow}
+                  onClick={() => selectAndScrollToChart(row.name)}
+                >
+                  <td>
+                    {row.name}
+                    {isRecent && <span className={styles.novoBadge}>NOVO</span>}
+                  </td>
+                  <td>{row.e1rm.toFixed(E1RM_DECIMAL_PLACES)}kg</td>
+                  <td>
+                    {row.weight}kg × {row.reps} @ RPE {row.rpe ?? "—"}
+                  </td>
+                  <td className={styles.dateCell}>{formatChartDate(row.date)}</td>
+                  <td className={styles.manageCell} data-manage-menu onClick={(event) => event.stopPropagation()}>
+                    <button
+                      className={styles.manageMenuButton}
+                      onClick={() => setManageMenuFor(manageMenuFor === row.name ? null : row.name)}
+                    >
+                      ⋮
+                    </button>
+                    {manageMenuFor === row.name && (
+                      <div className={styles.manageMenuDropdown}>
                         <button
-                          className={styles.historyEntryDelete}
-                          onClick={() => deleteHistoryEntry(entry.id)}
+                          className={styles.manageMenuItem}
+                          onClick={() => toggleHistoryPanel(row.name)}
                         >
-                          ✕
+                          Prikaži po datumima
+                        </button>
+                        <button
+                          className={styles.manageMenuItem}
+                          onClick={() => deleteAllRecordsForExercise(row.name)}
+                        >
+                          Obriši sve zapise
                         </button>
                       </div>
-                    ))}
+                    )}
                   </td>
                 </tr>
-              )}
-            </Fragment>
-          ))}
+                {expandedHistoryFor === row.name && (
+                  <tr>
+                    <td colSpan={5} className={styles.historyPanel}>
+                      {expandedHistoryEntries.map((entry) => (
+                        <div key={entry.id} className={styles.historyEntryRow}>
+                          <span className={styles.historyEntryDate}>{formatChartDate(entry.date)}</span>
+                          <span className={styles.historyEntryDetail}>
+                            {entry.sets.length > 0
+                              ? entry.sets.map((set) => `${set.weight}kg×${set.reps}`).join(", ")
+                              : "bez setova"}
+                          </span>
+                          <button
+                            className={styles.historyEntryDelete}
+                            onClick={() => deleteHistoryEntry(entry.id)}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </td>
+                  </tr>
+                )}
+              </Fragment>
+            );
+          })}
         </tbody>
       </table>
 
