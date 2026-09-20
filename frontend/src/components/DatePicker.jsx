@@ -1,11 +1,7 @@
 import { useState, useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import styles from "./DatePicker.module.css";
 
-const MONTH_NAMES = [
-  "Siječanj", "Veljača", "Ožujak", "Travanj", "Svibanj", "Lipanj",
-  "Srpanj", "Kolovoz", "Rujan", "Listopad", "Studeni", "Prosinac",
-];
-const WEEKDAY_LABELS = ["Po", "Ut", "Sr", "Če", "Pe", "Su", "Ne"];
 const SUNDAY_INDEX = 0;
 const DAYS_PER_WEEK = 7;
 
@@ -14,6 +10,7 @@ function formatDateString(year, month, day) {
 }
 
 function DatePicker({ value, onChange }) {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const selectedDate = new Date(value);
   const [viewYear, setViewYear] = useState(selectedDate.getUTCFullYear());
@@ -93,14 +90,14 @@ function DatePicker({ value, onChange }) {
               ‹
             </button>
             <span className={styles.monthLabel}>
-              {MONTH_NAMES[viewMonth - 1]} {viewYear}
+              {t("common.months", { returnObjects: true })[viewMonth - 1]} {viewYear}
             </span>
             <button type="button" className={styles.navButton} onClick={nextMonth}>
               ›
             </button>
           </div>
           <div className={styles.weekdayRow}>
-            {WEEKDAY_LABELS.map((label) => (
+            {t("datePicker.weekdays", { returnObjects: true }).map((label) => (
               <span key={label} className={styles.weekdayLabel}>
                 {label}
               </span>
