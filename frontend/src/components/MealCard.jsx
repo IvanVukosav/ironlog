@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { fetchJson } from "../api";
 import { useToast } from "../context/useToast";
 import styles from "./MealCard.module.css";
@@ -16,6 +17,7 @@ function foodItemToFormValues(item) {
 }
 
 function MealCard({ meal, foodItemTemplates, onAddItem, onUpdateItem, onDeleteItem, onDeleteMeal, onSaveTemplate }) {
+  const { t } = useTranslation();
   const { showError } = useToast();
   const [foodItem, setFoodItem] = useState(EMPTY_FOOD_ITEM);
   const [showPicker, setShowPicker] = useState(false);
@@ -96,7 +98,7 @@ function MealCard({ meal, foodItemTemplates, onAddItem, onUpdateItem, onDeleteIt
 
   const deleteMeal = () => {
     setShowMenu(false);
-    if (!window.confirm(`Obrisati obrok "${meal.name}" i sve njegove namirnice?`)) {
+    if (!window.confirm(t("nutrition.confirmDeleteMeal", { name: meal.name }))) {
       return;
     }
     fetchJson(`/api/nutrition/meals/${meal.id}`, { method: "DELETE" })
@@ -139,7 +141,7 @@ function MealCard({ meal, foodItemTemplates, onAddItem, onUpdateItem, onDeleteIt
           {showMenu && (
             <div className={styles.menuDropdown}>
               <button className={styles.menuItem} onClick={deleteMeal}>
-                Obriši obrok
+                {t("nutrition.deleteMeal")}
               </button>
             </div>
           )}
@@ -150,7 +152,7 @@ function MealCard({ meal, foodItemTemplates, onAddItem, onUpdateItem, onDeleteIt
         <input
           type="text"
           className={styles.itemNameInput}
-          placeholder="Naziv hrane"
+          placeholder={t("nutrition.foodNamePlaceholder")}
           value={foodItem.name}
           onChange={(event) => {
             setFoodItem((prev) => ({ ...prev, name: event.target.value }));
@@ -187,7 +189,7 @@ function MealCard({ meal, foodItemTemplates, onAddItem, onUpdateItem, onDeleteIt
           onChange={(event) => setFoodItem((prev) => ({ ...prev, fat: event.target.value }))}
         />
         <button className={styles.addItemButton} onClick={addItem}>
-          Dodaj
+          {t("nutrition.addItem")}
         </button>
 
         {showPicker && filteredTemplates.length > 0 && (
@@ -209,7 +211,7 @@ function MealCard({ meal, foodItemTemplates, onAddItem, onUpdateItem, onDeleteIt
       {savePromptItem && (
         <div className={styles.savePrompt}>
           <span className={styles.savePromptText}>
-            Spremi "{savePromptItem.name}" kao namirnicu?
+            {t("nutrition.saveAsFoodPrompt", { name: savePromptItem.name })}
           </span>
           <button
             className={styles.savePromptYes}
@@ -218,10 +220,10 @@ function MealCard({ meal, foodItemTemplates, onAddItem, onUpdateItem, onDeleteIt
               setSavePromptItem(null);
             }}
           >
-            Da
+            {t("common.yes")}
           </button>
           <button className={styles.savePromptNo} onClick={() => setSavePromptItem(null)}>
-            Ne
+            {t("common.no")}
           </button>
         </div>
       )}
@@ -261,10 +263,10 @@ function MealCard({ meal, foodItemTemplates, onAddItem, onUpdateItem, onDeleteIt
                 onChange={(event) => setEditItem((prev) => ({ ...prev, fat: event.target.value }))}
               />
               <button className={styles.saveItemButton} onClick={() => saveEditingItem(item.id)}>
-                Spremi
+                {t("common.save")}
               </button>
               <button className={styles.cancelItemButton} onClick={() => setEditingItemId(null)}>
-                Odustani
+                {t("common.cancel")}
               </button>
             </div>
           ) : (

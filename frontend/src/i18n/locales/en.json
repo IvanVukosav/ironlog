@@ -36,6 +36,7 @@
     "delete": "Delete",
     "cancel": "Cancel",
     "no": "No",
+    "yes": "Yes",
     "week": "Week",
     "month": "Month",
     "year": "Year",
@@ -71,6 +72,17 @@
     "e1rmSuffix": " — e1RM: {{value}}kg",
     "duplicateSet": "Duplicate set",
     "newPrToast": "🎉 New PR! {{name}} {{value}}kg e1RM"
+  },
+  "nutrition": {
+    "addDay": "Add day",
+    "quickAddPlaceholder": "Quickly add a food item by name",
+    "mealNamePlaceholder": "Meal name",
+    "addMeal": "Add meal",
+    "deleteMeal": "Delete meal",
+    "confirmDeleteMeal": "Delete meal \"{{name}}\" and all its items?",
+    "foodNamePlaceholder": "Food name",
+    "addItem": "Add",
+    "saveAsFoodPrompt": "Save \"{{name}}\" as a food item?"
   },
   "dashboard": {
     "workoutToday": "Training today",

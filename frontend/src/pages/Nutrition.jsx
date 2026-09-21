@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { fetchJson } from "../api";
 import MealCard from "../components/MealCard";
 import { useToast } from "../context/useToast";
@@ -31,6 +32,7 @@ function GoalBar({ value, goal, colorClass }) {
 }
 
 function Nutrition() {
+  const { t } = useTranslation();
   const { showError } = useToast();
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [day, setDay] = useState(null);
@@ -191,7 +193,7 @@ function Nutrition() {
 
   return (
     <div className={styles.page}>
-      <h1 className={styles.heading}>Nutrition</h1>
+      <h1 className={styles.heading}>{t("nav.nutrition")}</h1>
 
       <div className={styles.topRow}>
         <input
@@ -204,7 +206,7 @@ function Nutrition() {
 
       {!day && (
         <button className={styles.startButton} onClick={createDay}>
-          Dodaj dan
+          {t("nutrition.addDay")}
         </button>
       )}
 
@@ -239,7 +241,7 @@ function Nutrition() {
             <input
               type="text"
               className={styles.mealInput}
-              placeholder="Brzo dodaj namirnicu po nazivu"
+              placeholder={t("nutrition.quickAddPlaceholder")}
               value={quickAddName}
               onChange={(event) => {
                 setQuickAddName(event.target.value);
@@ -267,12 +269,12 @@ function Nutrition() {
             <input
               type="text"
               className={styles.mealInput}
-              placeholder="Ime obroka"
+              placeholder={t("nutrition.mealNamePlaceholder")}
               value={mealName}
               onChange={(event) => setMealName(event.target.value)}
             />
             <button className={styles.addMealButton} onClick={addMeal}>
-              Dodaj obrok
+              {t("nutrition.addMeal")}
             </button>
           </div>
 

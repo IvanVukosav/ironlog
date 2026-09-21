@@ -36,6 +36,7 @@
     "delete": "Obriši",
     "cancel": "Odustani",
     "no": "Ne",
+    "yes": "Da",
     "week": "Tjedan",
     "month": "Mjesec",
     "year": "Godina",
@@ -71,6 +72,17 @@
     "e1rmSuffix": " — e1RM: {{value}}kg",
     "duplicateSet": "Kopiraj set",
     "newPrToast": "🎉 Novi PR! {{name}} {{value}}kg e1RM"
+  },
+  "nutrition": {
+    "addDay": "Dodaj dan",
+    "quickAddPlaceholder": "Brzo dodaj namirnicu po nazivu",
+    "mealNamePlaceholder": "Ime obroka",
+    "addMeal": "Dodaj obrok",
+    "deleteMeal": "Obriši obrok",
+    "confirmDeleteMeal": "Obrisati obrok \"{{name}}\" i sve njegove namirnice?",
+    "foodNamePlaceholder": "Naziv hrane",
+    "addItem": "Dodaj",
+    "saveAsFoodPrompt": "Spremi \"{{name}}\" kao namirnicu?"
   },
   "dashboard": {
     "workoutToday": "Trening danas",
