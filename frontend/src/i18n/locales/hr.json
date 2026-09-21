@@ -84,6 +84,16 @@
     "addItem": "Dodaj",
     "saveAsFoodPrompt": "Spremi \"{{name}}\" kao namirnicu?"
   },
+  "stats": {
+    "recentPrs": "Nedavno oboreni rekordi",
+    "allExercisesHeader": "Sve vježbe",
+    "bestSetHeader": "Najbolji set",
+    "showByDate": "Prikaži po datumima",
+    "deleteAllRecords": "Obriši sve zapise",
+    "confirmDeleteAllRecords": "Obrisati SVE zapise vježbe \"{{name}}\" iz svih treninga? Ovo se ne može poništiti. (Za brisanje samo pojedinih dana, koristi \"Prikaži po datumima\" umjesto ovoga.)",
+    "noSets": "bez setova",
+    "progress": "Napredak"
+  },
   "dashboard": {
     "workoutToday": "Trening danas",
     "workoutFallbackName": "Trening",

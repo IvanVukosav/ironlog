@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback, Fragment } from "react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { useTranslation } from "react-i18next";
 import { fetchJson } from "../api";
 import { findBestSetByE1rm, ONE_REP_MAX_FORMULAS } from "../utils/oneRepMax";
 import { useToast } from "../context/useToast";
@@ -25,6 +26,7 @@ function formatChartDate(dateString) {
 }
 
 function Stats() {
+  const { t } = useTranslation();
   const { showError } = useToast();
   const chartAccentColor = getCssVar("--color-accent");
   const chartTextDimColor = getCssVar("--color-text-dim");
@@ -91,9 +93,7 @@ function Stats() {
 
   const deleteAllRecordsForExercise = (name) => {
     setManageMenuFor(null);
-    const confirmed = window.confirm(
-      `Obrisati SVE zapise vježbe "${name}" iz svih treninga? Ovo se ne može poništiti. (Za brisanje samo pojedinih dana, koristi "Prikaži po datumima" umjesto ovoga.)`,
-    );
+    const confirmed = window.confirm(t("stats.confirmDeleteAllRecords", { name }));
     if (!confirmed) return;
     fetchJson(`/api/workouts/exercises/by-name/${encodeURIComponent(name)}`, { method: "DELETE" })
       .then(() => {
@@ -169,10 +169,10 @@ function Stats() {
 
   return (
     <div className={styles.page}>
-      <h1 className={styles.heading}>Stats</h1>
+      <h1 className={styles.heading}>{t("nav.stats")}</h1>
       {recentPrRows.length > 0 && (
         <div className={styles.recentPrSection}>
-          <h2 className={styles.recentPrHeading}>Nedavno oboreni rekordi</h2>
+          <h2 className={styles.recentPrHeading}>{t("stats.recentPrs")}</h2>
           <div className={styles.recentPrList}>
             {recentPrRows.map((row) => (
               <button
@@ -196,9 +196,9 @@ function Stats() {
       <table className={styles.table}>
         <thead>
           <tr>
-            <th>All exercises</th>
+            <th>{t("stats.allExercisesHeader")}</th>
             <th>e1RM</th>
-            <th>Best set</th>
+            <th>{t("stats.bestSetHeader")}</th>
             <th></th>
           </tr>
         </thead>
@@ -224,13 +224,13 @@ function Stats() {
                         className={styles.manageMenuItem}
                         onClick={() => toggleHistoryPanel(row.name)}
                       >
-                        Prikaži po datumima
+                        {t("stats.showByDate")}
                       </button>
                       <button
                         className={styles.manageMenuItem}
                         onClick={() => deleteAllRecordsForExercise(row.name)}
                       >
-                        Obriši sve zapise
+                        {t("stats.deleteAllRecords")}
                       </button>
                     </div>
                   )}
@@ -245,7 +245,7 @@ function Stats() {
                         <span className={styles.historyEntryDetail}>
                           {entry.sets.length > 0
                             ? entry.sets.map((set) => `${set.weight}kg×${set.reps}`).join(", ")
-                            : "bez setova"}
+                            : t("stats.noSets")}
                         </span>
                         <button
                           className={styles.historyEntryDelete}
@@ -265,7 +265,7 @@ function Stats() {
 
       <div className={styles.chartSection} ref={chartSectionRef}>
         <div className={styles.chartHeader}>
-          <h2 className={styles.chartHeading}>Napredak</h2>
+          <h2 className={styles.chartHeading}>{t("stats.progress")}</h2>
           {prs.length > 0 && (
             <select
               className={styles.exerciseSelect}
@@ -295,12 +295,12 @@ function Stats() {
             </LineChart>
           </ResponsiveContainer>
         ) : (
-          <p className={styles.emptyState}>Nema podataka</p>
+          <p className={styles.emptyState}>{t("dashboard.noData")}</p>
         )}
       </div>
 
       <div className={styles.volumeSection}>
-        <h2 className={styles.chartHeading}>Volumen po mišićnoj skupini</h2>
+        <h2 className={styles.chartHeading}>{t("dashboard.muscleGroupVolume")}</h2>
         <MuscleGroupVolumeChart />
       </div>
     </div>

@@ -84,6 +84,16 @@
     "addItem": "Add",
     "saveAsFoodPrompt": "Save \"{{name}}\" as a food item?"
   },
+  "stats": {
+    "recentPrs": "Recently broken records",
+    "allExercisesHeader": "All exercises",
+    "bestSetHeader": "Best set",
+    "showByDate": "Show by date",
+    "deleteAllRecords": "Delete all records",
+    "confirmDeleteAllRecords": "Delete ALL records for \"{{name}}\" across every workout? This cannot be undone. (To delete only individual days, use \"Show by date\" instead.)",
+    "noSets": "no sets",
+    "progress": "Progress"
+  },
   "dashboard": {
     "workoutToday": "Training today",
     "workoutFallbackName": "Workout",
