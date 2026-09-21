@@ -159,6 +159,8 @@ function Nutrition() {
     return Math.min(100, Math.round((value / goal) * 100));
   };
 
+  const isOverGoal = (value, goal) => Boolean(goal) && value > goal;
+
   const allItems = day?.meals?.flatMap((meal) => meal.items || []) || [];
   const totals = allItems.reduce(
     (sum, item) => ({
@@ -198,7 +200,11 @@ function Nutrition() {
                 <span className={`${styles.totalsValue} ${styles.totalsValueKcal}`}>{totals.kcal} / {settings?.kcalGoal ?? "—"}</span>
                 <div className={styles.totalsBarTrack}>
                   <div
-                    className={`${styles.totalsBarFill} ${styles.totalsBarFillKcal}`}
+                    className={[
+                      styles.totalsBarFill,
+                      styles.totalsBarFillKcal,
+                      isOverGoal(totals.kcal, settings?.kcalGoal) && styles.totalsBarFillOverGoal,
+                    ].filter(Boolean).join(" ")}
                     style={{ width: `${goalPercent(totals.kcal, settings?.kcalGoal)}%` }}
                   />
                 </div>
@@ -208,7 +214,11 @@ function Nutrition() {
                 <span className={`${styles.totalsValue} ${styles.totalsValueProtein}`}>{totals.protein}g / {settings?.proteinGoal ?? "—"}g</span>
                 <div className={styles.totalsBarTrack}>
                   <div
-                    className={`${styles.totalsBarFill} ${styles.totalsBarFillProtein}`}
+                    className={[
+                      styles.totalsBarFill,
+                      styles.totalsBarFillProtein,
+                      isOverGoal(totals.protein, settings?.proteinGoal) && styles.totalsBarFillOverGoal,
+                    ].filter(Boolean).join(" ")}
                     style={{ width: `${goalPercent(totals.protein, settings?.proteinGoal)}%` }}
                   />
                 </div>
@@ -218,7 +228,11 @@ function Nutrition() {
                 <span className={`${styles.totalsValue} ${styles.totalsValueCarbs}`}>{totals.carbs}g / {settings?.carbsGoal ?? "—"}g</span>
                 <div className={styles.totalsBarTrack}>
                   <div
-                    className={`${styles.totalsBarFill} ${styles.totalsBarFillCarbs}`}
+                    className={[
+                      styles.totalsBarFill,
+                      styles.totalsBarFillCarbs,
+                      isOverGoal(totals.carbs, settings?.carbsGoal) && styles.totalsBarFillOverGoal,
+                    ].filter(Boolean).join(" ")}
                     style={{ width: `${goalPercent(totals.carbs, settings?.carbsGoal)}%` }}
                   />
                 </div>
@@ -228,7 +242,11 @@ function Nutrition() {
                 <span className={`${styles.totalsValue} ${styles.totalsValueFat}`}>{totals.fat}g / {settings?.fatGoal ?? "—"}g</span>
                 <div className={styles.totalsBarTrack}>
                   <div
-                    className={`${styles.totalsBarFill} ${styles.totalsBarFillFat}`}
+                    className={[
+                      styles.totalsBarFill,
+                      styles.totalsBarFillFat,
+                      isOverGoal(totals.fat, settings?.fatGoal) && styles.totalsBarFillOverGoal,
+                    ].filter(Boolean).join(" ")}
                     style={{ width: `${goalPercent(totals.fat, settings?.fatGoal)}%` }}
                   />
                 </div>
