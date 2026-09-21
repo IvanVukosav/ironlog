@@ -197,3 +197,33 @@
 .totalsValueFat {
   color: var(--color-fat);
 }
+
+.totalsBarTrack {
+  margin-top: 0.5rem;
+  height: 4px;
+  background-color: var(--color-border-subtle);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.totalsBarFill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.totalsBarFillKcal {
+  background-color: var(--color-accent);
+}
+
+.totalsBarFillProtein {
+  background-color: var(--color-protein);
+}
+
+.totalsBarFillCarbs {
+  background-color: var(--color-carbs);
+}
+
+.totalsBarFillFat {
+  background-color: var(--color-fat);
+}
