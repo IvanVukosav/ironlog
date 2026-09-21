@@ -82,7 +82,8 @@
     "confirmDeleteMeal": "Obrisati obrok \"{{name}}\" i sve njegove namirnice?",
     "foodNamePlaceholder": "Naziv hrane",
     "addItem": "Dodaj",
-    "saveAsFoodPrompt": "Spremi \"{{name}}\" kao namirnicu?"
+    "saveAsFoodPrompt": "Spremi \"{{name}}\" kao namirnicu?",
+    "kcalHistory": "Povijest unosa kalorija"
   },
   "stats": {
     "recentPrs": "Nedavno oboreni rekordi",

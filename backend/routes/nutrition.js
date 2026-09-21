@@ -19,6 +19,40 @@ router.get("/", async (req, res) => {
   }
 });
 
+// GET /api/nutrition/history?days=N
+router.get("/history", async (req, res) => {
+  try {
+    const days = parseInt(req.query.days) || 7;
+    const since = new Date();
+    since.setDate(since.getDate() - days);
+
+    const nutritionDays = await prisma.nutritionDay.findMany({
+      where: { date: { gte: since } },
+      include: { meals: { include: { items: true } } },
+      orderBy: { date: "asc" },
+    });
+
+    const history = nutritionDays.map((day) => {
+      const items = day.meals.flatMap((meal) => meal.items);
+      const totals = items.reduce(
+        (sum, item) => ({
+          kcal: sum.kcal + item.kcal,
+          protein: sum.protein + item.protein,
+          carbs: sum.carbs + item.carbs,
+          fat: sum.fat + item.fat,
+        }),
+        { kcal: 0, protein: 0, carbs: 0, fat: 0 },
+      );
+      return { date: day.date, ...totals };
+    });
+
+    res.json(history);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // POST /api/nutrition/days
 router.post("/days", async (req, res) => {
   try {
