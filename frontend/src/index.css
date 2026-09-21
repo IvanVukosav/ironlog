@@ -16,6 +16,33 @@
   --color-carbs: #d99a5c;
   --color-fat: #d9c25c;
   --color-success: #5cb87a;
+  --font-body: var(--font-mono);
+  --heading-weight: 700;
+  --card-bg: var(--color-bg-card);
+  --card-border: none;
+  --card-radius: 0;
+  --card-shadow: inset 3px 0 0 var(--color-accent);
+  --card-blur: none;
+  --card-padding: 1rem;
+  --button-bg: transparent;
+  --button-color: var(--color-accent);
+  --button-radius: 0;
+  --button-padding: 4px 0;
+  --button-border: none;
+  --button-shadow: none;
+  --button-weight: 400;
+  --button-transform: none;
+  --button-before: "[ ";
+  --button-after: " ]";
+  --input-bg: transparent;
+  --input-border: none;
+  --input-border-bottom: 1px solid var(--color-border);
+  --input-radius: 0;
+  --input-padding: 4px 2px;
+  --dropdown-bg: var(--color-bg-elevated);
+  --dropdown-border: 1px solid var(--color-border);
+  --dropdown-radius: 0;
+  --dropdown-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
 [data-theme="light"] {
@@ -91,6 +118,156 @@
   --color-text-placeholder: #999999;
   --color-border: #333333;
   --color-border-subtle: #1a1a1a;
+}
+
+[data-template="soft"] {
+  --font-body: -apple-system, "Segoe UI", Inter, sans-serif;
+  --heading-weight: 600;
+  --card-bg: var(--color-bg-card);
+  --card-border: none;
+  --card-radius: 14px;
+  --card-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  --card-blur: none;
+  --card-padding: 1.1rem;
+  --button-bg: var(--color-accent);
+  --button-color: var(--color-bg);
+  --button-radius: 20px;
+  --button-padding: 7px 16px;
+  --button-border: none;
+  --button-shadow: none;
+  --button-weight: 600;
+  --button-transform: none;
+  --button-before: "";
+  --button-after: "";
+  --input-bg: var(--color-bg-card);
+  --input-border: 1px solid var(--color-border);
+  --input-border-bottom: 1px solid var(--color-border);
+  --input-radius: 10px;
+  --input-padding: 8px 10px;
+  --dropdown-bg: var(--color-bg-card);
+  --dropdown-border: none;
+  --dropdown-radius: 14px;
+  --dropdown-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+[data-template="neon"] {
+  --font-body: -apple-system, "Segoe UI", sans-serif;
+  --heading-weight: 700;
+  --card-bg: var(--color-bg-card);
+  --card-border: 1px solid var(--color-accent);
+  --card-radius: 2px;
+  --card-shadow: 0 0 12px rgba(var(--color-accent-rgb), 0.15);
+  --card-blur: none;
+  --card-padding: 1rem;
+  --button-bg: transparent;
+  --button-color: var(--color-accent);
+  --button-radius: 2px;
+  --button-padding: 6px 14px;
+  --button-border: 1px solid var(--color-accent);
+  --button-shadow: 0 0 10px rgba(var(--color-accent-rgb), 0.3);
+  --button-weight: 600;
+  --button-transform: uppercase;
+  --button-before: "";
+  --button-after: "";
+  --input-bg: transparent;
+  --input-border: none;
+  --input-border-bottom: 1px solid var(--color-accent);
+  --input-radius: 0;
+  --input-padding: 4px 2px;
+  --dropdown-bg: var(--color-bg-card);
+  --dropdown-border: 1px solid var(--color-accent);
+  --dropdown-radius: 2px;
+  --dropdown-shadow: 0 0 16px rgba(var(--color-accent-rgb), 0.2);
+}
+
+[data-template="warm"] {
+  --font-body: -apple-system, "Segoe UI", sans-serif;
+  --heading-weight: 700;
+  --card-bg: var(--color-bg-card);
+  --card-border: 1px solid var(--color-border);
+  --card-radius: 16px;
+  --card-shadow: none;
+  --card-blur: none;
+  --card-padding: 1.1rem;
+  --button-bg: var(--color-accent);
+  --button-color: var(--color-bg);
+  --button-radius: 24px;
+  --button-padding: 8px 18px;
+  --button-border: none;
+  --button-shadow: none;
+  --button-weight: 600;
+  --button-transform: none;
+  --button-before: "";
+  --button-after: "";
+  --input-bg: var(--color-bg-card);
+  --input-border: 1px solid var(--color-border);
+  --input-border-bottom: 1px solid var(--color-border);
+  --input-radius: 12px;
+  --input-padding: 8px 10px;
+  --dropdown-bg: var(--color-bg-elevated);
+  --dropdown-border: 1px solid var(--color-border);
+  --dropdown-radius: 16px;
+  --dropdown-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+[data-template="glass"] {
+  --font-body: -apple-system, "Segoe UI", sans-serif;
+  --heading-weight: 700;
+  --card-bg: linear-gradient(135deg, rgba(var(--color-accent-rgb), 0.12), rgba(var(--color-accent-rgb), 0.03)), var(--color-bg-card);
+  --card-border: 1px solid rgba(var(--color-accent-rgb), 0.3);
+  --card-radius: 14px;
+  --card-shadow: none;
+  --card-blur: blur(6px);
+  --card-padding: 1.1rem;
+  --button-bg: rgba(var(--color-accent-rgb), 0.2);
+  --button-color: var(--color-text);
+  --button-radius: 20px;
+  --button-padding: 7px 16px;
+  --button-border: 1px solid rgba(var(--color-accent-rgb), 0.4);
+  --button-shadow: none;
+  --button-weight: 600;
+  --button-transform: none;
+  --button-before: "";
+  --button-after: "";
+  --input-bg: rgba(var(--color-accent-rgb), 0.08);
+  --input-border: 1px solid rgba(var(--color-accent-rgb), 0.3);
+  --input-border-bottom: 1px solid rgba(var(--color-accent-rgb), 0.3);
+  --input-radius: 10px;
+  --input-padding: 8px 10px;
+  --dropdown-bg: var(--color-bg-elevated);
+  --dropdown-border: 1px solid rgba(var(--color-accent-rgb), 0.3);
+  --dropdown-radius: 14px;
+  --dropdown-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+[data-template="material"] {
+  --font-body: Roboto, -apple-system, "Segoe UI", sans-serif;
+  --heading-weight: 500;
+  --card-bg: var(--color-bg-card);
+  --card-border: none;
+  --card-radius: 0;
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --card-blur: none;
+  --card-padding: 1rem;
+  --button-bg: var(--color-accent);
+  --button-color: var(--color-bg);
+  --button-radius: 2px;
+  --button-padding: 8px 20px;
+  --button-border: none;
+  --button-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  --button-weight: 600;
+  --button-transform: uppercase;
+  --button-before: "";
+  --button-after: "";
+  --input-bg: transparent;
+  --input-border: none;
+  --input-border-bottom: 2px solid var(--color-border);
+  --input-radius: 0;
+  --input-padding: 4px 2px;
+  --dropdown-bg: var(--color-bg-card);
+  --dropdown-border: none;
+  --dropdown-radius: 2px;
+  --dropdown-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 * {
