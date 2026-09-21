@@ -71,6 +71,7 @@ model Settings {
   e1rmFormula String @default("brzycki")
   language   String @default("hr")
   theme      String @default("dark-red")
+  template   String @default("terminal")
 
 }
 
