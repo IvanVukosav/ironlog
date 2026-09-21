@@ -217,8 +217,10 @@
 }
 
 .itemRow {
-  position: relative;
-  padding: 6px 28px 6px 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 6px 0;
   border-bottom: 1px solid var(--color-border-subtle);
   font-size: 0.85rem;
   color: var(--color-text-dim);
@@ -228,18 +230,33 @@
   border-bottom: none;
 }
 
-.itemText {
+.itemRowCells {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
   cursor: pointer;
 }
 
-.itemText:hover {
+.itemRowCells:hover {
   color: var(--color-text);
 }
 
+.itemCellName {
+  width: 160px;
+  flex-shrink: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.itemCell {
+  width: 80px;
+  flex-shrink: 0;
+}
+
 .deleteItem {
-  position: absolute;
-  top: 6px;
-  right: 0;
   background: none;
   border: none;
   color: var(--color-text-dim);
@@ -248,6 +265,7 @@
   cursor: pointer;
   padding: 0;
   line-height: 1;
+  flex-shrink: 0;
 }
 
 .deleteItem:hover {

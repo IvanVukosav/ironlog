@@ -269,9 +269,13 @@ function MealCard({ meal, foodItemTemplates, onAddItem, onUpdateItem, onDeleteIt
             </div>
           ) : (
             <div key={item.id} className={styles.itemRow}>
-              <span className={styles.itemText} onClick={() => startEditingItem(item)}>
-                {item.name} — {item.kcal} kcal — {item.protein}p / {item.carbs}c / {item.fat}f
-              </span>
+              <div className={styles.itemRowCells} onClick={() => startEditingItem(item)}>
+                <span className={styles.itemCellName}>{item.name}</span>
+                <span className={styles.itemCell}>{item.kcal} kcal</span>
+                <span className={styles.itemCell}>{item.protein}p</span>
+                <span className={styles.itemCell}>{item.carbs}c</span>
+                <span className={styles.itemCell}>{item.fat}f</span>
+              </div>
               <button className={styles.deleteItem} onClick={() => deleteItem(item.id)}>
                 X
               </button>
