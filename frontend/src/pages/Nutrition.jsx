@@ -1,8 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { fetchJson } from "../api";
 import MealCard from "../components/MealCard";
 import { useToast } from "../context/useToast";
 import styles from "./Nutrition.module.css";
+
+const DEFAULT_MEAL_NAME = "Ostalo";
 
 function Nutrition() {
   const { showError } = useToast();
@@ -11,6 +13,9 @@ function Nutrition() {
   const [mealName, setMealName] = useState("");
   const [foodItemTemplates, setFoodItemTemplates] = useState([]);
   const [settings, setSettings] = useState(null);
+  const [quickAddName, setQuickAddName] = useState("");
+  const [showQuickPicker, setShowQuickPicker] = useState(false);
+  const quickAddRef = useRef(null);
 
   useEffect(() => {
     fetchJson(`/api/nutrition?date=${date}`)
@@ -20,6 +25,17 @@ function Nutrition() {
         showError(err.message);
       });
   }, [date, showError]);
+
+  useEffect(() => {
+    if (!showQuickPicker) return undefined;
+    const handleClickOutside = (event) => {
+      if (quickAddRef.current && !quickAddRef.current.contains(event.target)) {
+        setShowQuickPicker(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showQuickPicker]);
 
   useEffect(() => {
     fetchJson("/api/food-item-templates")
@@ -66,6 +82,55 @@ function Nutrition() {
       });
   };
 
+  const quickAddItem = (template) => {
+    const addItemToMeal = (mealId) =>
+      fetchJson(`/api/nutrition/meals/${mealId}/items`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: template.name,
+          kcal: template.kcal,
+          protein: template.protein,
+          carbs: template.carbs,
+          fat: template.fat,
+        }),
+      });
+
+    const applyItemToState = (mealId, item) => {
+      setDay((prev) => ({
+        ...prev,
+        meals: prev.meals.map((currentMeal) =>
+          currentMeal.id === mealId
+            ? { ...currentMeal, items: [...(currentMeal.items || []), item] }
+            : currentMeal,
+        ),
+      }));
+    };
+
+    const existingMeal = day.meals?.find((meal) => meal.name === DEFAULT_MEAL_NAME);
+
+    const run = existingMeal
+      ? addItemToMeal(existingMeal.id).then((item) => applyItemToState(existingMeal.id, item))
+      : fetchJson("/api/nutrition/meals", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: DEFAULT_MEAL_NAME, nutritionDayId: day.id }),
+        }).then((newMeal) => {
+          setDay((prev) => ({ ...prev, meals: [...(prev.meals || []), { ...newMeal, items: [] }] }));
+          return addItemToMeal(newMeal.id).then((item) => applyItemToState(newMeal.id, item));
+        });
+
+    run
+      .then(() => {
+        setQuickAddName("");
+        setShowQuickPicker(false);
+      })
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
+  };
+
   const saveFoodItemTemplate = (item) => {
     fetchJson("/api/food-item-templates", {
       method: "POST",
@@ -82,6 +147,12 @@ function Nutrition() {
         showError(err.message);
       });
   };
+
+  const filteredQuickTemplates = quickAddName.trim()
+    ? foodItemTemplates.filter((template) =>
+        template.name.toLowerCase().includes(quickAddName.trim().toLowerCase()),
+      )
+    : foodItemTemplates;
 
   const allItems = day?.meals?.flatMap((meal) => meal.items || []) || [];
   const totals = allItems.reduce(
@@ -134,6 +205,34 @@ function Nutrition() {
                 <span className={`${styles.totalsValue} ${styles.totalsValueFat}`}>{totals.fat}g / {settings?.fatGoal ?? "—"}g</span>
               </div>
             </div>
+          </div>
+
+          <div className={styles.quickAddRow} style={{ position: "relative" }} ref={quickAddRef}>
+            <input
+              type="text"
+              className={styles.mealInput}
+              placeholder="Brzo dodaj namirnicu po nazivu"
+              value={quickAddName}
+              onChange={(event) => {
+                setQuickAddName(event.target.value);
+                setShowQuickPicker(true);
+              }}
+              onFocus={() => setShowQuickPicker(true)}
+            />
+            {showQuickPicker && filteredQuickTemplates.length > 0 && (
+              <div className={styles.quickAddPicker}>
+                {filteredQuickTemplates.map((template) => (
+                  <button
+                    key={template.id}
+                    className={styles.quickAddOption}
+                    onClick={() => quickAddItem(template)}
+                  >
+                    {template.name}
+                    <span className={styles.quickAddMacros}>{template.kcal} kcal</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className={styles.addMealRow}>

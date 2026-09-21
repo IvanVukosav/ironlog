@@ -18,7 +18,7 @@ router.get("/", async (req, res) => {
     }
     const workouts = await prisma.workout.findMany({
       where: date ? { date: getDayRange(date) } : undefined,
-      include: { exercises: { include: { sets: true } } },
+      include: { exercises: { include: { sets: { orderBy: { order: "asc" } } } } },
     });
     res.json(workouts);
   } catch (err) {
@@ -163,16 +163,40 @@ router.delete("/exercises/:id", async (req, res) => {
 router.post("/exercises/:id/sets", async (req, res) => {
   try {
     const { weight, reps, rpe } = req.body;
+    const exerciseId = parseInt(req.params.id);
+    const existingSetCount = await prisma.set.count({ where: { exerciseId } });
     const set = await prisma.set.create({
       data: {
         weight: parseFloat(weight),
         reps: parseInt(reps),
         rpe: parseFloat(rpe),
-        exercise: { connect: { id: parseInt(req.params.id) } },
+        order: existingSetCount,
+        exercise: { connect: { id: exerciseId } },
       },
     });
 
     res.json(set);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.patch("/exercises/:id/sets/reorder", async (req, res) => {
+  try {
+    const { setIds } = req.body;
+    if (!Array.isArray(setIds)) {
+      return res.status(400).json({ error: "setIds must be an array" });
+    }
+    await prisma.$transaction(
+      setIds.map((setId, index) =>
+        prisma.set.update({
+          where: { id: setId },
+          data: { order: index },
+        }),
+      ),
+    );
+    res.json({ success: true });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal server error" });

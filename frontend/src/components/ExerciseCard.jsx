@@ -37,12 +37,13 @@ function WeightInput({ value, onChange }) {
   );
 }
 
-function Exercise({ exercise, onAddSet, onDeleteSet, onDeleteExercise, onUpdateSet, showE1rm, e1rmFormula }) {
+function Exercise({ exercise, onAddSet, onDeleteSet, onDeleteExercise, onUpdateSet, onReorderSets, showE1rm, e1rmFormula }) {
   const { showError, showSuccess } = useToast();
   const [set, setSet] = useState({ weight: "", reps: "", rpe: "" });
   const [showMenu, setShowMenu] = useState(false);
   const [editingSetId, setEditingSetId] = useState(null);
   const [editSet, setEditSet] = useState({ weight: "", reps: "", rpe: "" });
+  const [draggedSetId, setDraggedSetId] = useState(null);
   const menuRef = useRef(null);
 
   useEffect(() => {
@@ -106,6 +107,56 @@ function Exercise({ exercise, onAddSet, onDeleteSet, onDeleteExercise, onUpdateS
         console.error(err);
         showError(err.message);
       });
+  };
+
+  const duplicateSet = (workoutSet) => {
+    fetchJson(`/api/workouts/exercises/${exercise.id}/sets`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        weight: workoutSet.weight,
+        reps: workoutSet.reps,
+        rpe: workoutSet.rpe,
+      }),
+    })
+      .then((data) => onAddSet(data))
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
+  };
+
+  const handleDragStart = (setId) => {
+    setDraggedSetId(setId);
+  };
+
+  const handleDragOver = (event) => {
+    event.preventDefault();
+  };
+
+  const handleDrop = (targetSetId) => {
+    if (draggedSetId === null || draggedSetId === targetSetId) {
+      setDraggedSetId(null);
+      return;
+    }
+
+    const sets = [...exercise.sets];
+    const draggedIndex = sets.findIndex((workoutSet) => workoutSet.id === draggedSetId);
+    const targetIndex = sets.findIndex((workoutSet) => workoutSet.id === targetSetId);
+    const [draggedSet] = sets.splice(draggedIndex, 1);
+    sets.splice(targetIndex, 0, draggedSet);
+
+    setDraggedSetId(null);
+    onReorderSets(sets);
+
+    fetchJson(`/api/workouts/exercises/${exercise.id}/sets/reorder`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ setIds: sets.map((workoutSet) => workoutSet.id) }),
+    }).catch((err) => {
+      console.error(err);
+      showError(err.message);
+    });
   };
 
   const startEditingSet = (workoutSet) => {
@@ -220,7 +271,15 @@ function Exercise({ exercise, onAddSet, onDeleteSet, onDeleteExercise, onUpdateS
               </button>
             </div>
           ) : (
-            <div key={workoutSet.id} className={styles.setRow}>
+            <div
+              key={workoutSet.id}
+              className={styles.setRow}
+              draggable
+              onDragStart={() => handleDragStart(workoutSet.id)}
+              onDragOver={handleDragOver}
+              onDrop={() => handleDrop(workoutSet.id)}
+            >
+              <span className={styles.dragHandle}>⠿</span>
               <span
                 className={styles.setText}
                 onClick={() => startEditingSet(workoutSet)}
@@ -232,12 +291,20 @@ function Exercise({ exercise, onAddSet, onDeleteSet, onDeleteExercise, onUpdateS
                   </span>
                 )}
               </span>
-              <button
-                className={styles.deleteSet}
-                onClick={() => deleteSet(workoutSet.id)}
-              >
-                X
-              </button>
+              <div className={styles.setRowActions}>
+                <button
+                  className={styles.duplicateSet}
+                  onClick={() => duplicateSet(workoutSet)}
+                >
+                  Kopiraj
+                </button>
+                <button
+                  className={styles.deleteSet}
+                  onClick={() => deleteSet(workoutSet.id)}
+                >
+                  X
+                </button>
+              </div>
             </div>
           )
         )}

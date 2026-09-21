@@ -27,6 +27,7 @@ model Set {
   weight     Float
   reps       Int
   rpe        Float?
+  order      Int      @default(0)
   exerciseId Int
   exercise   Exercise @relation(fields: [exerciseId], references: [id])
 }

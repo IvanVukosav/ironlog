@@ -538,6 +538,16 @@ function Log() {
                     ),
                   }))
                 }
+                onReorderSets={(newSets) =>
+                  setWorkout((prev) => ({
+                    ...prev,
+                    exercises: prev.exercises.map((currentExercise) =>
+                      currentExercise.id === exercise.id
+                        ? { ...currentExercise, sets: newSets }
+                        : currentExercise,
+                    ),
+                  }))
+                }
               />
             ))}
           </div>
