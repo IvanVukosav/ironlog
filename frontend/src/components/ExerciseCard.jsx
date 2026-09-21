@@ -274,12 +274,22 @@ function Exercise({ exercise, onAddSet, onDeleteSet, onDeleteExercise, onUpdateS
             <div
               key={workoutSet.id}
               className={styles.setRow}
-              draggable
-              onDragStart={() => handleDragStart(workoutSet.id)}
               onDragOver={handleDragOver}
-              onDrop={() => handleDrop(workoutSet.id)}
+              onDrop={(event) => {
+                event.preventDefault();
+                handleDrop(workoutSet.id);
+              }}
             >
-              <span className={styles.dragHandle}>⠿</span>
+              <span
+                className={styles.dragHandle}
+                draggable
+                onDragStart={(event) => {
+                  event.dataTransfer.effectAllowed = "move";
+                  handleDragStart(workoutSet.id);
+                }}
+              >
+                ⠿
+              </span>
               <span
                 className={styles.setText}
                 onClick={() => startEditingSet(workoutSet)}
