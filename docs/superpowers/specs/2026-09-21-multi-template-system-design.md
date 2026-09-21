@@ -1,0 +1,73 @@
+# Multi-template visual system — design
+
+## Problem
+
+Beyond the 6 color themes (already shipped), the user wants genuinely different visual *languages* — different fonts, card shapes, button treatments, shadows/glows — selectable like the color themes are. Confirmed via visual-companion brainstorming: 6 templates total — **Terminal** (current, stays default), **Soft** (rounded, sans-serif, soft-shadow SaaS look), **Neon** (glowing borders, cyberpunk), **Warm** (cream/rounded/friendly), **Glass** (frosted/blurred, accent-tinted), **Material** (flat, no border, subtle elevation-shadow).
+
+## Scope (explicitly reduced from "the whole app," with the user's authorization to proceed autonomously while away)
+
+Building the full template mechanism (backend column, token system for all 6 templates, shared building-block primitives) is required regardless of how many pages consume it. Rolling every page onto the new primitives is a much larger, separable effort. This spec/plan covers: **the complete mechanism + all 6 templates' full visual definitions + migrating Dashboard, Settings, and NavBar** (the same three surfaces already used to prove out the color-theme feature). The remaining pages (Log, Nutrition, Calendar, Calculator, Stats) and remaining components (ExerciseCard, MealCard, RestTimer, ToastContainer, DatePicker) are deferred follow-up work, tracked the same way the i18n page-by-page rollout was — not a silent scope cut, an explicit, documented phase boundary.
+
+## Architecture conflict, resolved with explicit user sign-off
+
+This app has a strong standing convention: no shared CSS between components (`composes` was explicitly rejected previously — see `feedback-no-composes` memory). Six structurally different templates applied independently in 12+ files would mean every card/button/input/dropdown hand-duplicated 6× per file — unmaintainable at this scale. **The user explicitly approved a scoped exception**: shared "building block" primitive classes (`.card`, `.button`, `.input`, `.dropdown`, `.dropdownItem`) live in `frontend/src/styles/shared.module.css` (which already holds `.card`/`.label`/`.value`, composed into `Dashboard.module.css` today) and pages `composes` from them. This exception is scoped to template-driven primitives only — it does not reopen the general "no composes" rule for ordinary per-page styling.
+
+## Mechanism: CSS custom properties, not structural per-template CSS
+
+Same proven pattern as the color-theme system: a `data-template` attribute (independent of `data-theme`) selects a block of CSS custom property overrides in `index.css`. The shared primitive classes in `shared.module.css` are written once, entirely in terms of `var(--card-*)`/`--button-*`/`--input-*`/`--dropdown-*` tokens — never a hardcoded value. Even structurally different treatments (Glass's `backdrop-filter` blur, Neon's glow `box-shadow`, a gradient card background) are expressible as token values, since a CSS custom property can hold any valid CSS value including `none`, a full `linear-gradient(...)`, or a `blur(6px)` filter function — the shared class always applies the property, and each template's token value determines whether it does anything visible. This avoids a real technical trap: CSS Modules hashes class names per file, so external `[data-template="x"] .card { ... }` rules in a separate stylesheet could never reliably target a Modules-generated class name — token-driven overrides sidestep this entirely, exactly as they did for color.
+
+## Token inventory (new, in addition to the existing color tokens)
+
+**Typography:** `--font-body`, `--heading-weight`
+
+**Card:** `--card-bg` (solid or gradient), `--card-accent-edge` (Terminal's left-accent-border, `none` elsewhere), `--card-border` (full border shorthand or `none`), `--card-radius`, `--card-shadow`, `--card-blur` (backdrop-filter value or `none`), `--card-padding`
+
+**Button (primary CTA):** `--button-bg`, `--button-color`, `--button-radius`, `--button-padding`, `--button-border`, `--button-shadow`, `--button-weight`, `--button-transform`, `--button-before`/`--button-after` (bracket-style `content` strings, empty elsewhere)
+
+**Input:** `--input-bg`, `--input-border` (full border or `none`), `--input-border-bottom` (used when `--input-border` is `none`, for underline-only styles), `--input-radius`
+
+**Dropdown:** `--dropdown-bg`, `--dropdown-border`, `--dropdown-radius`, `--dropdown-shadow`
+
+`--button-color` and card/dropdown text intentionally continue using the existing `--color-text`/`--color-bg` tokens rather than new template-specific text-color tokens — templates change *shape and treatment*, not the underlying color system, which stays fully orthogonal (any of the 6 color themes × any of the 6 templates should look coherent).
+
+## The 6 templates, full token values
+
+**Terminal** (default — matches current app exactly, zero visual change for untouched installs):
+`--font-body: var(--font-mono)`; `--heading-weight: 700`; `--card-bg: var(--color-bg-card)`; `--card-accent-edge: 3px solid var(--color-accent)`; `--card-border: none`; `--card-radius: 0`; `--card-shadow: none`; `--card-blur: none`; `--card-padding: 1rem`; `--button-bg: transparent`; `--button-color: var(--color-accent)`; `--button-radius: 0`; `--button-padding: 4px 0`; `--button-border: none`; `--button-shadow: none`; `--button-weight: 400`; `--button-transform: none`; `--button-before: "[ "`; `--button-after: " ]"`; `--input-bg: transparent`; `--input-border: none`; `--input-border-bottom: 1px solid var(--color-border)`; `--input-radius: 0`; `--dropdown-bg: var(--color-bg-elevated)`; `--dropdown-border: 1px solid var(--color-border)`; `--dropdown-radius: 0`; `--dropdown-shadow: 0 4px 12px rgba(0,0,0,0.5)`
+
+**Soft:** `--font-body: -apple-system, "Segoe UI", Inter, sans-serif`; `--heading-weight: 600`; `--card-bg: var(--color-bg-card)`; `--card-accent-edge: none`; `--card-border: none`; `--card-radius: 14px`; `--card-shadow: 0 2px 10px rgba(0,0,0,0.08)`; `--card-blur: none`; `--card-padding: 1.1rem`; `--button-bg: var(--color-accent)`; `--button-color: var(--color-bg)`; `--button-radius: 20px`; `--button-padding: 7px 16px`; `--button-border: none`; `--button-shadow: none`; `--button-weight: 600`; `--button-transform: none`; `--button-before: ""`; `--button-after: ""`; `--input-bg: var(--color-bg-card)`; `--input-border: 1px solid var(--color-border)`; `--input-border-bottom: 1px solid var(--color-border)`; `--input-radius: 10px`; `--dropdown-bg: var(--color-bg-card)`; `--dropdown-border: none`; `--dropdown-radius: 14px`; `--dropdown-shadow: 0 8px 24px rgba(0,0,0,0.12)`
+
+**Neon:** `--font-body: -apple-system, "Segoe UI", sans-serif`; `--heading-weight: 700`; `--card-bg: var(--color-bg-card)`; `--card-accent-edge: none`; `--card-border: 1px solid var(--color-accent)`; `--card-radius: 2px`; `--card-shadow: 0 0 12px rgba(var(--color-accent-rgb), 0.15)`; `--card-blur: none`; `--card-padding: 1rem`; `--button-bg: transparent`; `--button-color: var(--color-accent)`; `--button-radius: 2px`; `--button-padding: 6px 14px`; `--button-border: 1px solid var(--color-accent)`; `--button-shadow: 0 0 10px rgba(var(--color-accent-rgb), 0.3)`; `--button-weight: 600`; `--button-transform: uppercase`; `--button-before: ""`; `--button-after: ""`; `--input-bg: transparent`; `--input-border: none`; `--input-border-bottom: 1px solid var(--color-accent)`; `--input-radius: 0`; `--dropdown-bg: var(--color-bg-card)`; `--dropdown-border: 1px solid var(--color-accent)`; `--dropdown-radius: 2px`; `--dropdown-shadow: 0 0 16px rgba(var(--color-accent-rgb), 0.2)`
+
+**Warm:** `--font-body: -apple-system, "Segoe UI", sans-serif`; `--heading-weight: 700`; `--card-bg: var(--color-bg-card)`; `--card-accent-edge: none`; `--card-border: 1px solid var(--color-border)`; `--card-radius: 16px`; `--card-shadow: none`; `--card-blur: none`; `--card-padding: 1.1rem`; `--button-bg: var(--color-accent)`; `--button-color: var(--color-bg)`; `--button-radius: 24px`; `--button-padding: 8px 18px`; `--button-border: none`; `--button-shadow: none`; `--button-weight: 600`; `--button-transform: none`; `--button-before: ""`; `--button-after: ""`; `--input-bg: var(--color-bg-card)`; `--input-border: 1px solid var(--color-border)`; `--input-border-bottom: 1px solid var(--color-border)`; `--input-radius: 12px`; `--dropdown-bg: var(--color-bg-elevated)`; `--dropdown-border: 1px solid var(--color-border)`; `--dropdown-radius: 16px`; `--dropdown-shadow: 0 4px 16px rgba(0,0,0,0.1)`
+
+**Glass:** `--font-body: -apple-system, "Segoe UI", sans-serif`; `--heading-weight: 700`; `--card-bg: linear-gradient(135deg, rgba(var(--color-accent-rgb), 0.12), rgba(var(--color-accent-rgb), 0.03)), var(--color-bg-card)`; `--card-accent-edge: none`; `--card-border: 1px solid rgba(var(--color-accent-rgb), 0.3)`; `--card-radius: 14px`; `--card-shadow: none`; `--card-blur: blur(6px)`; `--card-padding: 1.1rem`; `--button-bg: rgba(var(--color-accent-rgb), 0.2)`; `--button-color: var(--color-text)`; `--button-radius: 20px`; `--button-padding: 7px 16px`; `--button-border: 1px solid rgba(var(--color-accent-rgb), 0.4)`; `--button-shadow: none`; `--button-weight: 600`; `--button-transform: none`; `--button-before: ""`; `--button-after: ""`; `--input-bg: rgba(var(--color-accent-rgb), 0.08)`; `--input-border: 1px solid rgba(var(--color-accent-rgb), 0.3)`; `--input-border-bottom: 1px solid rgba(var(--color-accent-rgb), 0.3)`; `--input-radius: 10px`; `--dropdown-bg: var(--color-bg-elevated)`; `--dropdown-border: 1px solid rgba(var(--color-accent-rgb), 0.3)`; `--dropdown-radius: 14px`; `--dropdown-shadow: 0 8px 24px rgba(0,0,0,0.2)`
+
+Glass's blur/gradient is scoped to cards only, not the page background — extending it to the global backdrop would mean restyling `index.css`'s `body` per-template, a materially bigger change deferred along with the rest of the page rollout. The card treatment alone is enough to read as "glass."
+
+**Material:** `--font-body: Roboto, -apple-system, "Segoe UI", sans-serif`; `--heading-weight: 500`; `--card-bg: var(--color-bg-card)`; `--card-accent-edge: none`; `--card-border: none`; `--card-radius: 0`; `--card-shadow: 0 1px 3px rgba(0,0,0,0.3)`; `--card-blur: none`; `--card-padding: 1rem`; `--button-bg: var(--color-accent)`; `--button-color: var(--color-bg)`; `--button-radius: 2px`; `--button-padding: 8px 20px`; `--button-border: none`; `--button-shadow: 0 2px 4px rgba(0,0,0,0.3)`; `--button-weight: 600`; `--button-transform: uppercase`; `--button-before: ""`; `--button-after: ""`; `--input-bg: transparent`; `--input-border: none`; `--input-border-bottom: 2px solid var(--color-border)`; `--input-radius: 0`; `--dropdown-bg: var(--color-bg-card)`; `--dropdown-border: none`; `--dropdown-radius: 2px`; `--dropdown-shadow: 0 4px 8px rgba(0,0,0,0.3)`
+
+Material's mockup showed a two-tone card (colored header strip + separate body) — that's a structural markup difference the shared single `.card` element can't express through tokens alone. Simplified to: no border, subtle shadow, sharp corners, medium-weight sans-serif — still reads as a distinct "flat, bordered-by-shadow-not-outline" language from the other 5, without requiring template-conditional JSX structure.
+
+## Shared primitives (`frontend/src/styles/shared.module.css`)
+
+`.card` (retokenized from its current hardcoded left-border version), `.label`/`.value` (unchanged, already token-driven), plus new `.button`, `.input`, `.dropdown`, `.dropdownItem` — each written once against the token set above. `.button::before { content: var(--button-before); }` / `::after` handles Terminal's bracket style without any per-template conditional markup.
+
+## Migration: Dashboard, Settings, NavBar
+
+- **Dashboard.jsx/`.module.css`**: already `composes: card/label/value from shared` — picks up the retokenized `.card` for free. Its "Postavi" kcal-goal button migrates from its bespoke bracket-only CSS to `composes: button from shared`. Range-tab segmented controls (`.rangeTab`/`.rangeTabActive`) are a distinct UI pattern, not part of the card/button/input/dropdown primitive set — left as page-specific, out of scope here.
+- **Settings.jsx/`.module.css`**: currently has zero shared primitives — every input/button/dropdown is bespoke. Migrates `.fieldInput`/`.languageSelect`/`.themeTrigger` to compose `input`, `.saveButton` to compose `button`, `.themeDropdown`/`.themeOption` to compose `dropdown`/`dropdownItem`.
+- **NavBar/`Navbar.css`**: no card/button/input/dropdown involved — its contribution to this rollout is purely `font-family: var(--font-body)` on the nav links, so at least one always-visible surface reflects the template's typography choice everywhere.
+
+## New Settings UI: template picker
+
+Same interaction pattern as the theme picker (custom dropdown, not native `<select>`, instant-apply + background-persist, no separate Save click), but list items show plain text names (no color swatch — a template isn't reducible to one color the way a theme is). Backend: new `template` column on `Settings`, `String @default("terminal")`, same partial-PUT persistence pattern as `theme`.
+
+## Testing
+
+No automated test suite — `npm run build` plus manual checks:
+1. Default load: Dashboard/Settings/NavBar render identically to before (Terminal's token values reproduce the current hardcoded look exactly).
+2. Settings' new "Predložak" picker lists all 6 templates; picking one instantly reshapes Dashboard's cards/button and Settings' own inputs/button/dropdowns, and NavBar's font — with no page reload.
+3. Cross-check template × color-theme combinations aren't broken for at least 2-3 combos (e.g., Glass template with Dark Blue theme, Neon template with Light theme) — confirms the two systems are genuinely orthogonal, not accidentally coupled.
+4. Reload persists the chosen template (proves the `PUT` + bootstrap round-trip, same mechanism as language/theme).
+5. Switch back to Terminal — confirms full reversibility.
