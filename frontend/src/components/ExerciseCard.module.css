@@ -214,11 +214,11 @@
 }
 
 .duplicateSet {
+  display: flex;
+  align-items: center;
   background: none;
   border: none;
   color: var(--color-text-dim);
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
   cursor: pointer;
   padding: 0;
   line-height: 1;
