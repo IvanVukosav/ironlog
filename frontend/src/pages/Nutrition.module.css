@@ -215,7 +215,7 @@
 
 .totalsBarFillOverGoal {
   background-image: repeating-linear-gradient(
-    45deg,
+    -45deg,
     rgba(0, 0, 0, 0.3) 0px,
     rgba(0, 0, 0, 0.3) 3px,
     transparent 3px,
