@@ -58,22 +58,9 @@
 }
 
 .kcalSetButton {
-  background: transparent;
-  border: none;
-  color: var(--color-accent);
-  font-family: var(--font-mono);
+  composes: button from "../styles/shared.module.css";
   font-size: 1.2rem;
-  font-weight: 700;
-  cursor: pointer;
   padding: 0;
-}
-
-.kcalSetButton::before {
-  content: "[ ";
-}
-
-.kcalSetButton::after {
-  content: " ]";
 }
 
 .bwChartHeader {
