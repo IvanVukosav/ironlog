@@ -11,6 +11,28 @@ function formatTime(totalSeconds) {
   return `${minutes}:${String(seconds).padStart(2, "0")}`;
 }
 
+function playExpiryBeep() {
+  try {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    const audioContext = new AudioContextClass();
+    [0, 0.2].forEach((startOffset) => {
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      oscillator.type = "sine";
+      oscillator.frequency.value = 880;
+      const startTime = audioContext.currentTime + startOffset;
+      gainNode.gain.setValueAtTime(0.2, startTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + 0.15);
+      oscillator.start(startTime);
+      oscillator.stop(startTime + 0.15);
+    });
+  } catch (err) {
+    console.error(err);
+  }
+}
+
 function RestTimer() {
   const [secondsRemaining, setSecondsRemaining] = useState(null);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -21,6 +43,12 @@ function RestTimer() {
       setSecondsRemaining((prev) => (prev !== null ? prev - 1 : null));
     }, 1000);
     return () => clearTimeout(timeoutId);
+  }, [secondsRemaining]);
+
+  useEffect(() => {
+    if (secondsRemaining === 0) {
+      playExpiryBeep();
+    }
   }, [secondsRemaining]);
 
   const startRest = (duration) => setSecondsRemaining(duration);
