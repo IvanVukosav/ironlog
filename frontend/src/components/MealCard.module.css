@@ -3,6 +3,7 @@
   border-left: 3px solid var(--color-accent);
   padding: 1rem;
   font-family: var(--font-mono);
+  max-width: 640px;
 }
 
 .cardHeader {
