@@ -34,10 +34,32 @@
   "common": {
     "save": "Save",
     "delete": "Delete",
+    "week": "Week",
+    "month": "Month",
+    "year": "Year",
     "months": [
       "January", "February", "March", "April", "May", "June",
       "July", "August", "September", "October", "November", "December"
     ]
+  },
+  "dashboard": {
+    "workoutToday": "Training today",
+    "workoutFallbackName": "Workout",
+    "exercisesSuffix": "exercises",
+    "noWorkoutToday": "No workout — click to start",
+    "nutritionToday": "Nutrition today",
+    "setGoal": "Set",
+    "weeklyProgress": "Weekly progress",
+    "trainingsThisWeek": "{{count}} / {{goal}} trainings this week",
+    "trainingsThisMonth": "{{count}} trainings this month",
+    "trainingsThisYear": "{{count}} trainings this year",
+    "todaySuffix": " (today)",
+    "weekdaysMonFirst": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+    "bodyweight": "Bodyweight",
+    "noData": "No data",
+    "muscleGroupVolume": "Volume by muscle group",
+    "recentWorkouts": "Recent workouts",
+    "noWorkouts": "No workouts"
   },
   "calendar": {
     "weekdays": ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { fetchJson } from "../api";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { useToast } from "../context/useToast";
@@ -10,9 +11,6 @@ import styles from "./Dashboard.module.css";
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 const DAYS_PER_WEEK = 7;
 const MAX_PROGRESS_PERCENT = 100;
-const FULL_WEEKDAY_NAMES = [
-  "Ponedjeljak", "Utorak", "Srijeda", "Četvrtak", "Petak", "Subota", "Nedjelja",
-];
 
 function formatDateString(date) {
   const year = date.getUTCFullYear();
@@ -48,6 +46,7 @@ function getWeekDates(anchorDateString) {
 
 function Dashboard() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { showError } = useToast();
   const chartAccentColor = getCssVar("--color-accent");
   const chartTextDimColor = getCssVar("--color-text-dim");
@@ -175,10 +174,11 @@ function Dashboard() {
     : 0;
   const weekDates = getWeekDates(today);
   const todayDate = new Date(today);
+  const weekdayNames = t("dashboard.weekdaysMonFirst", { returnObjects: true });
   const weekDayInfo = weekDates.map((date, dayIndex) => {
     const matchingWorkout = weeklyWorkouts.find((entry) => isSameCalendarDay(new Date(entry.date), date));
     return {
-      label: FULL_WEEKDAY_NAMES[dayIndex],
+      label: weekdayNames[dayIndex],
       dateString: formatDateString(date),
       trained: Boolean(matchingWorkout),
       workoutName: matchingWorkout?.name || null,
@@ -195,13 +195,13 @@ function Dashboard() {
             className={`${styles.card} ${styles.clickableCard}`}
             onClick={() => navigate(`/log?date=${today}`)}
           >
-            <h2 className={styles.label}>Trening danas</h2>
+            <h2 className={styles.label}>{t("dashboard.workoutToday")}</h2>
             {workout ? (
               <p className={styles.value}>
-                {workout.name || "Trening"} — {workout.exercises?.length} vježbi
+                {workout.name || t("dashboard.workoutFallbackName")} — {workout.exercises?.length} {t("dashboard.exercisesSuffix")}
               </p>
             ) : (
-              <p className={styles.value}>Nema treninga — klikni za početak</p>
+              <p className={styles.value}>{t("dashboard.noWorkoutToday")}</p>
             )}
           </div>
         )}
@@ -210,7 +210,7 @@ function Dashboard() {
             className={`${styles.card} ${styles.clickableCard}`}
             onClick={() => navigate(`/nutrition?date=${today}`)}
           >
-            <h2 className={styles.label}>Prehrana danas</h2>
+            <h2 className={styles.label}>{t("dashboard.nutritionToday")}</h2>
             <p className={styles.value}>
               {totalKcal} /{" "}
               {settings?.kcalGoal ? (
@@ -241,7 +241,7 @@ function Dashboard() {
                       setKcalGoalInput("");
                     }}
                   >
-                    Postavi
+                    {t("dashboard.setGoal")}
                   </button>{" "}
                   kcal
                 </>
@@ -251,12 +251,12 @@ function Dashboard() {
         )}
         <div className={`${styles.card} ${styles.fullWidth}`}>
           <div className={styles.bwChartHeader}>
-            <h2 className={styles.label}>Tjedni napredak</h2>
+            <h2 className={styles.label}>{t("dashboard.weeklyProgress")}</h2>
             <div className={styles.rangeTabs}>
               {[
-                { label: "Tjedan", range: "week" },
-                { label: "Mjesec", range: "month" },
-                { label: "Godina", range: "year" },
+                { label: t("common.week"), range: "week" },
+                { label: t("common.month"), range: "month" },
+                { label: t("common.year"), range: "year" },
               ].map(({ label, range }) => (
                 <button
                   key={range}
@@ -272,7 +272,7 @@ function Dashboard() {
             <>
               <div className={styles.weeklyProgressHeader}>
                 <p className={styles.value}>
-                  {weeklyWorkouts.length} / {weeklyGoal} treninga ovaj tjedan
+                  {t("dashboard.trainingsThisWeek", { count: weeklyWorkouts.length, goal: weeklyGoal })}
                 </p>
                 <div className={styles.progressTrack}>
                   <div
@@ -290,7 +290,7 @@ function Dashboard() {
                   >
                     <span className={isToday ? styles.weekDayNameToday : styles.weekDayName}>
                       {label}
-                      {isToday && " (danas)"}
+                      {isToday && t("dashboard.todaySuffix")}
                     </span>
                     <span className={styles.weekDayStatus}>
                       {trained && workoutName && (
@@ -306,19 +306,21 @@ function Dashboard() {
             </>
           ) : (
             <p className={styles.value}>
-              {rangeWorkoutCount} treninga {workoutRangeView === "month" ? "ovaj mjesec" : "ove godine"}
+              {workoutRangeView === "month"
+                ? t("dashboard.trainingsThisMonth", { count: rangeWorkoutCount })
+                : t("dashboard.trainingsThisYear", { count: rangeWorkoutCount })}
             </p>
           )}
         </div>
 
         <div className={styles.card}>
           <div className={styles.bwChartHeader}>
-            <h2 className={styles.label}>Tjelesna težina</h2>
+            <h2 className={styles.label}>{t("dashboard.bodyweight")}</h2>
             <div className={styles.rangeTabs}>
               {[
-                { label: "Tjedan", days: 7 },
-                { label: "Mjesec", days: 30 },
-                { label: "Godina", days: 365 },
+                { label: t("common.week"), days: 7 },
+                { label: t("common.month"), days: 30 },
+                { label: t("common.year"), days: 365 },
               ].map(({ label, days }) => (
                 <button
                   key={days}
@@ -344,17 +346,17 @@ function Dashboard() {
               </LineChart>
             </ResponsiveContainer>
           ) : (
-            <p className={styles.value}>Nema podataka</p>
+            <p className={styles.value}>{t("dashboard.noData")}</p>
           )}
         </div>
 
         <div className={styles.card}>
-          <h2 className={styles.label}>Volumen po mišićnoj skupini</h2>
+          <h2 className={styles.label}>{t("dashboard.muscleGroupVolume")}</h2>
           <MuscleGroupVolumeChart />
         </div>
 
         <div className={`${styles.card} ${styles.fullWidth}`}>
-          <h2 className={styles.label}>Zadnji treninzi</h2>
+          <h2 className={styles.label}>{t("dashboard.recentWorkouts")}</h2>
           {recentWorkouts.length > 0 ? (
             <div className={styles.recentWorkoutList}>
               {recentWorkouts.map((recentWorkout) => (
@@ -363,13 +365,13 @@ function Dashboard() {
                     {new Date(recentWorkout.date).toISOString().split("T")[0]}
                   </span>
                   <span className={styles.recentWorkoutExercises}>
-                    {recentWorkout.exercises?.length ?? 0} vježbi
+                    {recentWorkout.exercises?.length ?? 0} {t("dashboard.exercisesSuffix")}
                   </span>
                 </div>
               ))}
             </div>
           ) : (
-            <p className={styles.value}>Nema treninga</p>
+            <p className={styles.value}>{t("dashboard.noWorkouts")}</p>
           )}
         </div>
       </div>

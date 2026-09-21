@@ -34,10 +34,32 @@
   "common": {
     "save": "Spremi",
     "delete": "Obriši",
+    "week": "Tjedan",
+    "month": "Mjesec",
+    "year": "Godina",
     "months": [
       "Siječanj", "Veljača", "Ožujak", "Travanj", "Svibanj", "Lipanj",
       "Srpanj", "Kolovoz", "Rujan", "Listopad", "Studeni", "Prosinac"
     ]
+  },
+  "dashboard": {
+    "workoutToday": "Trening danas",
+    "workoutFallbackName": "Trening",
+    "exercisesSuffix": "vježbi",
+    "noWorkoutToday": "Nema treninga — klikni za početak",
+    "nutritionToday": "Prehrana danas",
+    "setGoal": "Postavi",
+    "weeklyProgress": "Tjedni napredak",
+    "trainingsThisWeek": "{{count}} / {{goal}} treninga ovaj tjedan",
+    "trainingsThisMonth": "{{count}} treninga ovaj mjesec",
+    "trainingsThisYear": "{{count}} treninga ove godine",
+    "todaySuffix": " (danas)",
+    "weekdaysMonFirst": ["Ponedjeljak", "Utorak", "Srijeda", "Četvrtak", "Petak", "Subota", "Nedjelja"],
+    "bodyweight": "Tjelesna težina",
+    "noData": "Nema podataka",
+    "muscleGroupVolume": "Volumen po mišićnoj skupini",
+    "recentWorkouts": "Zadnji treninzi",
+    "noWorkouts": "Nema treninga"
   },
   "calendar": {
     "weekdays": ["Nedjelja", "Ponedjeljak", "Utorak", "Srijeda", "Četvrtak", "Petak", "Subota"],
