@@ -199,6 +199,7 @@
 }
 
 .totalsBarTrack {
+  display: flex;
   margin-top: 0.5rem;
   height: 4px;
   background-color: var(--color-border-subtle);
@@ -208,7 +209,7 @@
 
 .totalsBarFill {
   height: 100%;
-  border-radius: 2px;
+  flex-shrink: 0;
   transition: width 0.3s ease;
 }
 
