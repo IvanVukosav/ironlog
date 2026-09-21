@@ -24,6 +24,9 @@ function App() {
         if (data?.theme && data.theme !== "dark-red") {
           document.documentElement.setAttribute("data-theme", data.theme);
         }
+        if (data?.template && data.template !== "terminal") {
+          document.documentElement.setAttribute("data-template", data.template);
+        }
       })
       .catch((err) => console.error(err));
   }, []);
