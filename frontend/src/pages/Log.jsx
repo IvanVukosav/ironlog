@@ -4,6 +4,7 @@ import ExerciseCard from "../components/ExerciseCard";
 import DatePicker from "../components/DatePicker";
 import { fetchJson } from "../api";
 import { useToast } from "../context/useToast";
+import { useDragReorder } from "../hooks/useDragReorder";
 import styles from "./Log.module.css";
 
 const MUSCLE_GROUPS = [
@@ -31,6 +32,21 @@ function Log() {
   const exercisePickerRef = useRef(null);
   const templatePickerRef = useRef(null);
   const pickerMode = settings?.exercisePickerMode ?? "chips";
+
+  const { draggedId: draggedExerciseId, hoveredId: hoveredExerciseId, startDrag: startExerciseDrag } = useDragReorder(
+    workout?.exercises || [],
+    (newExercises) => {
+      setWorkout((prev) => ({ ...prev, exercises: newExercises }));
+      fetchJson(`/api/workouts/${workout.id}/exercises/reorder`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ exerciseIds: newExercises.map((exercise) => exercise.id) }),
+      }).catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
+    },
+  );
 
   useEffect(() => {
     fetchJson(`/api/workouts?date=${date}`)
@@ -487,6 +503,9 @@ function Log() {
                 exercise={exercise}
                 showE1rm={settings?.showE1rm ?? true}
                 e1rmFormula={settings?.e1rmFormula ?? "brzycki"}
+                isDragging={draggedExerciseId === exercise.id}
+                isDropTarget={hoveredExerciseId === String(exercise.id) && draggedExerciseId !== exercise.id}
+                onDragHandlePointerDown={() => startExerciseDrag(exercise.id)}
                 onDeleteSet={(setId) =>
                   setWorkout((prev) => ({
                     ...prev,

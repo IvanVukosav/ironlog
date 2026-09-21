@@ -17,6 +17,7 @@ model Workout {
 model Exercise {
   id        Int     @id @default(autoincrement())
   name      String
+  order     Int     @default(0)
   workoutId Int
   workout   Workout @relation(fields: [workoutId], references: [id])
   sets      Set[]

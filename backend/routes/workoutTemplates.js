@@ -68,12 +68,16 @@ router.post("/:id/apply", async (req, res) => {
       return res.status(404).json({ error: "Workout template not found" });
     }
 
+    const workoutIdInt = parseInt(workoutId);
+    const existingExerciseCount = await prisma.exercise.count({ where: { workoutId: workoutIdInt } });
+
     const createdExercises = [];
-    for (const templateExercise of template.exercises) {
+    for (const [index, templateExercise] of template.exercises.entries()) {
       const exercise = await prisma.exercise.create({
         data: {
           name: templateExercise.name,
-          workoutId: parseInt(workoutId),
+          order: existingExerciseCount + index,
+          workoutId: workoutIdInt,
           sets: {
             create: templateExercise.sets.map((set) => ({
               weight: set.weight,

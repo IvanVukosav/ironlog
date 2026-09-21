@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { fetchJson } from "../api";
 import { calculateEstimatedOneRepMax, findBestSetByE1rm } from "../utils/oneRepMax";
 import { useToast } from "../context/useToast";
+import { useDragReorder } from "../hooks/useDragReorder";
 import styles from "./ExerciseCard.module.css";
 
 const WEIGHT_STEP_KG = 1;
@@ -37,14 +38,40 @@ function WeightInput({ value, onChange }) {
   );
 }
 
-function Exercise({ exercise, onAddSet, onDeleteSet, onDeleteExercise, onUpdateSet, onReorderSets, showE1rm, e1rmFormula }) {
+function Exercise({
+  exercise,
+  onAddSet,
+  onDeleteSet,
+  onDeleteExercise,
+  onUpdateSet,
+  onReorderSets,
+  showE1rm,
+  e1rmFormula,
+  isDragging,
+  isDropTarget,
+  onDragHandlePointerDown,
+}) {
   const { showError, showSuccess } = useToast();
   const [set, setSet] = useState({ weight: "", reps: "", rpe: "" });
   const [showMenu, setShowMenu] = useState(false);
   const [editingSetId, setEditingSetId] = useState(null);
   const [editSet, setEditSet] = useState({ weight: "", reps: "", rpe: "" });
-  const [draggedSetId, setDraggedSetId] = useState(null);
   const menuRef = useRef(null);
+
+  const { draggedId: draggedSetId, hoveredId: hoveredSetId, startDrag: startSetDrag } = useDragReorder(
+    exercise.sets || [],
+    (newSets) => {
+      onReorderSets(newSets);
+      fetchJson(`/api/workouts/exercises/${exercise.id}/sets/reorder`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ setIds: newSets.map((workoutSet) => workoutSet.id) }),
+      }).catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
+    },
+  );
 
   useEffect(() => {
     if (!showMenu) return undefined;
@@ -126,39 +153,6 @@ function Exercise({ exercise, onAddSet, onDeleteSet, onDeleteExercise, onUpdateS
       });
   };
 
-  const handleDragStart = (setId) => {
-    setDraggedSetId(setId);
-  };
-
-  const handleDragOver = (event) => {
-    event.preventDefault();
-  };
-
-  const handleDrop = (targetSetId) => {
-    if (draggedSetId === null || draggedSetId === targetSetId) {
-      setDraggedSetId(null);
-      return;
-    }
-
-    const sets = [...exercise.sets];
-    const draggedIndex = sets.findIndex((workoutSet) => workoutSet.id === draggedSetId);
-    const targetIndex = sets.findIndex((workoutSet) => workoutSet.id === targetSetId);
-    const [draggedSet] = sets.splice(draggedIndex, 1);
-    sets.splice(targetIndex, 0, draggedSet);
-
-    setDraggedSetId(null);
-    onReorderSets(sets);
-
-    fetchJson(`/api/workouts/exercises/${exercise.id}/sets/reorder`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ setIds: sets.map((workoutSet) => workoutSet.id) }),
-    }).catch((err) => {
-      console.error(err);
-      showError(err.message);
-    });
-  };
-
   const startEditingSet = (workoutSet) => {
     setEditingSetId(workoutSet.id);
     setEditSet({
@@ -185,9 +179,27 @@ function Exercise({ exercise, onAddSet, onDeleteSet, onDeleteExercise, onUpdateS
   };
 
   return (
-    <div className={styles.card}>
+    <div
+      className={[
+        styles.card,
+        isDragging && styles.cardDragging,
+        isDropTarget && styles.cardDropTarget,
+      ].filter(Boolean).join(" ")}
+      data-drag-id={exercise.id}
+    >
       <div className={styles.cardHeader}>
-        <h3 className={styles.heading}>{exercise.name}</h3>
+        <div className={styles.cardHeaderLeft}>
+          <span
+            className={styles.dragHandle}
+            onPointerDown={(event) => {
+              event.preventDefault();
+              onDragHandlePointerDown();
+            }}
+          >
+            ⠿
+          </span>
+          <h3 className={styles.heading}>{exercise.name}</h3>
+        </div>
         <div className={styles.menuWrapper} ref={menuRef}>
           <button className={styles.menuButton} onClick={() => setShowMenu((prev) => !prev)}>
             ⋮
@@ -273,19 +285,18 @@ function Exercise({ exercise, onAddSet, onDeleteSet, onDeleteExercise, onUpdateS
           ) : (
             <div
               key={workoutSet.id}
-              className={styles.setRow}
-              onDragOver={handleDragOver}
-              onDrop={(event) => {
-                event.preventDefault();
-                handleDrop(workoutSet.id);
-              }}
+              className={[
+                styles.setRow,
+                draggedSetId === workoutSet.id && styles.setRowDragging,
+                hoveredSetId === String(workoutSet.id) && draggedSetId !== workoutSet.id && styles.setRowDropTarget,
+              ].filter(Boolean).join(" ")}
+              data-drag-id={workoutSet.id}
             >
               <span
                 className={styles.dragHandle}
-                draggable
-                onDragStart={(event) => {
-                  event.dataTransfer.effectAllowed = "move";
-                  handleDragStart(workoutSet.id);
+                onPointerDown={(event) => {
+                  event.preventDefault();
+                  startSetDrag(workoutSet.id);
                 }}
               >
                 ⠿

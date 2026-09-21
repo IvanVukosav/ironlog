@@ -18,7 +18,12 @@ router.get("/", async (req, res) => {
     }
     const workouts = await prisma.workout.findMany({
       where: date ? { date: getDayRange(date) } : undefined,
-      include: { exercises: { include: { sets: { orderBy: { order: "asc" } } } } },
+      include: {
+        exercises: {
+          orderBy: { order: "asc" },
+          include: { sets: { orderBy: { order: "asc" } } },
+        },
+      },
     });
     res.json(workouts);
   } catch (err) {
@@ -123,11 +128,34 @@ router.post("/:id/exercises", async (req, res) => {
       return res.status(400).json({ error: "Exercise name is required" });
     }
 
+    const workoutId = parseInt(req.params.id);
+    const existingExerciseCount = await prisma.exercise.count({ where: { workoutId } });
     const exercise = await prisma.exercise.create({
-      data: { name, workoutId: parseInt(req.params.id) },
+      data: { name, order: existingExerciseCount, workoutId },
     });
 
     res.json(exercise);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.patch("/:id/exercises/reorder", async (req, res) => {
+  try {
+    const { exerciseIds } = req.body;
+    if (!Array.isArray(exerciseIds)) {
+      return res.status(400).json({ error: "exerciseIds must be an array" });
+    }
+    await prisma.$transaction(
+      exerciseIds.map((exerciseId, index) =>
+        prisma.exercise.update({
+          where: { id: exerciseId },
+          data: { order: index },
+        }),
+      ),
+    );
+    res.json({ success: true });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal server error" });
