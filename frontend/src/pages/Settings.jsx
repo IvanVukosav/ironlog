@@ -24,9 +24,7 @@ const TEMPLATES = [
   { value: "terminal", label: "Terminal" },
   { value: "soft", label: "Soft" },
   { value: "neon", label: "Neon" },
-  { value: "warm", label: "Warm" },
   { value: "glass", label: "Glass" },
-  { value: "material", label: "Material" },
 ];
 
 function Settings() {

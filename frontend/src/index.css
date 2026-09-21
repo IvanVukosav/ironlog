@@ -180,36 +180,6 @@
   --dropdown-shadow: 0 0 16px rgba(var(--color-accent-rgb), 0.2);
 }
 
-[data-template="warm"] {
-  --font-body: -apple-system, "Segoe UI", sans-serif;
-  --heading-weight: 700;
-  --card-bg: var(--color-bg-card);
-  --card-border: 1px solid var(--color-border);
-  --card-radius: 16px;
-  --card-shadow: none;
-  --card-blur: none;
-  --card-padding: 1.1rem;
-  --button-bg: var(--color-accent);
-  --button-color: var(--color-bg);
-  --button-radius: 24px;
-  --button-padding: 8px 18px;
-  --button-border: none;
-  --button-shadow: none;
-  --button-weight: 600;
-  --button-transform: none;
-  --button-before: "";
-  --button-after: "";
-  --input-bg: var(--color-bg-card);
-  --input-border: 1px solid var(--color-border);
-  --input-border-bottom: 1px solid var(--color-border);
-  --input-radius: 12px;
-  --input-padding: 8px 10px;
-  --dropdown-bg: var(--color-bg-elevated);
-  --dropdown-border: 1px solid var(--color-border);
-  --dropdown-radius: 16px;
-  --dropdown-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-}
-
 [data-template="glass"] {
   --font-body: -apple-system, "Segoe UI", sans-serif;
   --heading-weight: 700;
@@ -238,36 +208,6 @@
   --dropdown-border: 1px solid rgba(var(--color-accent-rgb), 0.3);
   --dropdown-radius: 14px;
   --dropdown-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-}
-
-[data-template="material"] {
-  --font-body: Roboto, -apple-system, "Segoe UI", sans-serif;
-  --heading-weight: 500;
-  --card-bg: var(--color-bg-card);
-  --card-border: none;
-  --card-radius: 0;
-  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-  --card-blur: none;
-  --card-padding: 1rem;
-  --button-bg: var(--color-accent);
-  --button-color: var(--color-bg);
-  --button-radius: 2px;
-  --button-padding: 8px 20px;
-  --button-border: none;
-  --button-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  --button-weight: 600;
-  --button-transform: uppercase;
-  --button-before: "";
-  --button-after: "";
-  --input-bg: transparent;
-  --input-border: none;
-  --input-border-bottom: 2px solid var(--color-border);
-  --input-radius: 0;
-  --input-padding: 4px 2px;
-  --dropdown-bg: var(--color-bg-card);
-  --dropdown-border: none;
-  --dropdown-radius: 2px;
-  --dropdown-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 * {
