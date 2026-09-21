@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { fetchJson } from "../api";
 import { calculateOneRepMax, ONE_REP_MAX_FORMULAS } from "../utils/oneRepMax";
 import { useToast } from "../context/useToast";
@@ -11,6 +12,7 @@ const MIN_STEP = 1;
 const RESULT_DECIMAL_PLACES = 2;
 
 function Calculator() {
+  const { t } = useTranslation();
   const { showError } = useToast();
   const [weight, setWeight] = useState("");
   const [reps, setReps] = useState("");
@@ -34,19 +36,19 @@ function Calculator() {
     if (!weight || !reps) return;
 
     if (weight <= 0 || reps <= 0) {
-      setError("Weight and reps must be greater than 0");
+      setError(t("calculator.errorWeightRepsPositive"));
       return;
     }
     if (step < MIN_STEP) {
-      setError(`Step must be at least ${MIN_STEP}`);
+      setError(t("calculator.errorStepMin", { min: MIN_STEP }));
       return;
     }
     if (minPct < MIN_PERCENTAGE || minPct > MAX_PERCENTAGE) {
-      setError(`Percentage must be between ${MIN_PERCENTAGE} and ${MAX_PERCENTAGE}`);
+      setError(t("calculator.errorPercentageRange", { min: MIN_PERCENTAGE, max: MAX_PERCENTAGE }));
       return;
     }
     if (formula === ONE_REP_MAX_FORMULAS.brzycki && reps >= BRZYCKI_MAX_REPS) {
-      setError("Brzycki formula does not work for 37+ reps");
+      setError(t("calculator.errorBrzyckiMaxReps"));
       return;
     }
     setError(null);
@@ -62,14 +64,14 @@ function Calculator() {
 
   return (
     <div className={styles.page}>
-      <h1 className={styles.heading}>Calculator</h1>
+      <h1 className={styles.heading}>{t("nav.calculator")}</h1>
 
       <div className={styles.inputRow}>
         <input
           type="number"
           min="0"
           className={styles.input}
-          placeholder="Daj kilazicu"
+          placeholder={t("calculator.weightPlaceholder")}
           value={weight}
           onChange={(event) => setWeight(event.target.value)}
         />
@@ -77,7 +79,7 @@ function Calculator() {
           type="number"
           min="0"
           className={styles.input}
-          placeholder="Daj ponavljanja"
+          placeholder={t("calculator.repsPlaceholder")}
           value={reps}
           onChange={(event) => setReps(event.target.value)}
         />
@@ -86,7 +88,7 @@ function Calculator() {
           onClick={calculate}
           disabled={!weight || !reps}
         >
-          Calculate
+          {t("calculator.calculate")}
         </button>
       </div>
 
@@ -98,7 +100,7 @@ function Calculator() {
           type="number"
           min={MIN_STEP}
           className={styles.input}
-          placeholder="Daj postotak skoka"
+          placeholder={t("calculator.stepPlaceholder")}
           value={step}
           onChange={(event) => setStep(parseFloat(event.target.value))}
         />
@@ -107,7 +109,7 @@ function Calculator() {
           min={MIN_PERCENTAGE}
           max={MAX_PERCENTAGE}
           className={styles.input}
-          placeholder="Daj postotak(default do 70%)"
+          placeholder={t("calculator.minPercentagePlaceholder")}
           value={minPct}
           onChange={(event) => setMinPct(parseFloat(event.target.value))}
         />

@@ -94,6 +94,17 @@
     "noSets": "bez setova",
     "progress": "Napredak"
   },
+  "calculator": {
+    "weightPlaceholder": "Unesi kilažu",
+    "repsPlaceholder": "Unesi ponavljanja",
+    "calculate": "Izračunaj",
+    "errorWeightRepsPositive": "Kilaža i ponavljanja moraju biti veći od 0",
+    "errorStepMin": "Korak mora biti barem {{min}}",
+    "errorPercentageRange": "Postotak mora biti između {{min}} i {{max}}",
+    "errorBrzyckiMaxReps": "Brzycki formula ne radi za 37+ ponavljanja",
+    "stepPlaceholder": "Unesi korak postotka",
+    "minPercentagePlaceholder": "Unesi postotak (zadano do 70%)"
+  },
   "dashboard": {
     "workoutToday": "Trening danas",
     "workoutFallbackName": "Trening",

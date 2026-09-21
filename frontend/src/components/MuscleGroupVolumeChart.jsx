@@ -1,19 +1,21 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { fetchJson } from "../api";
 import { useToast } from "../context/useToast";
 import styles from "./MuscleGroupVolumeChart.module.css";
 
-const RANGES = [
-  { label: "Tjedan", range: "week" },
-  { label: "Mjesec", range: "month" },
-  { label: "Godina", range: "year" },
-];
 const MINIMUM_MAX_VOLUME = 1;
 
 function MuscleGroupVolumeChart() {
+  const { t } = useTranslation();
   const { showError } = useToast();
   const [range, setRange] = useState("week");
   const [volumeData, setVolumeData] = useState([]);
+  const ranges = [
+    { label: t("common.week"), range: "week" },
+    { label: t("common.month"), range: "month" },
+    { label: t("common.year"), range: "year" },
+  ];
 
   useEffect(() => {
     const today = new Date().toISOString().split("T")[0];
@@ -30,7 +32,7 @@ function MuscleGroupVolumeChart() {
   return (
     <div>
       <div className={styles.rangeTabs}>
-        {RANGES.map(({ label, range: rangeValue }) => (
+        {ranges.map(({ label, range: rangeValue }) => (
           <button
             key={rangeValue}
             className={range === rangeValue ? styles.rangeTabActive : styles.rangeTab}
@@ -56,7 +58,7 @@ function MuscleGroupVolumeChart() {
           ))}
         </div>
       ) : (
-        <p className={styles.emptyState}>Nema podataka</p>
+        <p className={styles.emptyState}>{t("dashboard.noData")}</p>
       )}
     </div>
   );

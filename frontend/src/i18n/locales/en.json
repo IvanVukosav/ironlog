@@ -94,6 +94,17 @@
     "noSets": "no sets",
     "progress": "Progress"
   },
+  "calculator": {
+    "weightPlaceholder": "Enter weight",
+    "repsPlaceholder": "Enter reps",
+    "calculate": "Calculate",
+    "errorWeightRepsPositive": "Weight and reps must be greater than 0",
+    "errorStepMin": "Step must be at least {{min}}",
+    "errorPercentageRange": "Percentage must be between {{min}} and {{max}}",
+    "errorBrzyckiMaxReps": "Brzycki formula does not work for 37+ reps",
+    "stepPlaceholder": "Enter percentage step",
+    "minPercentagePlaceholder": "Enter percentage (default down to 70%)"
+  },
   "dashboard": {
     "workoutToday": "Training today",
     "workoutFallbackName": "Workout",
