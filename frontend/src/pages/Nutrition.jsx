@@ -6,30 +6,6 @@ import styles from "./Nutrition.module.css";
 
 const DEFAULT_MEAL_NAME = "Ostalo";
 
-function getBarSegments(value, goal) {
-  if (!goal) return { normalPercent: 0, overPercent: 0 };
-  if (value <= goal) {
-    return { normalPercent: Math.min(100, Math.round((value / goal) * 100)), overPercent: 0 };
-  }
-  const normalPercent = Math.round((goal / value) * 100);
-  return { normalPercent, overPercent: 100 - normalPercent };
-}
-
-function GoalBar({ value, goal, colorClass }) {
-  const { normalPercent, overPercent } = getBarSegments(value, goal);
-  return (
-    <div className={styles.totalsBarTrack}>
-      <div className={`${styles.totalsBarFill} ${colorClass}`} style={{ width: `${normalPercent}%` }} />
-      {overPercent > 0 && (
-        <div
-          className={`${styles.totalsBarFill} ${colorClass} ${styles.totalsBarFillOverGoal}`}
-          style={{ width: `${overPercent}%` }}
-        />
-      )}
-    </div>
-  );
-}
-
 function Nutrition() {
   const { showError } = useToast();
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
@@ -178,6 +154,11 @@ function Nutrition() {
       )
     : foodItemTemplates;
 
+  const goalPercent = (value, goal) => {
+    if (!goal) return 0;
+    return Math.min(100, Math.round((value / goal) * 100));
+  };
+
   const allItems = day?.meals?.flatMap((meal) => meal.items || []) || [];
   const totals = allItems.reduce(
     (sum, item) => ({
@@ -215,22 +196,42 @@ function Nutrition() {
               <div className={styles.totalsStat}>
                 <span className={styles.totalsLabel}>Kcal</span>
                 <span className={`${styles.totalsValue} ${styles.totalsValueKcal}`}>{totals.kcal} / {settings?.kcalGoal ?? "—"}</span>
-                <GoalBar value={totals.kcal} goal={settings?.kcalGoal} colorClass={styles.totalsBarFillKcal} />
+                <div className={styles.totalsBarTrack}>
+                  <div
+                    className={`${styles.totalsBarFill} ${styles.totalsBarFillKcal}`}
+                    style={{ width: `${goalPercent(totals.kcal, settings?.kcalGoal)}%` }}
+                  />
+                </div>
               </div>
               <div className={styles.totalsStat}>
                 <span className={styles.totalsLabel}>Protein</span>
                 <span className={`${styles.totalsValue} ${styles.totalsValueProtein}`}>{totals.protein}g / {settings?.proteinGoal ?? "—"}g</span>
-                <GoalBar value={totals.protein} goal={settings?.proteinGoal} colorClass={styles.totalsBarFillProtein} />
+                <div className={styles.totalsBarTrack}>
+                  <div
+                    className={`${styles.totalsBarFill} ${styles.totalsBarFillProtein}`}
+                    style={{ width: `${goalPercent(totals.protein, settings?.proteinGoal)}%` }}
+                  />
+                </div>
               </div>
               <div className={styles.totalsStat}>
                 <span className={styles.totalsLabel}>Carbs</span>
                 <span className={`${styles.totalsValue} ${styles.totalsValueCarbs}`}>{totals.carbs}g / {settings?.carbsGoal ?? "—"}g</span>
-                <GoalBar value={totals.carbs} goal={settings?.carbsGoal} colorClass={styles.totalsBarFillCarbs} />
+                <div className={styles.totalsBarTrack}>
+                  <div
+                    className={`${styles.totalsBarFill} ${styles.totalsBarFillCarbs}`}
+                    style={{ width: `${goalPercent(totals.carbs, settings?.carbsGoal)}%` }}
+                  />
+                </div>
               </div>
               <div className={styles.totalsStat}>
                 <span className={styles.totalsLabel}>Fat</span>
                 <span className={`${styles.totalsValue} ${styles.totalsValueFat}`}>{totals.fat}g / {settings?.fatGoal ?? "—"}g</span>
-                <GoalBar value={totals.fat} goal={settings?.fatGoal} colorClass={styles.totalsBarFillFat} />
+                <div className={styles.totalsBarTrack}>
+                  <div
+                    className={`${styles.totalsBarFill} ${styles.totalsBarFillFat}`}
+                    style={{ width: `${goalPercent(totals.fat, settings?.fatGoal)}%` }}
+                  />
+                </div>
               </div>
             </div>
           </div>

@@ -199,7 +199,6 @@
 }
 
 .totalsBarTrack {
-  display: flex;
   margin-top: 0.5rem;
   height: 4px;
   background-color: var(--color-border-subtle);
@@ -209,18 +208,8 @@
 
 .totalsBarFill {
   height: 100%;
-  flex-shrink: 0;
+  border-radius: 2px;
   transition: width 0.3s ease;
-}
-
-.totalsBarFillOverGoal {
-  background-image: repeating-linear-gradient(
-    45deg,
-    rgba(0, 0, 0, 0.3) 0px,
-    rgba(0, 0, 0, 0.3) 3px,
-    transparent 3px,
-    transparent 6px
-  );
 }
 
 .totalsBarFillKcal {
