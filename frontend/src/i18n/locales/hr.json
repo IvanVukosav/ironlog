@@ -34,6 +34,8 @@
   "common": {
     "save": "Spremi",
     "delete": "Obriši",
+    "cancel": "Odustani",
+    "no": "Ne",
     "week": "Tjedan",
     "month": "Mjesec",
     "year": "Godina",
@@ -41,6 +43,34 @@
       "Siječanj", "Veljača", "Ožujak", "Travanj", "Svibanj", "Lipanj",
       "Srpanj", "Kolovoz", "Rujan", "Listopad", "Studeni", "Prosinac"
     ]
+  },
+  "log": {
+    "title": "Log treninga",
+    "workoutId": "ID treninga: {{id}}",
+    "saveAsTemplate": "Spremi kao predložak",
+    "templateNameLabel": "Naziv predloška:",
+    "confirmCancelWorkout": "Odustati od treninga? Sve dodane vježbe i setovi će biti obrisani.",
+    "workoutNamePlaceholder": "Naziv treninga (opcionalno)",
+    "startWorkout": "Započni trening",
+    "searchOrTypeExercise": "Pretraži ili upiši vježbu",
+    "addExercise": "Dodaj vježbu",
+    "loadTemplate": "Učitaj predložak",
+    "exercisesSuffix": "vježbi",
+    "back": "‹ Natrag",
+    "muscleGroupPlaceholder": "Mišićna skupina...",
+    "addAsExercise": "+ Dodaj \"{{name}}\" kao vježbu",
+    "savePromptExercise": "Spremi \"{{name}}\" na listu vježbi?",
+    "exerciseAlreadyAdded": "\"{{name}}\" je već dodana u ovaj trening",
+    "weightPlaceholder": "Kilaža",
+    "repsPlaceholder": "Broj ponavljanja",
+    "rpePlaceholder": "RPE",
+    "deleteExercise": "Obriši vježbu",
+    "confirmDeleteExercise": "Obrisati vježbu \"{{name}}\" i sve njene setove?",
+    "addSet": "Dodaj set",
+    "setSummary": "{{weight}}kg — {{reps}} reps @ RPE {{rpe}}",
+    "e1rmSuffix": " — e1RM: {{value}}kg",
+    "duplicateSet": "Kopiraj set",
+    "newPrToast": "🎉 Novi PR! {{name}} {{value}}kg e1RM"
   },
   "dashboard": {
     "workoutToday": "Trening danas",

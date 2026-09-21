@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import ExerciseCard from "../components/ExerciseCard";
 import DatePicker from "../components/DatePicker";
 import { fetchJson } from "../api";
@@ -13,6 +14,7 @@ const MUSCLE_GROUPS = [
 const ALL_MUSCLE_GROUPS_FILTER = "Sve";
 
 function Log() {
+  const { t } = useTranslation();
   const { showError } = useToast();
   const [searchParams] = useSearchParams();
   const [date, setDate] = useState(
@@ -108,7 +110,7 @@ function Log() {
 
   const cancelWorkout = () => {
     if (!workout) return;
-    if (!window.confirm("Odustati od treninga? Sve dodane vježbe i setovi će biti obrisani.")) {
+    if (!window.confirm(t("log.confirmCancelWorkout"))) {
       return;
     }
     fetchJson(`/api/workouts/${workout.id}`, { method: "DELETE" })
@@ -133,7 +135,7 @@ function Log() {
       (exercise) => exercise.name.toLowerCase() === exerciseName.trim().toLowerCase()
     );
     if (alreadyInWorkout) {
-      showError(`"${exerciseName.trim()}" je već dodana u ovaj trening`);
+      showError(t("log.exerciseAlreadyAdded", { name: exerciseName.trim() }));
       return;
     }
 
@@ -266,22 +268,22 @@ function Log() {
 
   return (
     <div className={styles.page}>
-      <h1 className={styles.heading}>Log treninga</h1>
+      <h1 className={styles.heading}>{t("log.title")}</h1>
 
       <div className={styles.topRow}>
         <DatePicker value={date} onChange={setDate} />
         {workout && (
           <>
-            <span className={styles.meta}>Workout ID: {workout.id}</span>
+            <span className={styles.meta}>{t("log.workoutId", { id: workout.id })}</span>
             <button className={styles.cancelButton} onClick={cancelWorkout}>
-              Odustani
+              {t("common.cancel")}
             </button>
             {workout.exercises?.length > 0 && (
               <button
                 className={styles.cancelButton}
                 onClick={() => setSaveTemplateName("")}
               >
-                Spremi kao predložak
+                {t("log.saveAsTemplate")}
               </button>
             )}
           </>
@@ -290,7 +292,7 @@ function Log() {
 
       {saveTemplateName !== null && (
         <div className={styles.savePrompt}>
-          <span className={styles.savePromptText}>Naziv predloška:</span>
+          <span className={styles.savePromptText}>{t("log.templateNameLabel")}</span>
           <input
             type="text"
             className={styles.savePromptSelect}
@@ -307,10 +309,10 @@ function Log() {
             disabled={!saveTemplateName.trim()}
             onClick={saveWorkoutTemplate}
           >
-            Spremi
+            {t("common.save")}
           </button>
           <button className={styles.savePromptNo} onClick={() => setSaveTemplateName(null)}>
-            Ne
+            {t("common.no")}
           </button>
         </div>
       )}
@@ -319,7 +321,7 @@ function Log() {
         <input
           type="text"
           className={styles.workoutNameInput}
-          placeholder="Naziv treninga (opcionalno)"
+          placeholder={t("log.workoutNamePlaceholder")}
           defaultValue={workout.name || ""}
           onBlur={(event) => updateWorkoutName(event.target.value)}
           onKeyDown={(event) => {
@@ -330,7 +332,7 @@ function Log() {
 
       {!workout && (
         <button className={styles.startButton} onClick={createWorkout}>
-          Započni trening
+          {t("log.startWorkout")}
         </button>
       )}
 
@@ -340,7 +342,7 @@ function Log() {
             <input
               type="text"
               className={styles.exerciseInput}
-              placeholder="Pretraži ili upiši vježbu"
+              placeholder={t("log.searchOrTypeExercise")}
               value={exerciseName}
               onChange={(event) => {
                 setExerciseName(event.target.value);
@@ -350,7 +352,7 @@ function Log() {
               onFocus={() => setShowExercisePicker(true)}
             />
             <button className={styles.addButton} onClick={addExercise}>
-              Dodaj vježbu
+              {t("log.addExercise")}
             </button>
             {workoutTemplates.length > 0 && (
               <div style={{ position: "relative", display: "inline-block" }} ref={templatePickerRef}>
@@ -358,7 +360,7 @@ function Log() {
                   className={styles.addButton}
                   onClick={() => setShowTemplatePicker((prev) => !prev)}
                 >
-                  Učitaj predložak
+                  {t("log.loadTemplate")}
                 </button>
                 {showTemplatePicker && (
                   <div className={styles.exercisePicker}>
@@ -370,7 +372,7 @@ function Log() {
                         >
                           {template.name}
                           <span className={styles.exercisePickerGroup}>
-                            {template.exercises.length} vježbi
+                            {template.exercises.length} {t("log.exercisesSuffix")}
                           </span>
                         </button>
                         <button
@@ -420,7 +422,7 @@ function Log() {
                     className={styles.backButton}
                     onClick={() => setMuscleGroupFilter(ALL_MUSCLE_GROUPS_FILTER)}
                   >
-                    ‹ Natrag
+                    {t("log.back")}
                   </button>
                 )}
 
@@ -454,7 +456,7 @@ function Log() {
                         className={styles.exercisePickerCustom}
                         onClick={addExercise}
                       >
-                        + Dodaj "{exerciseName.trim()}" kao vježbu
+                        {t("log.addAsExercise", { name: exerciseName.trim() })}
                       </button>
                     )}
                   </>
@@ -465,14 +467,14 @@ function Log() {
           {savePromptName && (
             <div className={styles.savePrompt}>
               <span className={styles.savePromptText}>
-                Spremi "{savePromptName}" na listu vježbi?
+                {t("log.savePromptExercise", { name: savePromptName })}
               </span>
               <select
                 className={styles.savePromptSelect}
                 value={savePromptMuscleGroup}
                 onChange={(event) => setSavePromptMuscleGroup(event.target.value)}
               >
-                <option value="">Mišićna skupina...</option>
+                <option value="">{t("log.muscleGroupPlaceholder")}</option>
                 {MUSCLE_GROUPS.map((group) => (
                   <option key={group} value={group}>{group}</option>
                 ))}
@@ -482,7 +484,7 @@ function Log() {
                 disabled={!savePromptMuscleGroup}
                 onClick={() => saveExerciseTemplate(savePromptName, savePromptMuscleGroup)}
               >
-                Spremi
+                {t("common.save")}
               </button>
               <button
                 className={styles.savePromptNo}
@@ -491,7 +493,7 @@ function Log() {
                   setSavePromptMuscleGroup("");
                 }}
               >
-                Ne
+                {t("common.no")}
               </button>
             </div>
           )}

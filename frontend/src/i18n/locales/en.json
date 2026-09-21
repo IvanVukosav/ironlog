@@ -34,6 +34,8 @@
   "common": {
     "save": "Save",
     "delete": "Delete",
+    "cancel": "Cancel",
+    "no": "No",
     "week": "Week",
     "month": "Month",
     "year": "Year",
@@ -41,6 +43,34 @@
       "January", "February", "March", "April", "May", "June",
       "July", "August", "September", "October", "November", "December"
     ]
+  },
+  "log": {
+    "title": "Training log",
+    "workoutId": "Workout ID: {{id}}",
+    "saveAsTemplate": "Save as template",
+    "templateNameLabel": "Template name:",
+    "confirmCancelWorkout": "Cancel this workout? All added exercises and sets will be deleted.",
+    "workoutNamePlaceholder": "Workout name (optional)",
+    "startWorkout": "Start workout",
+    "searchOrTypeExercise": "Search or type an exercise",
+    "addExercise": "Add exercise",
+    "loadTemplate": "Load template",
+    "exercisesSuffix": "exercises",
+    "back": "‹ Back",
+    "muscleGroupPlaceholder": "Muscle group...",
+    "addAsExercise": "+ Add \"{{name}}\" as an exercise",
+    "savePromptExercise": "Save \"{{name}}\" to your exercise list?",
+    "exerciseAlreadyAdded": "\"{{name}}\" is already added to this workout",
+    "weightPlaceholder": "Weight",
+    "repsPlaceholder": "Reps",
+    "rpePlaceholder": "RPE",
+    "deleteExercise": "Delete exercise",
+    "confirmDeleteExercise": "Delete exercise \"{{name}}\" and all its sets?",
+    "addSet": "Add set",
+    "setSummary": "{{weight}}kg — {{reps}} reps @ RPE {{rpe}}",
+    "e1rmSuffix": " — e1RM: {{value}}kg",
+    "duplicateSet": "Duplicate set",
+    "newPrToast": "🎉 New PR! {{name}} {{value}}kg e1RM"
   },
   "dashboard": {
     "workoutToday": "Training today",

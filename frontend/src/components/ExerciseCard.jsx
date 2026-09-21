@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { fetchJson } from "../api";
 import { calculateEstimatedOneRepMax, findBestSetByE1rm } from "../utils/oneRepMax";
 import { useToast } from "../context/useToast";
@@ -10,6 +11,7 @@ const MINIMUM_WEIGHT_KG = 0;
 const E1RM_DECIMAL_PLACES = 1;
 
 function WeightInput({ value, onChange }) {
+  const { t } = useTranslation();
   const adjust = (amount) => {
     const currentWeight = parseFloat(value) || 0;
     const nextWeight = Math.max(currentWeight + amount, MINIMUM_WEIGHT_KG);
@@ -25,7 +27,7 @@ function WeightInput({ value, onChange }) {
         <input
           type="text"
           className={styles.setInput}
-          placeholder="Kilaza"
+          placeholder={t("log.weightPlaceholder")}
           value={value}
           onChange={(event) => onChange(event.target.value)}
         />
@@ -51,6 +53,7 @@ function Exercise({
   isDropTarget,
   onDragHandlePointerDown,
 }) {
+  const { t } = useTranslation();
   const { showError, showSuccess } = useToast();
   const [set, setSet] = useState({ weight: "", reps: "", rpe: "" });
   const [showMenu, setShowMenu] = useState(false);
@@ -102,7 +105,7 @@ function Exercise({
 
           const newSetE1rm = calculateEstimatedOneRepMax(data.weight, data.reps, data.rpe, e1rmFormula);
           if (!previousBest || newSetE1rm > previousBest.e1rm) {
-            showSuccess(`🎉 Novi PR! ${exercise.name} ${newSetE1rm.toFixed(E1RM_DECIMAL_PLACES)}kg e1RM`);
+            showSuccess(t("log.newPrToast", { name: exercise.name, value: newSetE1rm.toFixed(E1RM_DECIMAL_PLACES) }));
           }
         });
       })
@@ -125,7 +128,7 @@ function Exercise({
 
   const deleteExercise = () => {
     setShowMenu(false);
-    if (!window.confirm(`Obrisati vježbu "${exercise.name}" i sve njene setove?`)) {
+    if (!window.confirm(t("log.confirmDeleteExercise", { name: exercise.name }))) {
       return;
     }
     fetchJson(`/api/workouts/exercises/${exercise.id}`, { method: "DELETE" })
@@ -207,7 +210,7 @@ function Exercise({
           {showMenu && (
             <div className={styles.menuDropdown}>
               <button className={styles.menuItem} onClick={deleteExercise}>
-                Obriši vježbu
+                {t("log.deleteExercise")}
               </button>
             </div>
           )}
@@ -221,7 +224,7 @@ function Exercise({
         <input
           type="text"
           className={styles.setInput}
-          placeholder="Broj ponavljanja"
+          placeholder={t("log.repsPlaceholder")}
           value={set.reps}
           onChange={(event) =>
             setSet((prev) => ({ ...prev, reps: event.target.value }))
@@ -230,7 +233,7 @@ function Exercise({
         <input
           type="text"
           className={styles.setInput}
-          placeholder="Rpe"
+          placeholder={t("log.rpePlaceholder")}
           value={set.rpe}
           onChange={(event) =>
             setSet((prev) => ({ ...prev, rpe: event.target.value }))
@@ -240,7 +243,7 @@ function Exercise({
           className={styles.addSetButton}
           onClick={() => addSet(exercise.id)}
         >
-          Dodaj set
+          {t("log.addSet")}
         </button>
       </div>
       <div className={styles.setList}>
@@ -254,7 +257,7 @@ function Exercise({
               <input
                 type="text"
                 className={styles.setInput}
-                placeholder="Broj ponavljanja"
+                placeholder={t("log.repsPlaceholder")}
                 value={editSet.reps}
                 onChange={(event) =>
                   setEditSet((prev) => ({ ...prev, reps: event.target.value }))
@@ -263,7 +266,7 @@ function Exercise({
               <input
                 type="text"
                 className={styles.setInput}
-                placeholder="Rpe"
+                placeholder={t("log.rpePlaceholder")}
                 value={editSet.rpe}
                 onChange={(event) =>
                   setEditSet((prev) => ({ ...prev, rpe: event.target.value }))
@@ -273,13 +276,13 @@ function Exercise({
                 className={styles.saveSetButton}
                 onClick={() => saveEditingSet(workoutSet.id)}
               >
-                Spremi
+                {t("common.save")}
               </button>
               <button
                 className={styles.cancelSetButton}
                 onClick={() => setEditingSetId(null)}
               >
-                Odustani
+                {t("common.cancel")}
               </button>
             </div>
           ) : (
@@ -305,10 +308,10 @@ function Exercise({
                 className={styles.setText}
                 onClick={() => startEditingSet(workoutSet)}
               >
-                {workoutSet.weight}kg — {workoutSet.reps} reps @ RPE {workoutSet.rpe}
+                {t("log.setSummary", { weight: workoutSet.weight, reps: workoutSet.reps, rpe: workoutSet.rpe })}
                 {showE1rm && Number.isFinite(workoutSet.rpe) && (
                   <span className={styles.e1rmText}>
-                    {" "}— e1RM: {calculateEstimatedOneRepMax(workoutSet.weight, workoutSet.reps, workoutSet.rpe, e1rmFormula).toFixed(E1RM_DECIMAL_PLACES)}kg
+                    {t("log.e1rmSuffix", { value: calculateEstimatedOneRepMax(workoutSet.weight, workoutSet.reps, workoutSet.rpe, e1rmFormula).toFixed(E1RM_DECIMAL_PLACES) })}
                   </span>
                 )}
               </span>
@@ -316,8 +319,8 @@ function Exercise({
                 <button
                   className={styles.duplicateSet}
                   onClick={() => duplicateSet(workoutSet)}
-                  aria-label="Kopiraj set"
-                  title="Kopiraj set"
+                  aria-label={t("log.duplicateSet")}
+                  title={t("log.duplicateSet")}
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="9" y="9" width="13" height="13" rx="2" />
