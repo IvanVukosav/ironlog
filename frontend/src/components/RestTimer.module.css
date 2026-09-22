@@ -5,9 +5,12 @@
   z-index: 90;
   display: flex;
   flex-direction: column;
+  width: 15rem;
 }
 
 .toggleBar {
+  width: 100%;
+  box-sizing: border-box;
   background-color: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
   color: var(--color-text-dim);
@@ -24,6 +27,8 @@
 }
 
 .presetRow {
+  width: 100%;
+  box-sizing: border-box;
   display: flex;
   gap: 0.4rem;
   background-color: var(--color-bg-elevated);
@@ -47,6 +52,8 @@
 }
 
 .timerCard {
+  width: 100%;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   gap: 0.75rem;
