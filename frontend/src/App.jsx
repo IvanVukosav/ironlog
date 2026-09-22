@@ -6,6 +6,7 @@ import { ToastProvider } from "./context/ToastContext";
 import ToastContainer from "./components/ToastContainer";
 import RestTimer from "./components/RestTimer";
 import NavBar from "./components/NavBar";
+import styles from "./App.module.css";
 import Dashboard from "./pages/Dashboard";
 import Log from "./pages/Log";
 import Nutrition from "./pages/Nutrition";
@@ -35,7 +36,7 @@ function App() {
     <ToastProvider>
       <BrowserRouter>
         <NavBar />
-        <div style={{ paddingBottom: "1rem" }}>
+        <div className={styles.routes}>
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/log" element={<Log />} />
