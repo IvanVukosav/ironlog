@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, Fragment } from "react";
+import { useSearchParams } from "react-router-dom";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { useTranslation } from "react-i18next";
 import { fetchJson } from "../api";
@@ -28,6 +29,8 @@ function formatChartDate(dateString) {
 function Stats() {
   const { t } = useTranslation();
   const { showError } = useToast();
+  const [searchParams] = useSearchParams();
+  const exerciseParam = searchParams.get("exercise");
   const chartAccentColor = getCssVar("--color-accent");
   const chartTextDimColor = getCssVar("--color-text-dim");
   const chartBgCardColor = getCssVar("--color-bg-card");
@@ -48,8 +51,8 @@ function Stats() {
       .then((data) => {
         setPrs(data);
         setSelectedExercise((prev) => {
-          const stillExists = data.some((pr) => pr.name === prev);
-          if (stillExists) return prev;
+          if (prev && data.some((pr) => pr.name === prev)) return prev;
+          if (exerciseParam && data.some((pr) => pr.name === exerciseParam)) return exerciseParam;
           return data.length > 0 ? data[0].name : "";
         });
       })
@@ -57,7 +60,7 @@ function Stats() {
         console.error(err);
         showError(err.message);
       });
-  }, [showError]);
+  }, [showError, exerciseParam]);
 
   useEffect(() => {
     fetchPrs();
@@ -69,6 +72,12 @@ function Stats() {
         showError(err.message);
       });
   }, [fetchPrs, showError]);
+
+  useEffect(() => {
+    if (exerciseParam && selectedExercise === exerciseParam) {
+      chartSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [exerciseParam, selectedExercise]);
 
   useEffect(() => {
     if (!manageMenuFor) return undefined;

@@ -374,7 +374,10 @@ function Dashboard() {
           </p>
         </div>
         {(settings?.showPrWidget ?? true) && latestPr && (
-          <div className={styles.card}>
+          <div
+            className={`${styles.card} ${styles.clickableCard}`}
+            onClick={() => navigate(`/stats?exercise=${encodeURIComponent(latestPr.name)}`)}
+          >
             <div className={styles.prHeader}>
               <h2 className={styles.label}>{t("dashboard.latestPr")}</h2>
               <span className={styles.prDate}>{new Date(latestPr.date).toISOString().split("T")[0]}</span>
