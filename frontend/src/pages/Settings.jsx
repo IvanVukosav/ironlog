@@ -315,6 +315,20 @@ function Settings() {
         {t("settings.showNutritionWidget")}
       </label>
 
+      <label className={styles.checkboxRow}>
+        <input
+          type="checkbox"
+          checked={settings?.showPrWidget ?? true}
+          onChange={(event) =>
+            setSettings((prev) => ({
+              ...prev,
+              showPrWidget: event.target.checked,
+            }))
+          }
+        />
+        {t("settings.showPrWidget")}
+      </label>
+
       <p className={styles.sectionLabel}>{t("settings.exercisePickerSection")}</p>
 
       <label className={styles.checkboxRow}>

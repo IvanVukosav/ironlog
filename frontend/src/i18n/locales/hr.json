@@ -18,6 +18,7 @@
     "dashboardWidgets": "Dashboard widgeti",
     "showWorkoutWidget": "Prikaži trening widget",
     "showNutritionWidget": "Prikaži prehrana widget",
+    "showPrWidget": "Prikaži zadnji PR widget",
     "exercisePickerSection": "Odabir vježbe u Logu",
     "exercisePickerChips": "Chips (filter iznad liste)",
     "exercisePickerTwoStep": "Dvokorak (prvo kategorija, pa vježba)",
@@ -128,7 +129,9 @@
     "noWorkouts": "Nema treninga",
     "streak": "Niz treninga",
     "streakDays": "{{count}} dana zaredom",
-    "longestStreakSuffix": "Najduži niz: {{count}} dana"
+    "longestStreakSuffix": "Najduži niz: {{count}} dana",
+    "latestPr": "Zadnji PR",
+    "latestPrDetail": "{{e1rm}}kg e1RM — {{weight}}kg × {{reps}} @ RPE {{rpe}}"
   },
   "calendar": {
     "weekdays": ["Nedjelja", "Ponedjeljak", "Utorak", "Srijeda", "Četvrtak", "Petak", "Subota"],

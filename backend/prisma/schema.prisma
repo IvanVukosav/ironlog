@@ -65,6 +65,7 @@ model Settings {
   showWorkoutWidget   Boolean @default(true)
   showNutritionWidget Boolean @default(true)
   showCalendarWidget  Boolean @default(true)
+  showPrWidget        Boolean @default(true)
   kcalGoal            Int     @default(2500)
   proteinGoal         Int     @default(180)
   trainingsPerWeek    Int     @default(4)

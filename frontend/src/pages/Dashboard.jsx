@@ -5,12 +5,25 @@ import { fetchJson } from "../api";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { useToast } from "../context/useToast";
 import { getCssVar } from "../utils/theme";
+import { findBestSetByE1rm } from "../utils/oneRepMax";
 import MuscleGroupVolumeChart from "../components/MuscleGroupVolumeChart";
 import styles from "./Dashboard.module.css";
 
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 const DAYS_PER_WEEK = 7;
 const MAX_PROGRESS_PERCENT = 100;
+const PR_E1RM_DECIMAL_PLACES = 1;
+
+function getLatestPr(prs, formula) {
+  let latest = null;
+  prs.forEach((pr) => {
+    const best = findBestSetByE1rm(pr.sets, formula);
+    if (best && (!latest || best.date > latest.date)) {
+      latest = { name: pr.name, ...best };
+    }
+  });
+  return latest;
+}
 
 function formatDateString(date) {
   const year = date.getUTCFullYear();
@@ -64,6 +77,7 @@ function Dashboard() {
   const [weeklyWorkouts, setWeeklyWorkouts] = useState([]);
   const [rangeWorkoutCount, setRangeWorkoutCount] = useState(0);
   const [streak, setStreak] = useState({ currentStreak: 0, longestStreak: 0 });
+  const [prs, setPrs] = useState([]);
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -112,6 +126,13 @@ function Dashboard() {
 
     fetchJson("/api/stats/streak")
       .then((data) => setStreak(data))
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
+
+    fetchJson("/api/stats/prs")
+      .then((data) => setPrs(data))
       .catch((err) => {
         console.error(err);
         showError(err.message);
@@ -175,6 +196,8 @@ function Dashboard() {
 
   const allItems = nutritionDay?.meals?.flatMap((meal) => meal.items) || [];
   const totalKcal = allItems.reduce((sum, item) => sum + item.kcal, 0);
+
+  const latestPr = getLatestPr(prs, settings?.e1rmFormula ?? "brzycki");
 
   const weeklyGoal = settings?.trainingsPerWeek;
   const weeklyProgressPercent = weeklyGoal
@@ -264,6 +287,23 @@ function Dashboard() {
             {t("dashboard.longestStreakSuffix", { count: streak.longestStreak })}
           </p>
         </div>
+        {(settings?.showPrWidget ?? true) && latestPr && (
+          <div className={styles.card}>
+            <div className={styles.prHeader}>
+              <h2 className={styles.label}>{t("dashboard.latestPr")}</h2>
+              <span className={styles.prDate}>{new Date(latestPr.date).toISOString().split("T")[0]}</span>
+            </div>
+            <p className={styles.prName}>{latestPr.name}</p>
+            <p className={styles.streakLongest}>
+              {t("dashboard.latestPrDetail", {
+                e1rm: latestPr.e1rm.toFixed(PR_E1RM_DECIMAL_PLACES),
+                weight: latestPr.weight,
+                reps: latestPr.reps,
+                rpe: latestPr.rpe ?? "—",
+              })}
+            </p>
+          </div>
+        )}
         <div className={`${styles.card} ${styles.fullWidth}`}>
           <div className={styles.bwChartHeader}>
             <h2 className={styles.label}>{t("dashboard.weeklyProgress")}</h2>

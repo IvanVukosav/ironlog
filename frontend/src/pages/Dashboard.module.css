@@ -69,6 +69,26 @@
   margin-top: 0.25rem;
 }
 
+.prHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.prDate {
+  color: var(--color-text-dim);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.prName {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-top: 0.25rem;
+}
+
 .bwChartHeader {
   display: flex;
   align-items: center;
