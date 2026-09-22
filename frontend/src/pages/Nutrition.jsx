@@ -244,74 +244,69 @@ function Nutrition() {
       {day && (
         <div>
           <div className={styles.totalsCard}>
-            <div className={styles.totalsGrid}>
-              <div className={styles.totalsStat}>
-                <span className={styles.totalsLabel}>Kcal</span>
-                <span className={`${styles.totalsValue} ${styles.totalsValueKcal}`}>{totals.kcal} / {settings?.kcalGoal ?? "—"}</span>
-                <GoalBar value={totals.kcal} goal={settings?.kcalGoal} colorClass={styles.totalsBarFillKcal} />
-              </div>
-              <div className={styles.totalsStat}>
-                <span className={styles.totalsLabel}>Protein</span>
-                <span className={`${styles.totalsValue} ${styles.totalsValueProtein}`}>{totals.protein}g / {settings?.proteinGoal ?? "—"}g</span>
-                <GoalBar value={totals.protein} goal={settings?.proteinGoal} colorClass={styles.totalsBarFillProtein} />
-              </div>
-              <div className={styles.totalsStat}>
-                <span className={styles.totalsLabel}>Carbs</span>
-                <span className={`${styles.totalsValue} ${styles.totalsValueCarbs}`}>{totals.carbs}g / {settings?.carbsGoal ?? "—"}g</span>
-                <GoalBar value={totals.carbs} goal={settings?.carbsGoal} colorClass={styles.totalsBarFillCarbs} />
-              </div>
-              <div className={styles.totalsStat}>
-                <span className={styles.totalsLabel}>Fat</span>
-                <span className={`${styles.totalsValue} ${styles.totalsValueFat}`}>{totals.fat}g / {settings?.fatGoal ?? "—"}g</span>
-                <GoalBar value={totals.fat} goal={settings?.fatGoal} colorClass={styles.totalsBarFillFat} />
-              </div>
-            </div>
-          </div>
-
-          <div className={styles.historyCard}>
-            <div className={styles.historyHeader}>
-              <h2 className={styles.historyHeading}>{t("nutrition.macroBreakdown")}</h2>
-            </div>
-            {macroChartData.length > 0 ? (
-              <div className={styles.macroChartRow}>
-                <PieChart width={MACRO_CHART_SIZE} height={MACRO_CHART_SIZE}>
-                  <Pie
-                    data={macroChartData}
-                    dataKey="value"
-                    nameKey="name"
-                    innerRadius={MACRO_CHART_INNER_RADIUS}
-                    outerRadius={MACRO_CHART_OUTER_RADIUS}
-                    paddingAngle={2}
-                  >
-                    {macroChartData.map((entry) => (
-                      <Cell key={entry.name} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{ background: chartBgCardColor, border: `1px solid ${chartBorderColor}`, fontFamily: "ui-monospace", fontSize: 12 }}
-                    labelStyle={{ color: chartTextDimColor }}
-                    itemStyle={{ color: chartTextColor }}
-                    formatter={(value, name) => [`${Math.round(value)} kcal`, name]}
-                  />
-                </PieChart>
-                <div className={styles.macroLegend}>
-                  <div className={styles.macroLegendRow}>
-                    <span className={styles.macroLegendDot} style={{ backgroundColor: chartProteinColor }} />
-                    Protein — {totals.protein}g ({macroPercent(macroKcal.protein)}%)
-                  </div>
-                  <div className={styles.macroLegendRow}>
-                    <span className={styles.macroLegendDot} style={{ backgroundColor: chartCarbsColor }} />
-                    Carbs — {totals.carbs}g ({macroPercent(macroKcal.carbs)}%)
-                  </div>
-                  <div className={styles.macroLegendRow}>
-                    <span className={styles.macroLegendDot} style={{ backgroundColor: chartFatColor }} />
-                    Fat — {totals.fat}g ({macroPercent(macroKcal.fat)}%)
+            <div className={styles.totalsRow}>
+              {macroChartData.length > 0 && (
+                <div className={styles.macroChartBlock}>
+                  <PieChart width={MACRO_CHART_SIZE} height={MACRO_CHART_SIZE}>
+                    <Pie
+                      data={macroChartData}
+                      dataKey="value"
+                      nameKey="name"
+                      innerRadius={MACRO_CHART_INNER_RADIUS}
+                      outerRadius={MACRO_CHART_OUTER_RADIUS}
+                      paddingAngle={2}
+                    >
+                      {macroChartData.map((entry) => (
+                        <Cell key={entry.name} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{ background: chartBgCardColor, border: `1px solid ${chartBorderColor}`, fontFamily: "ui-monospace", fontSize: 12 }}
+                      labelStyle={{ color: chartTextDimColor }}
+                      itemStyle={{ color: chartTextColor }}
+                      formatter={(value, name) => [`${Math.round(value)} kcal`, name]}
+                    />
+                  </PieChart>
+                  <div className={styles.macroLegend}>
+                    <div className={styles.macroLegendRow}>
+                      <span className={styles.macroLegendDot} style={{ backgroundColor: chartProteinColor }} />
+                      Protein {macroPercent(macroKcal.protein)}%
+                    </div>
+                    <div className={styles.macroLegendRow}>
+                      <span className={styles.macroLegendDot} style={{ backgroundColor: chartCarbsColor }} />
+                      Carbs {macroPercent(macroKcal.carbs)}%
+                    </div>
+                    <div className={styles.macroLegendRow}>
+                      <span className={styles.macroLegendDot} style={{ backgroundColor: chartFatColor }} />
+                      Fat {macroPercent(macroKcal.fat)}%
+                    </div>
                   </div>
                 </div>
+              )}
+
+              <div className={styles.totalsGrid}>
+                <div className={styles.totalsStat}>
+                  <span className={styles.totalsLabel}>Kcal</span>
+                  <span className={`${styles.totalsValue} ${styles.totalsValueKcal}`}>{totals.kcal} / {settings?.kcalGoal ?? "—"}</span>
+                  <GoalBar value={totals.kcal} goal={settings?.kcalGoal} colorClass={styles.totalsBarFillKcal} />
+                </div>
+                <div className={styles.totalsStat}>
+                  <span className={styles.totalsLabel}>Protein</span>
+                  <span className={`${styles.totalsValue} ${styles.totalsValueProtein}`}>{totals.protein}g / {settings?.proteinGoal ?? "—"}g</span>
+                  <GoalBar value={totals.protein} goal={settings?.proteinGoal} colorClass={styles.totalsBarFillProtein} />
+                </div>
+                <div className={styles.totalsStat}>
+                  <span className={styles.totalsLabel}>Carbs</span>
+                  <span className={`${styles.totalsValue} ${styles.totalsValueCarbs}`}>{totals.carbs}g / {settings?.carbsGoal ?? "—"}g</span>
+                  <GoalBar value={totals.carbs} goal={settings?.carbsGoal} colorClass={styles.totalsBarFillCarbs} />
+                </div>
+                <div className={styles.totalsStat}>
+                  <span className={styles.totalsLabel}>Fat</span>
+                  <span className={`${styles.totalsValue} ${styles.totalsValueFat}`}>{totals.fat}g / {settings?.fatGoal ?? "—"}g</span>
+                  <GoalBar value={totals.fat} goal={settings?.fatGoal} colorClass={styles.totalsBarFillFat} />
+                </div>
               </div>
-            ) : (
-              <p className={styles.emptyState}>{t("dashboard.noData")}</p>
-            )}
+            </div>
           </div>
 
           <div className={styles.quickAddRow} style={{ position: "relative" }} ref={quickAddRef}>

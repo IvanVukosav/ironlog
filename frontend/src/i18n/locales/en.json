@@ -85,8 +85,7 @@
     "confirmDeleteMeal": "Delete meal \"{{name}}\" and all its items?",
     "foodNamePlaceholder": "Food name",
     "addItem": "Add",
-    "saveAsFoodPrompt": "Save \"{{name}}\" as a food item?",
-    "macroBreakdown": "Macro breakdown"
+    "saveAsFoodPrompt": "Save \"{{name}}\" as a food item?"
   },
   "stats": {
     "recentPrs": "Recently broken records",
