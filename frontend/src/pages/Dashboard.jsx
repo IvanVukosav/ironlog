@@ -16,9 +16,10 @@ const PR_E1RM_DECIMAL_PLACES = 1;
 const KCAL_PER_GRAM_PROTEIN = 4;
 const KCAL_PER_GRAM_CARBS = 4;
 const KCAL_PER_GRAM_FAT = 9;
-const MACRO_CHART_SIZE = 40;
-const MACRO_CHART_INNER_RADIUS = 12;
-const MACRO_CHART_OUTER_RADIUS = 20;
+const MACRO_CHART_SIZE = 110;
+const MACRO_CHART_INNER_RADIUS = 30;
+const MACRO_CHART_OUTER_RADIUS = 50;
+const PERCENT_MULTIPLIER = 100;
 
 function getLatestPr(prs, formula) {
   let latest = null;
@@ -208,11 +209,19 @@ function Dashboard() {
   const totalProtein = allItems.reduce((sum, item) => sum + item.protein, 0);
   const totalCarbs = allItems.reduce((sum, item) => sum + item.carbs, 0);
   const totalFat = allItems.reduce((sum, item) => sum + item.fat, 0);
+  const macroKcal = {
+    protein: totalProtein * KCAL_PER_GRAM_PROTEIN,
+    carbs: totalCarbs * KCAL_PER_GRAM_CARBS,
+    fat: totalFat * KCAL_PER_GRAM_FAT,
+  };
+  const macroKcalTotal = macroKcal.protein + macroKcal.carbs + macroKcal.fat;
   const macroChartData = [
-    { name: "Protein", value: totalProtein * KCAL_PER_GRAM_PROTEIN, color: chartProteinColor },
-    { name: "Carbs", value: totalCarbs * KCAL_PER_GRAM_CARBS, color: chartCarbsColor },
-    { name: "Fat", value: totalFat * KCAL_PER_GRAM_FAT, color: chartFatColor },
+    { name: "Protein", value: macroKcal.protein, color: chartProteinColor },
+    { name: "Carbs", value: macroKcal.carbs, color: chartCarbsColor },
+    { name: "Fat", value: macroKcal.fat, color: chartFatColor },
   ].filter((entry) => entry.value > 0);
+  const macroPercent = (kcal) =>
+    macroKcalTotal > 0 ? Math.round((kcal / macroKcalTotal) * PERCENT_MULTIPLIER) : 0;
 
   const latestPr = getLatestPr(prs, settings?.e1rmFormula ?? "brzycki");
 
@@ -259,44 +268,44 @@ function Dashboard() {
             onClick={() => navigate(`/nutrition?date=${today}`)}
           >
             <h2 className={styles.label}>{t("dashboard.nutritionToday")}</h2>
-            <div className={styles.nutritionRow}>
-              <p className={styles.value}>
-                {totalKcal} /{" "}
-                {settings?.kcalGoal ? (
-                  `${settings.kcalGoal} kcal`
-                ) : kcalGoalInput !== null ? (
-                  <>
-                    <input
-                      className={styles.kcalInlineInput}
-                      type="number"
-                      autoFocus
-                      value={kcalGoalInput}
-                      onClick={(event) => event.stopPropagation()}
-                      onChange={(event) => setKcalGoalInput(event.target.value)}
-                      onKeyDown={(event) => {
-                        if (event.key === "Enter") saveKcalGoal();
-                        if (event.key === "Escape") setKcalGoalInput(null);
-                      }}
-                      onBlur={saveKcalGoal}
-                    />{" "}
-                    kcal
-                  </>
-                ) : (
-                  <>
-                    <button
-                      className={styles.kcalSetButton}
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        setKcalGoalInput("");
-                      }}
-                    >
-                      {t("dashboard.setGoal")}
-                    </button>{" "}
-                    kcal
-                  </>
-                )}
-              </p>
-              {macroChartData.length > 0 && (
+            <p className={styles.value}>
+              {totalKcal} /{" "}
+              {settings?.kcalGoal ? (
+                `${settings.kcalGoal} kcal`
+              ) : kcalGoalInput !== null ? (
+                <>
+                  <input
+                    className={styles.kcalInlineInput}
+                    type="number"
+                    autoFocus
+                    value={kcalGoalInput}
+                    onClick={(event) => event.stopPropagation()}
+                    onChange={(event) => setKcalGoalInput(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") saveKcalGoal();
+                      if (event.key === "Escape") setKcalGoalInput(null);
+                    }}
+                    onBlur={saveKcalGoal}
+                  />{" "}
+                  kcal
+                </>
+              ) : (
+                <>
+                  <button
+                    className={styles.kcalSetButton}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setKcalGoalInput("");
+                    }}
+                  >
+                    {t("dashboard.setGoal")}
+                  </button>{" "}
+                  kcal
+                </>
+              )}
+            </p>
+            {macroChartData.length > 0 && (
+              <div className={styles.macroRow}>
                 <PieChart width={MACRO_CHART_SIZE} height={MACRO_CHART_SIZE}>
                   <Pie
                     data={macroChartData}
@@ -317,8 +326,22 @@ function Dashboard() {
                     formatter={(value, name) => [`${Math.round(value)} kcal`, name]}
                   />
                 </PieChart>
-              )}
-            </div>
+                <div className={styles.macroLegend}>
+                  <div className={styles.macroLegendRow}>
+                    <span className={styles.macroLegendDot} style={{ backgroundColor: chartProteinColor }} />
+                    Protein {macroPercent(macroKcal.protein)}%
+                  </div>
+                  <div className={styles.macroLegendRow}>
+                    <span className={styles.macroLegendDot} style={{ backgroundColor: chartCarbsColor }} />
+                    Carbs {macroPercent(macroKcal.carbs)}%
+                  </div>
+                  <div className={styles.macroLegendRow}>
+                    <span className={styles.macroLegendDot} style={{ backgroundColor: chartFatColor }} />
+                    Fat {macroPercent(macroKcal.fat)}%
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
         <div className={styles.card}>
