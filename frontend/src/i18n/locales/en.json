@@ -86,7 +86,8 @@
     "foodNamePlaceholder": "Food name",
     "addItem": "Add",
     "saveAsFoodPrompt": "Save \"{{name}}\" as a food item?",
-    "kcalHistory": "Calorie history"
+    "kcalHistory": "Calorie history",
+    "macroBreakdown": "Macro breakdown"
   },
   "stats": {
     "recentPrs": "Recently broken records",

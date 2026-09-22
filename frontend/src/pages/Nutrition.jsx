@@ -1,11 +1,19 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, PieChart, Pie, Cell } from "recharts";
 import { fetchJson } from "../api";
 import MealCard from "../components/MealCard";
 import { useToast } from "../context/useToast";
 import { getCssVar } from "../utils/theme";
 import styles from "./Nutrition.module.css";
+
+const KCAL_PER_GRAM_PROTEIN = 4;
+const KCAL_PER_GRAM_CARBS = 4;
+const KCAL_PER_GRAM_FAT = 9;
+const MACRO_CHART_SIZE = 140;
+const MACRO_CHART_INNER_RADIUS = 40;
+const MACRO_CHART_OUTER_RADIUS = 65;
+const PERCENT_MULTIPLIER = 100;
 
 const DEFAULT_MEAL_NAME = "Ostalo";
 const HISTORY_DAYS = { week: 7, month: 30 };
@@ -47,6 +55,9 @@ function Nutrition() {
   const chartBgCardColor = getCssVar("--color-bg-card");
   const chartBorderColor = getCssVar("--color-border");
   const chartTextColor = getCssVar("--color-text");
+  const chartProteinColor = getCssVar("--color-protein");
+  const chartCarbsColor = getCssVar("--color-carbs");
+  const chartFatColor = getCssVar("--color-fat");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [day, setDay] = useState(null);
   const [mealName, setMealName] = useState("");
@@ -220,6 +231,20 @@ function Nutrition() {
     { kcal: 0, protein: 0, carbs: 0, fat: 0 },
   );
 
+  const macroKcal = {
+    protein: totals.protein * KCAL_PER_GRAM_PROTEIN,
+    carbs: totals.carbs * KCAL_PER_GRAM_CARBS,
+    fat: totals.fat * KCAL_PER_GRAM_FAT,
+  };
+  const macroKcalTotal = macroKcal.protein + macroKcal.carbs + macroKcal.fat;
+  const macroChartData = [
+    { name: "Protein", value: macroKcal.protein, color: chartProteinColor },
+    { name: "Carbs", value: macroKcal.carbs, color: chartCarbsColor },
+    { name: "Fat", value: macroKcal.fat, color: chartFatColor },
+  ].filter((entry) => entry.value > 0);
+  const macroPercent = (kcal) =>
+    macroKcalTotal > 0 ? Math.round((kcal / macroKcalTotal) * PERCENT_MULTIPLIER) : 0;
+
   return (
     <div className={styles.page}>
       <h1 className={styles.heading}>{t("nav.nutrition")}</h1>
@@ -301,6 +326,52 @@ function Nutrition() {
                   <Bar dataKey="kcal" fill={chartAccentColor} radius={[2, 2, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
+            ) : (
+              <p className={styles.emptyState}>{t("dashboard.noData")}</p>
+            )}
+          </div>
+
+          <div className={styles.historyCard}>
+            <div className={styles.historyHeader}>
+              <h2 className={styles.historyHeading}>{t("nutrition.macroBreakdown")}</h2>
+            </div>
+            {macroChartData.length > 0 ? (
+              <div className={styles.macroChartRow}>
+                <PieChart width={MACRO_CHART_SIZE} height={MACRO_CHART_SIZE}>
+                  <Pie
+                    data={macroChartData}
+                    dataKey="value"
+                    nameKey="name"
+                    innerRadius={MACRO_CHART_INNER_RADIUS}
+                    outerRadius={MACRO_CHART_OUTER_RADIUS}
+                    paddingAngle={2}
+                  >
+                    {macroChartData.map((entry) => (
+                      <Cell key={entry.name} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{ background: chartBgCardColor, border: `1px solid ${chartBorderColor}`, fontFamily: "ui-monospace", fontSize: 12 }}
+                    labelStyle={{ color: chartTextDimColor }}
+                    itemStyle={{ color: chartTextColor }}
+                    formatter={(value, name) => [`${Math.round(value)} kcal`, name]}
+                  />
+                </PieChart>
+                <div className={styles.macroLegend}>
+                  <div className={styles.macroLegendRow}>
+                    <span className={styles.macroLegendDot} style={{ backgroundColor: chartProteinColor }} />
+                    Protein — {totals.protein}g ({macroPercent(macroKcal.protein)}%)
+                  </div>
+                  <div className={styles.macroLegendRow}>
+                    <span className={styles.macroLegendDot} style={{ backgroundColor: chartCarbsColor }} />
+                    Carbs — {totals.carbs}g ({macroPercent(macroKcal.carbs)}%)
+                  </div>
+                  <div className={styles.macroLegendRow}>
+                    <span className={styles.macroLegendDot} style={{ backgroundColor: chartFatColor }} />
+                    Fat — {totals.fat}g ({macroPercent(macroKcal.fat)}%)
+                  </div>
+                </div>
+              </div>
             ) : (
               <p className={styles.emptyState}>{t("dashboard.noData")}</p>
             )}

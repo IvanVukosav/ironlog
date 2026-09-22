@@ -295,3 +295,32 @@
   color: var(--color-text-dim);
   font-size: 0.85rem;
 }
+
+.macroChartRow {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.macroLegend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.macroLegendRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-text);
+  font-size: 0.85rem;
+}
+
+.macroLegendDot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
