@@ -261,7 +261,18 @@ function Dashboard() {
                 {workout.exercises?.length > 0 && (
                   <div className={styles.chips}>
                     {workout.exercises.map((exercise) => (
-                      <span key={exercise.id} className={styles.chip}>{exercise.name}</span>
+                      <span key={exercise.id} className={styles.chip}>
+                        {exercise.name}
+                        <span className={styles.chipTooltip}>
+                          {exercise.sets?.length > 0
+                            ? exercise.sets
+                                .map((set) =>
+                                  t("log.setSummary", { weight: set.weight, reps: set.reps, rpe: set.rpe ?? "—" }),
+                                )
+                                .join(", ")
+                            : t("dashboard.noSetsLogged")}
+                        </span>
+                      </span>
                     ))}
                   </div>
                 )}

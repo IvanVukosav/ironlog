@@ -131,7 +131,8 @@
     "streakDays": "{{count}} dana zaredom",
     "longestStreakSuffix": "Najduži niz: {{count}} dana",
     "latestPr": "Zadnji PR",
-    "latestPrDetail": "{{e1rm}}kg e1RM — {{weight}}kg × {{reps}} @ RPE {{rpe}}"
+    "latestPrDetail": "{{e1rm}}kg e1RM — {{weight}}kg × {{reps}} @ RPE {{rpe}}",
+    "noSetsLogged": "Nema zabilježenih setova"
   },
   "calendar": {
     "weekdays": ["Nedjelja", "Ponedjeljak", "Utorak", "Srijeda", "Četvrtak", "Petak", "Subota"],

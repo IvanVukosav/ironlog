@@ -131,7 +131,8 @@
     "streakDays": "{{count}} day streak",
     "longestStreakSuffix": "Longest: {{count}} days",
     "latestPr": "Latest PR",
-    "latestPrDetail": "{{e1rm}}kg e1RM — {{weight}}kg × {{reps}} @ RPE {{rpe}}"
+    "latestPrDetail": "{{e1rm}}kg e1RM — {{weight}}kg × {{reps}} @ RPE {{rpe}}",
+    "noSetsLogged": "No sets logged"
   },
   "calendar": {
     "weekdays": ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
