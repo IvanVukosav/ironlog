@@ -5,6 +5,9 @@ import { fetchJson } from "../api";
 import { useToast } from "../context/useToast";
 import styles from "./Calendar.module.css";
 
+const EMPTY_MEASUREMENTS = { waist: "", chest: "", arms: "", thighs: "", hips: "" };
+const MEASUREMENT_FIELDS = ["waist", "chest", "arms", "thighs", "hips"];
+
 function Calendar() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -17,6 +20,10 @@ function Calendar() {
   const [bwModalDate, setBwModalDate] = useState(null);
   const [bwWeight, setBwWeight] = useState("");
   const [bwEntryId, setBwEntryId] = useState(null);
+  const [monthMeasurements, setMonthMeasurements] = useState([]);
+  const [measurementsModalDate, setMeasurementsModalDate] = useState(null);
+  const [measurementsForm, setMeasurementsForm] = useState(EMPTY_MEASUREMENTS);
+  const [measurementsEntryId, setMeasurementsEntryId] = useState(null);
   const dropdownRef = useRef(null);
 
   const today = new Date();
@@ -37,6 +44,13 @@ function Calendar() {
 
     fetchJson(`/api/bodyweight?year=${currentYear}&month=${currentMonth}`)
       .then((data) => setMonthBwEntries(data))
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
+
+    fetchJson(`/api/body-measurements?year=${currentYear}&month=${currentMonth}`)
+      .then((data) => setMonthMeasurements(data))
       .catch((err) => {
         console.error(err);
         showError(err.message);
@@ -83,6 +97,10 @@ function Calendar() {
   const getBwWeight = (day) => {
     const entry = getBwEntry(day);
     return entry ? entry.weight : null;
+  };
+
+  const getMeasurementsEntry = (day) => {
+    return monthMeasurements.find((entry) => matchesCurrentMonthDay(entry.date, day)) || null;
   };
 
   const isToday = (day) =>
@@ -171,6 +189,65 @@ function Calendar() {
       });
   };
 
+  const handleMeasurementsClick = (day) => {
+    const dateString = `${currentYear}-${String(currentMonth).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    setActiveDropdown(null);
+    setMeasurementsModalDate(dateString);
+    const existingEntry = getMeasurementsEntry(day);
+    setMeasurementsForm(
+      existingEntry
+        ? {
+            waist: existingEntry.waist ?? "",
+            chest: existingEntry.chest ?? "",
+            arms: existingEntry.arms ?? "",
+            thighs: existingEntry.thighs ?? "",
+            hips: existingEntry.hips ?? "",
+          }
+        : EMPTY_MEASUREMENTS,
+    );
+    setMeasurementsEntryId(existingEntry ? existingEntry.id : null);
+  };
+
+  const saveMeasurements = () => {
+    fetchJson("/api/body-measurements", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ date: measurementsModalDate, ...measurementsForm }),
+    })
+      .then((data) => {
+        setMeasurementsModalDate(null);
+        setMonthMeasurements((prev) => {
+          const savedDate = new Date(data.date);
+          const filtered = prev.filter((entry) => {
+            const entryDate = new Date(entry.date);
+            return !(
+              entryDate.getUTCFullYear() === savedDate.getUTCFullYear() &&
+              entryDate.getUTCMonth() === savedDate.getUTCMonth() &&
+              entryDate.getUTCDate() === savedDate.getUTCDate()
+            );
+          });
+          return [...filtered, data];
+        });
+      })
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
+  };
+
+  const deleteMeasurements = () => {
+    if (measurementsEntryId === null) return;
+    fetchJson(`/api/body-measurements/${measurementsEntryId}`, { method: "DELETE" })
+      .then(() => {
+        setMeasurementsModalDate(null);
+        setMonthMeasurements((prev) => prev.filter((entry) => entry.id !== measurementsEntryId));
+      })
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
+  };
+
   const prevMonthDays = new Date(Date.UTC(currentYear, currentMonth - 1, 0)).getUTCDate();
   const cells = [];
   for (let i = firstDay - 1; i >= 0; i--) {
@@ -245,6 +322,15 @@ function Calendar() {
                 >
                   {t("calendar.bodyweightOption")}
                 </button>
+                <button
+                  className={styles.dropdownItem}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    handleMeasurementsClick(cell.day);
+                  }}
+                >
+                  {t("calendar.measurementsOption")}
+                </button>
               </div>
             )}
           </div>
@@ -287,6 +373,59 @@ function Calendar() {
                 </button>
               )}
               <button className={styles.bwSaveButton} onClick={saveBw}>
+                {t("common.save")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {measurementsModalDate && (
+        <div className={styles.bwOverlay} onClick={() => setMeasurementsModalDate(null)}>
+          <div
+            className={styles.bwModal}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className={styles.bwModalHeader}>
+              <span className={styles.bwModalTitle}>
+                {t("calendar.measurementsModalTitle", { date: measurementsModalDate })}
+              </span>
+              <button
+                className={styles.bwModalClose}
+                onClick={() => setMeasurementsModalDate(null)}
+              >
+                X
+              </button>
+            </div>
+            <div className={styles.measurementsGrid}>
+              {MEASUREMENT_FIELDS.map((field) => (
+                <div key={field} className={styles.measurementField}>
+                  <label className={styles.measurementLabel}>
+                    {t(`calendar.measurementFields.${field}`)}
+                  </label>
+                  <input
+                    className={styles.measurementInput}
+                    type="number"
+                    placeholder="cm"
+                    value={measurementsForm[field]}
+                    onChange={(event) =>
+                      setMeasurementsForm((prev) => ({ ...prev, [field]: event.target.value }))
+                    }
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") saveMeasurements();
+                      if (event.key === "Escape") setMeasurementsModalDate(null);
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+            <div className={styles.bwModalFooter}>
+              {measurementsEntryId !== null && (
+                <button className={styles.bwDeleteButton} onClick={deleteMeasurements}>
+                  {t("common.delete")}
+                </button>
+              )}
+              <button className={styles.bwSaveButton} onClick={saveMeasurements}>
                 {t("common.save")}
               </button>
             </div>

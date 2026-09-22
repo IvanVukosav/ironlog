@@ -265,3 +265,44 @@
 .cellBwWeight {
   white-space: nowrap;
 }
+
+.measurementsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.measurementField {
+  display: flex;
+  flex-direction: column;
+}
+
+.measurementLabel {
+  color: var(--color-text-dim);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 2px;
+}
+
+.measurementInput {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 4px 2px;
+  outline: none;
+  width: 100%;
+}
+
+.measurementInput:focus {
+  border-bottom-color: var(--color-accent);
+}
+
+.measurementInput::placeholder {
+  color: var(--color-text-placeholder);
+}

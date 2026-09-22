@@ -135,7 +135,16 @@
     "weekdays": ["Nedjelja", "Ponedjeljak", "Utorak", "Srijeda", "Četvrtak", "Petak", "Subota"],
     "workoutOption": "Trening",
     "bodyweightOption": "Tjelesna težina",
-    "bodyweightModalTitle": "Tjelesna težina {{date}}"
+    "bodyweightModalTitle": "Tjelesna težina {{date}}",
+    "measurementsOption": "Mjere tijela",
+    "measurementsModalTitle": "Mjere tijela {{date}}",
+    "measurementFields": {
+      "waist": "Struk",
+      "chest": "Prsa",
+      "arms": "Ruke",
+      "thighs": "Bedra",
+      "hips": "Kukovi"
+    }
   },
   "datePicker": {
     "weekdays": ["Po", "Ut", "Sr", "Če", "Pe", "Su", "Ne"]
