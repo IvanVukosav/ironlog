@@ -63,6 +63,12 @@
   padding: 0;
 }
 
+.streakLongest {
+  color: var(--color-text-dim);
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
 .bwChartHeader {
   display: flex;
   align-items: center;

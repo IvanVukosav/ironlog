@@ -126,7 +126,10 @@
     "noData": "Nema podataka",
     "muscleGroupVolume": "Volumen po mišićnoj skupini",
     "recentWorkouts": "Zadnji treninzi",
-    "noWorkouts": "Nema treninga"
+    "noWorkouts": "Nema treninga",
+    "streak": "Niz treninga",
+    "streakDays": "{{count}} dana zaredom",
+    "longestStreakSuffix": "Najduži niz: {{count}} dana"
   },
   "calendar": {
     "weekdays": ["Nedjelja", "Ponedjeljak", "Utorak", "Srijeda", "Četvrtak", "Petak", "Subota"],

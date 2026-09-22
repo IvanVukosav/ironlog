@@ -126,7 +126,10 @@
     "noData": "No data",
     "muscleGroupVolume": "Volume by muscle group",
     "recentWorkouts": "Recent workouts",
-    "noWorkouts": "No workouts"
+    "noWorkouts": "No workouts",
+    "streak": "Training streak",
+    "streakDays": "{{count}} day streak",
+    "longestStreakSuffix": "Longest: {{count}} days"
   },
   "calendar": {
     "weekdays": ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],

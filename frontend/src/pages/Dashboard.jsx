@@ -63,6 +63,7 @@ function Dashboard() {
   const [workoutRangeView, setWorkoutRangeView] = useState("week");
   const [weeklyWorkouts, setWeeklyWorkouts] = useState([]);
   const [rangeWorkoutCount, setRangeWorkoutCount] = useState(0);
+  const [streak, setStreak] = useState({ currentStreak: 0, longestStreak: 0 });
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -104,6 +105,13 @@ function Dashboard() {
 
     fetchJson(`/api/workouts/week?date=${today}`)
       .then((data) => setWeeklyWorkouts(data))
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
+
+    fetchJson("/api/stats/streak")
+      .then((data) => setStreak(data))
       .catch((err) => {
         console.error(err);
         showError(err.message);
@@ -249,6 +257,13 @@ function Dashboard() {
             </p>
           </div>
         )}
+        <div className={styles.card}>
+          <h2 className={styles.label}>{t("dashboard.streak")}</h2>
+          <p className={styles.value}>🔥 {t("dashboard.streakDays", { count: streak.currentStreak })}</p>
+          <p className={styles.streakLongest}>
+            {t("dashboard.longestStreakSuffix", { count: streak.longestStreak })}
+          </p>
+        </div>
         <div className={`${styles.card} ${styles.fullWidth}`}>
           <div className={styles.bwChartHeader}>
             <h2 className={styles.label}>{t("dashboard.weeklyProgress")}</h2>

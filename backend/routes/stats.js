@@ -5,6 +5,11 @@ const { getWeekRange, getMonthRange, getYearRange } = require("../utils/dateRang
 
 const UNCATEGORIZED_MUSCLE_GROUP = "Ostalo";
 const VOLUME_RANGE_GETTERS = { week: getWeekRange, month: getMonthRange, year: getYearRange };
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+function toDateKey(date) {
+  return new Date(date).toISOString().split("T")[0];
+}
 
 router.get("/prs", async (req, res) => {
   try {
@@ -19,6 +24,7 @@ router.get("/prs", async (req, res) => {
         weight: set.weight,
         reps: set.reps,
         rpe: set.rpe,
+        isWarmup: set.isWarmup,
       }));
       setsByExerciseName[exercise.name] = (setsByExerciseName[exercise.name] || []).concat(sets);
     });
@@ -84,6 +90,43 @@ router.get("/volume", async (req, res) => {
       .sort((entryA, entryB) => entryB.volume - entryA.volume);
 
     res.json(result);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.get("/streak", async (req, res) => {
+  try {
+    const workouts = await prisma.workout.findMany({ select: { date: true } });
+    const dateKeys = new Set(workouts.map((workout) => toDateKey(workout.date)));
+    const sortedKeys = Array.from(dateKeys).sort();
+
+    let longestStreak = 0;
+    let runLength = 0;
+    let previousDate = null;
+    for (const dateKey of sortedKeys) {
+      const currentDate = new Date(dateKey);
+      if (previousDate && Math.round((currentDate - previousDate) / MS_PER_DAY) === 1) {
+        runLength += 1;
+      } else {
+        runLength = 1;
+      }
+      longestStreak = Math.max(longestStreak, runLength);
+      previousDate = currentDate;
+    }
+
+    const todayKey = toDateKey(new Date());
+    let cursor = dateKeys.has(todayKey)
+      ? new Date(todayKey)
+      : new Date(new Date(todayKey).getTime() - MS_PER_DAY);
+    let currentStreak = 0;
+    while (dateKeys.has(toDateKey(cursor))) {
+      currentStreak += 1;
+      cursor = new Date(cursor.getTime() - MS_PER_DAY);
+    }
+
+    res.json({ currentStreak, longestStreak });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal server error" });
