@@ -35,7 +35,7 @@ function App() {
     <ToastProvider>
       <BrowserRouter>
         <NavBar />
-        <div style={{ paddingBottom: "5rem" }}>
+        <div style={{ paddingBottom: "1rem" }}>
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/log" element={<Log />} />
