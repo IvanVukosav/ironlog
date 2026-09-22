@@ -35,15 +35,17 @@ function App() {
     <ToastProvider>
       <BrowserRouter>
         <NavBar />
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/log" element={<Log />} />
-          <Route path="/nutrition" element={<Nutrition />} />
-          <Route path="/calendar" element={<Calendar />} />
-          <Route path="/calculator" element={<Calculator />} />
-          <Route path="/stats" element={<Stats />} />
-          <Route path="/settings" element={<Settings />} />
-        </Routes>
+        <div style={{ paddingBottom: "5rem" }}>
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/log" element={<Log />} />
+            <Route path="/nutrition" element={<Nutrition />} />
+            <Route path="/calendar" element={<Calendar />} />
+            <Route path="/calculator" element={<Calculator />} />
+            <Route path="/stats" element={<Stats />} />
+            <Route path="/settings" element={<Settings />} />
+          </Routes>
+        </div>
       </BrowserRouter>
       <ToastContainer />
       <RestTimer />
