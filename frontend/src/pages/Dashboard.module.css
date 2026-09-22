@@ -40,12 +40,6 @@
   background-color: var(--color-bg-hover);
 }
 
-.centeredCard {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
 .macroRow {
   display: flex;
   align-items: center;
