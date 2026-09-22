@@ -509,14 +509,9 @@ function Log() {
           )}
 
           <div className={styles.cardList}>
-            {workout.exercises?.map((exercise, exerciseIndex) => {
-              const nextExercise = workout.exercises[exerciseIndex + 1];
-              const isLinkedToNext = Boolean(
-                exercise.supersetGroup && nextExercise?.supersetGroup === exercise.supersetGroup,
-              );
-              return (
-              <div key={exercise.id}>
+            {workout.exercises?.map((exercise) => (
               <ExerciseCard
+                key={exercise.id}
                 exercise={exercise}
                 showE1rm={settings?.showE1rm ?? true}
                 e1rmFormula={settings?.e1rmFormula ?? "brzycki"}
@@ -596,17 +591,7 @@ function Log() {
                   }))
                 }
               />
-              {isLinkedToNext && (
-                <div
-                  className={styles.supersetLink}
-                  style={{ "--group-color": supersetColorByGroup[exercise.supersetGroup] }}
-                >
-                  {t("log.supersetLinked", { name: nextExercise.name })}
-                </div>
-              )}
-              </div>
-              );
-            })}
+            ))}
           </div>
         </div>
       )}

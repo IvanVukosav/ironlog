@@ -117,14 +117,6 @@
   gap: 1rem;
 }
 
-.supersetLink {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  color: var(--group-color);
-  padding: 4px 0 0 1.75rem;
-  margin-top: -0.5rem;
-}
-
 .workoutNameInput {
   background: transparent;
   border: none;
