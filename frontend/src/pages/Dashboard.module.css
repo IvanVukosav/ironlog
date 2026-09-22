@@ -40,6 +40,21 @@
   background-color: var(--color-bg-hover);
 }
 
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 0.6rem;
+}
+
+.chip {
+  border: 1px solid var(--color-border);
+  color: var(--color-text-dim);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  padding: 3px 9px;
+}
+
 .macroRow {
   display: flex;
   align-items: center;

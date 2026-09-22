@@ -254,9 +254,18 @@ function Dashboard() {
           >
             <h2 className={styles.label}>{t("dashboard.workoutToday")}</h2>
             {workout ? (
-              <p className={styles.value}>
-                {workout.name || t("dashboard.workoutFallbackName")} — {workout.exercises?.length} {t("dashboard.exercisesSuffix")}
-              </p>
+              <>
+                <p className={styles.value}>
+                  {workout.name || t("dashboard.workoutFallbackName")} — {workout.exercises?.length} {t("dashboard.exercisesSuffix")}
+                </p>
+                {workout.exercises?.length > 0 && (
+                  <div className={styles.chips}>
+                    {workout.exercises.map((exercise) => (
+                      <span key={exercise.id} className={styles.chip}>{exercise.name}</span>
+                    ))}
+                  </div>
+                )}
+              </>
             ) : (
               <p className={styles.value}>{t("dashboard.noWorkoutToday")}</p>
             )}
