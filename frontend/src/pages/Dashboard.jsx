@@ -501,7 +501,11 @@ function Dashboard() {
           {recentWorkouts.length > 0 ? (
             <div className={styles.recentWorkoutList}>
               {recentWorkouts.map((recentWorkout) => (
-                <div key={recentWorkout.id} className={styles.recentWorkoutRow}>
+                <div
+                  key={recentWorkout.id}
+                  className={styles.recentWorkoutRow}
+                  onClick={() => navigate(`/log?date=${new Date(recentWorkout.date).toISOString().split("T")[0]}`)}
+                >
                   <span className={styles.recentWorkoutDate}>
                     {new Date(recentWorkout.date).toISOString().split("T")[0]}
                   </span>

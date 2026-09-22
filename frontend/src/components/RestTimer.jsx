@@ -35,7 +35,7 @@ function playExpiryBeep() {
 
 function RestTimer() {
   const [secondsRemaining, setSecondsRemaining] = useState(null);
-  const [isMinimized, setIsMinimized] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(true);
 
   useEffect(() => {
     if (secondsRemaining === null || secondsRemaining <= 0) return undefined;
