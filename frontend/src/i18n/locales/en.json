@@ -74,7 +74,8 @@
     "newPrToast": "🎉 New PR! {{name}} {{value}}kg e1RM",
     "warmupLabel": "Warm-up",
     "warmupBadge": "W",
-    "supersetPlaceholder": "—"
+    "supersetPlaceholder": "—",
+    "supersetLinked": "⤵ linked with {{name}} — superset"
   },
   "nutrition": {
     "addDay": "Add day",

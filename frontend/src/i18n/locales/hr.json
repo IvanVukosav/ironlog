@@ -74,7 +74,8 @@
     "newPrToast": "🎉 Novi PR! {{name}} {{value}}kg e1RM",
     "warmupLabel": "Zagrijavanje",
     "warmupBadge": "W",
-    "supersetPlaceholder": "—"
+    "supersetPlaceholder": "—",
+    "supersetLinked": "⤵ povezano s {{name}} — superset"
   },
   "nutrition": {
     "addDay": "Dodaj dan",
