@@ -12,6 +12,7 @@ const MUSCLE_GROUPS = [
   "Leđa", "Prsa", "Kvadriceps", "Stražnja loža", "Ramena", "Gluteus", "Ruke", "Trbušnjaci",
 ];
 const ALL_MUSCLE_GROUPS_FILTER = "Sve";
+const SUPERSET_COLORS = ["#3ba7ff", "#3ec95c", "#ffb020", "#c678dd", "#ff6b9d"];
 
 function Log() {
   const { t } = useTranslation();
@@ -266,6 +267,15 @@ function Log() {
     return matchesSearch && matchesGroup;
   });
 
+  const supersetGroups = [...new Set(
+    (workout?.exercises || [])
+      .map((exercise) => exercise.supersetGroup)
+      .filter(Boolean),
+  )];
+  const supersetColorByGroup = Object.fromEntries(
+    supersetGroups.map((group, index) => [group, SUPERSET_COLORS[index % SUPERSET_COLORS.length]]),
+  );
+
   return (
     <div className={styles.page}>
       <h1 className={styles.heading}>{t("log.title")}</h1>
@@ -505,6 +515,7 @@ function Log() {
                 exercise={exercise}
                 showE1rm={settings?.showE1rm ?? true}
                 e1rmFormula={settings?.e1rmFormula ?? "brzycki"}
+                supersetColor={exercise.supersetGroup ? supersetColorByGroup[exercise.supersetGroup] : null}
                 isDragging={draggedExerciseId === exercise.id}
                 isDropTarget={hoveredExerciseId === String(exercise.id) && draggedExerciseId !== exercise.id}
                 onDragHandlePointerDown={() => startExerciseDrag(exercise.id)}

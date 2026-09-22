@@ -50,6 +50,7 @@ function Exercise({
   onReorderSets,
   showE1rm,
   e1rmFormula,
+  supersetColor,
   isDragging,
   isDropTarget,
   onDragHandlePointerDown,
@@ -201,9 +202,11 @@ function Exercise({
     <div
       className={[
         styles.card,
+        supersetColor && styles.cardGrouped,
         isDragging && styles.cardDragging,
         isDropTarget && styles.cardDropTarget,
       ].filter(Boolean).join(" ")}
+      style={supersetColor ? { "--group-color": supersetColor } : undefined}
       data-drag-id={exercise.id}
     >
       <div className={styles.cardHeader}>
@@ -220,7 +223,7 @@ function Exercise({
           <h3 className={styles.heading}>{exercise.name}</h3>
           <input
             type="text"
-            className={styles.supersetInput}
+            className={supersetColor ? `${styles.supersetInput} ${styles.supersetInputActive}` : styles.supersetInput}
             placeholder={t("log.supersetPlaceholder")}
             defaultValue={exercise.supersetGroup || ""}
             maxLength={8}
