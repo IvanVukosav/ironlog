@@ -40,6 +40,13 @@
   background-color: var(--color-bg-hover);
 }
 
+.nutritionRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
 .kcalInlineInput {
   background: transparent;
   border: none;

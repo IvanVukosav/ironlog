@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { fetchJson } from "../api";
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { useToast } from "../context/useToast";
 import { getCssVar } from "../utils/theme";
 import { findBestSetByE1rm } from "../utils/oneRepMax";
@@ -13,6 +13,12 @@ const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 const DAYS_PER_WEEK = 7;
 const MAX_PROGRESS_PERCENT = 100;
 const PR_E1RM_DECIMAL_PLACES = 1;
+const KCAL_PER_GRAM_PROTEIN = 4;
+const KCAL_PER_GRAM_CARBS = 4;
+const KCAL_PER_GRAM_FAT = 9;
+const MACRO_CHART_SIZE = 40;
+const MACRO_CHART_INNER_RADIUS = 12;
+const MACRO_CHART_OUTER_RADIUS = 20;
 
 function getLatestPr(prs, formula) {
   let latest = null;
@@ -66,6 +72,9 @@ function Dashboard() {
   const chartBgCardColor = getCssVar("--color-bg-card");
   const chartBorderColor = getCssVar("--color-border");
   const chartTextColor = getCssVar("--color-text");
+  const chartProteinColor = getCssVar("--color-protein");
+  const chartCarbsColor = getCssVar("--color-carbs");
+  const chartFatColor = getCssVar("--color-fat");
   const [workout, setWorkout] = useState(null);
   const [nutritionDay, setNutritionDay] = useState(null);
   const [settings, setSettings] = useState(null);
@@ -196,6 +205,14 @@ function Dashboard() {
 
   const allItems = nutritionDay?.meals?.flatMap((meal) => meal.items) || [];
   const totalKcal = allItems.reduce((sum, item) => sum + item.kcal, 0);
+  const totalProtein = allItems.reduce((sum, item) => sum + item.protein, 0);
+  const totalCarbs = allItems.reduce((sum, item) => sum + item.carbs, 0);
+  const totalFat = allItems.reduce((sum, item) => sum + item.fat, 0);
+  const macroChartData = [
+    { name: "Protein", value: totalProtein * KCAL_PER_GRAM_PROTEIN, color: chartProteinColor },
+    { name: "Carbs", value: totalCarbs * KCAL_PER_GRAM_CARBS, color: chartCarbsColor },
+    { name: "Fat", value: totalFat * KCAL_PER_GRAM_FAT, color: chartFatColor },
+  ].filter((entry) => entry.value > 0);
 
   const latestPr = getLatestPr(prs, settings?.e1rmFormula ?? "brzycki");
 
@@ -242,42 +259,66 @@ function Dashboard() {
             onClick={() => navigate(`/nutrition?date=${today}`)}
           >
             <h2 className={styles.label}>{t("dashboard.nutritionToday")}</h2>
-            <p className={styles.value}>
-              {totalKcal} /{" "}
-              {settings?.kcalGoal ? (
-                `${settings.kcalGoal} kcal`
-              ) : kcalGoalInput !== null ? (
-                <>
-                  <input
-                    className={styles.kcalInlineInput}
-                    type="number"
-                    autoFocus
-                    value={kcalGoalInput}
-                    onClick={(event) => event.stopPropagation()}
-                    onChange={(event) => setKcalGoalInput(event.target.value)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter") saveKcalGoal();
-                      if (event.key === "Escape") setKcalGoalInput(null);
-                    }}
-                    onBlur={saveKcalGoal}
-                  />{" "}
-                  kcal
-                </>
-              ) : (
-                <>
-                  <button
-                    className={styles.kcalSetButton}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      setKcalGoalInput("");
-                    }}
+            <div className={styles.nutritionRow}>
+              <p className={styles.value}>
+                {totalKcal} /{" "}
+                {settings?.kcalGoal ? (
+                  `${settings.kcalGoal} kcal`
+                ) : kcalGoalInput !== null ? (
+                  <>
+                    <input
+                      className={styles.kcalInlineInput}
+                      type="number"
+                      autoFocus
+                      value={kcalGoalInput}
+                      onClick={(event) => event.stopPropagation()}
+                      onChange={(event) => setKcalGoalInput(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") saveKcalGoal();
+                        if (event.key === "Escape") setKcalGoalInput(null);
+                      }}
+                      onBlur={saveKcalGoal}
+                    />{" "}
+                    kcal
+                  </>
+                ) : (
+                  <>
+                    <button
+                      className={styles.kcalSetButton}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setKcalGoalInput("");
+                      }}
+                    >
+                      {t("dashboard.setGoal")}
+                    </button>{" "}
+                    kcal
+                  </>
+                )}
+              </p>
+              {macroChartData.length > 0 && (
+                <PieChart width={MACRO_CHART_SIZE} height={MACRO_CHART_SIZE}>
+                  <Pie
+                    data={macroChartData}
+                    dataKey="value"
+                    nameKey="name"
+                    innerRadius={MACRO_CHART_INNER_RADIUS}
+                    outerRadius={MACRO_CHART_OUTER_RADIUS}
+                    paddingAngle={2}
                   >
-                    {t("dashboard.setGoal")}
-                  </button>{" "}
-                  kcal
-                </>
+                    {macroChartData.map((entry) => (
+                      <Cell key={entry.name} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{ background: chartBgCardColor, border: `1px solid ${chartBorderColor}`, fontFamily: "ui-monospace", fontSize: 12 }}
+                    labelStyle={{ color: chartTextDimColor }}
+                    itemStyle={{ color: chartTextColor }}
+                    formatter={(value, name) => [`${Math.round(value)} kcal`, name]}
+                  />
+                </PieChart>
               )}
-            </p>
+            </div>
           </div>
         )}
         <div className={styles.card}>
