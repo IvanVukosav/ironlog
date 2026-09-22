@@ -86,7 +86,6 @@
     "foodNamePlaceholder": "Naziv hrane",
     "addItem": "Dodaj",
     "saveAsFoodPrompt": "Spremi \"{{name}}\" kao namirnicu?",
-    "kcalHistory": "Povijest unosa kalorija",
     "macroBreakdown": "Raspodjela makronutrijenata"
   },
   "stats": {

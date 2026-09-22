@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, PieChart, Pie, Cell } from "recharts";
+import { Tooltip, PieChart, Pie, Cell } from "recharts";
 import { fetchJson } from "../api";
 import MealCard from "../components/MealCard";
 import { useToast } from "../context/useToast";
@@ -16,12 +16,6 @@ const MACRO_CHART_OUTER_RADIUS = 65;
 const PERCENT_MULTIPLIER = 100;
 
 const DEFAULT_MEAL_NAME = "Ostalo";
-const HISTORY_DAYS = { week: 7, month: 30 };
-
-function formatChartDate(dateString) {
-  const date = new Date(dateString);
-  return `${date.getUTCDate()}/${date.getUTCMonth() + 1}`;
-}
 
 function getBarSegments(value, goal) {
   if (!goal) return { normalPercent: 0, overPercent: 0 };
@@ -50,10 +44,9 @@ function GoalBar({ value, goal, colorClass }) {
 function Nutrition() {
   const { t } = useTranslation();
   const { showError } = useToast();
-  const chartAccentColor = getCssVar("--color-accent");
-  const chartTextDimColor = getCssVar("--color-text-dim");
   const chartBgCardColor = getCssVar("--color-bg-card");
   const chartBorderColor = getCssVar("--color-border");
+  const chartTextDimColor = getCssVar("--color-text-dim");
   const chartTextColor = getCssVar("--color-text");
   const chartProteinColor = getCssVar("--color-protein");
   const chartCarbsColor = getCssVar("--color-carbs");
@@ -65,8 +58,6 @@ function Nutrition() {
   const [settings, setSettings] = useState(null);
   const [quickAddName, setQuickAddName] = useState("");
   const [showQuickPicker, setShowQuickPicker] = useState(false);
-  const [historyRange, setHistoryRange] = useState("week");
-  const [history, setHistory] = useState([]);
   const quickAddRef = useRef(null);
 
   useEffect(() => {
@@ -88,15 +79,6 @@ function Nutrition() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showQuickPicker]);
-
-  useEffect(() => {
-    fetchJson(`/api/nutrition/history?days=${HISTORY_DAYS[historyRange]}`)
-      .then((data) => setHistory(data))
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
-  }, [historyRange, day, showError]);
 
   useEffect(() => {
     fetchJson("/api/food-item-templates")
@@ -215,11 +197,6 @@ function Nutrition() {
       )
     : foodItemTemplates;
 
-  const chartData = history.map((entry) => ({
-    label: formatChartDate(entry.date),
-    kcal: Math.round(entry.kcal),
-  }));
-
   const allItems = day?.meals?.flatMap((meal) => meal.items || []) || [];
   const totals = allItems.reduce(
     (sum, item) => ({
@@ -289,46 +266,6 @@ function Nutrition() {
                 <GoalBar value={totals.fat} goal={settings?.fatGoal} colorClass={styles.totalsBarFillFat} />
               </div>
             </div>
-          </div>
-
-          <div className={styles.historyCard}>
-            <div className={styles.historyHeader}>
-              <h2 className={styles.historyHeading}>{t("nutrition.kcalHistory")}</h2>
-              <div className={styles.rangeTabs}>
-                {[
-                  { label: t("common.week"), range: "week" },
-                  { label: t("common.month"), range: "month" },
-                ].map(({ label, range }) => (
-                  <button
-                    key={range}
-                    className={historyRange === range ? styles.rangeTabActive : styles.rangeTab}
-                    onClick={() => setHistoryRange(range)}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-            {chartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={180}>
-                <BarChart data={chartData}>
-                  <XAxis dataKey="label" tick={{ fill: chartTextDimColor, fontFamily: "ui-monospace", fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: chartTextDimColor, fontFamily: "ui-monospace", fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <Tooltip
-                    contentStyle={{ background: chartBgCardColor, border: `1px solid ${chartBorderColor}`, fontFamily: "ui-monospace", fontSize: 12 }}
-                    labelStyle={{ color: chartTextDimColor }}
-                    itemStyle={{ color: chartTextColor }}
-                    formatter={(value) => [`${value} kcal`, "Kcal"]}
-                  />
-                  {settings?.kcalGoal && (
-                    <ReferenceLine y={settings.kcalGoal} stroke={chartTextDimColor} strokeDasharray="4 4" />
-                  )}
-                  <Bar dataKey="kcal" fill={chartAccentColor} radius={[2, 2, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <p className={styles.emptyState}>{t("dashboard.noData")}</p>
-            )}
           </div>
 
           <div className={styles.historyCard}>
