@@ -249,7 +249,7 @@ function Dashboard() {
       <div className={styles.grid}>
         {(settings?.showWorkoutWidget ?? true) && (
           <div
-            className={`${styles.card} ${styles.clickableCard}`}
+            className={`${styles.card} ${styles.clickableCard} ${styles.centeredCard}`}
             onClick={() => navigate(`/log?date=${today}`)}
           >
             <h2 className={styles.label}>{t("dashboard.workoutToday")}</h2>
