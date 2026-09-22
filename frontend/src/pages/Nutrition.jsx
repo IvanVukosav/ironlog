@@ -266,8 +266,13 @@ function Nutrition() {
                 <GoalBar value={totals.fat} goal={settings?.fatGoal} colorClass={styles.totalsBarFillFat} />
               </div>
             </div>
+          </div>
 
-            {macroChartData.length > 0 && (
+          <div className={styles.historyCard}>
+            <div className={styles.historyHeader}>
+              <h2 className={styles.historyHeading}>{t("nutrition.macroBreakdown")}</h2>
+            </div>
+            {macroChartData.length > 0 ? (
               <div className={styles.macroChartRow}>
                 <PieChart width={MACRO_CHART_SIZE} height={MACRO_CHART_SIZE}>
                   <Pie
@@ -304,6 +309,8 @@ function Nutrition() {
                   </div>
                 </div>
               </div>
+            ) : (
+              <p className={styles.emptyState}>{t("dashboard.noData")}</p>
             )}
           </div>
 
