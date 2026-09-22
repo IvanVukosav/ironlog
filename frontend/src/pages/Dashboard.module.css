@@ -112,6 +112,7 @@
   gap: 8px;
   color: var(--color-text);
   font-size: 0.82rem;
+  text-transform: capitalize;
 }
 
 .macroLegendDot {

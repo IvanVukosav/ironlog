@@ -351,15 +351,15 @@ function Dashboard() {
                 <div className={styles.macroLegend}>
                   <div className={styles.macroLegendRow}>
                     <span className={styles.macroLegendDot} style={{ backgroundColor: chartProteinColor }} />
-                    Protein {macroPercent(macroKcal.protein)}%
+                    {t("nutrition.macroProtein")} {macroPercent(macroKcal.protein)}%
                   </div>
                   <div className={styles.macroLegendRow}>
                     <span className={styles.macroLegendDot} style={{ backgroundColor: chartCarbsColor }} />
-                    Carbs {macroPercent(macroKcal.carbs)}%
+                    {t("nutrition.macroCarbs")} {macroPercent(macroKcal.carbs)}%
                   </div>
                   <div className={styles.macroLegendRow}>
                     <span className={styles.macroLegendDot} style={{ backgroundColor: chartFatColor }} />
-                    Fat {macroPercent(macroKcal.fat)}%
+                    {t("nutrition.macroFat")} {macroPercent(macroKcal.fat)}%
                   </div>
                 </div>
               </div>

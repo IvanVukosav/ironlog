@@ -163,28 +163,28 @@ function MealCard({ meal, foodItemTemplates, onAddItem, onUpdateItem, onDeleteIt
         <input
           type="number"
           className={styles.itemInput}
-          placeholder="kcal"
+          placeholder={t("nutrition.kcalPlaceholder")}
           value={foodItem.kcal}
           onChange={(event) => setFoodItem((prev) => ({ ...prev, kcal: event.target.value }))}
         />
         <input
           type="number"
           className={styles.itemInput}
-          placeholder="protein"
+          placeholder={t("nutrition.macroProtein")}
           value={foodItem.protein}
           onChange={(event) => setFoodItem((prev) => ({ ...prev, protein: event.target.value }))}
         />
         <input
           type="number"
           className={styles.itemInput}
-          placeholder="carbs"
+          placeholder={t("nutrition.macroCarbs")}
           value={foodItem.carbs}
           onChange={(event) => setFoodItem((prev) => ({ ...prev, carbs: event.target.value }))}
         />
         <input
           type="number"
           className={styles.itemInput}
-          placeholder="fat"
+          placeholder={t("nutrition.macroFat")}
           value={foodItem.fat}
           onChange={(event) => setFoodItem((prev) => ({ ...prev, fat: event.target.value }))}
         />

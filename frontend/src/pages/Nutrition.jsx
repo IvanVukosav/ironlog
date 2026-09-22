@@ -270,15 +270,15 @@ function Nutrition() {
                   <div className={styles.macroLegend}>
                     <div className={styles.macroLegendRow}>
                       <span className={styles.macroLegendDot} style={{ backgroundColor: chartProteinColor }} />
-                      Protein {macroPercent(macroKcal.protein)}%
+                      {t("nutrition.macroProtein")} {macroPercent(macroKcal.protein)}%
                     </div>
                     <div className={styles.macroLegendRow}>
                       <span className={styles.macroLegendDot} style={{ backgroundColor: chartCarbsColor }} />
-                      Carbs {macroPercent(macroKcal.carbs)}%
+                      {t("nutrition.macroCarbs")} {macroPercent(macroKcal.carbs)}%
                     </div>
                     <div className={styles.macroLegendRow}>
                       <span className={styles.macroLegendDot} style={{ backgroundColor: chartFatColor }} />
-                      Fat {macroPercent(macroKcal.fat)}%
+                      {t("nutrition.macroFat")} {macroPercent(macroKcal.fat)}%
                     </div>
                   </div>
                 </div>
@@ -291,17 +291,17 @@ function Nutrition() {
                   <GoalBar value={totals.kcal} goal={settings?.kcalGoal} colorClass={styles.totalsBarFillKcal} />
                 </div>
                 <div className={styles.totalsStat}>
-                  <span className={styles.totalsLabel}>Protein</span>
+                  <span className={styles.totalsLabel}>{t("nutrition.macroProtein")}</span>
                   <span className={`${styles.totalsValue} ${styles.totalsValueProtein}`}>{totals.protein}g / {settings?.proteinGoal ?? "—"}g</span>
                   <GoalBar value={totals.protein} goal={settings?.proteinGoal} colorClass={styles.totalsBarFillProtein} />
                 </div>
                 <div className={styles.totalsStat}>
-                  <span className={styles.totalsLabel}>Carbs</span>
+                  <span className={styles.totalsLabel}>{t("nutrition.macroCarbs")}</span>
                   <span className={`${styles.totalsValue} ${styles.totalsValueCarbs}`}>{totals.carbs}g / {settings?.carbsGoal ?? "—"}g</span>
                   <GoalBar value={totals.carbs} goal={settings?.carbsGoal} colorClass={styles.totalsBarFillCarbs} />
                 </div>
                 <div className={styles.totalsStat}>
-                  <span className={styles.totalsLabel}>Fat</span>
+                  <span className={styles.totalsLabel}>{t("nutrition.macroFat")}</span>
                   <span className={`${styles.totalsValue} ${styles.totalsValueFat}`}>{totals.fat}g / {settings?.fatGoal ?? "—"}g</span>
                   <GoalBar value={totals.fat} goal={settings?.fatGoal} colorClass={styles.totalsBarFillFat} />
                 </div>
