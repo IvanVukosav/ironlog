@@ -12,7 +12,7 @@ router.get("/", async (req, res) => {
       const workouts = await prisma.workout.findMany({
         take: parseInt(limit),
         orderBy: { date: "desc" },
-        include: { exercises: true },
+        include: { exercises: { orderBy: { order: "asc" } } },
       });
       return res.json(workouts);
     }
@@ -161,6 +161,13 @@ router.patch("/:id/exercises/reorder", async (req, res) => {
     if (!Array.isArray(exerciseIds)) {
       return res.status(400).json({ error: "exerciseIds must be an array" });
     }
+    const workoutId = parseInt(req.params.id);
+    const ownedCount = await prisma.exercise.count({
+      where: { id: { in: exerciseIds }, workoutId },
+    });
+    if (ownedCount !== exerciseIds.length) {
+      return res.status(400).json({ error: "exerciseIds must all belong to this workout" });
+    }
     await prisma.$transaction(
       exerciseIds.map((exerciseId, index) =>
         prisma.exercise.update({
@@ -230,6 +237,13 @@ router.patch("/exercises/:id/sets/reorder", async (req, res) => {
     const { setIds } = req.body;
     if (!Array.isArray(setIds)) {
       return res.status(400).json({ error: "setIds must be an array" });
+    }
+    const exerciseId = parseInt(req.params.id);
+    const ownedCount = await prisma.set.count({
+      where: { id: { in: setIds }, exerciseId },
+    });
+    if (ownedCount !== setIds.length) {
+      return res.status(400).json({ error: "setIds must all belong to this exercise" });
     }
     await prisma.$transaction(
       setIds.map((setId, index) =>

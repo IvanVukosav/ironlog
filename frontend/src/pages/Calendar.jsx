@@ -209,6 +209,8 @@ function Calendar() {
   };
 
   const saveMeasurements = () => {
+    const hasAnyValue = MEASUREMENT_FIELDS.some((field) => measurementsForm[field] !== "");
+    if (!hasAnyValue) return;
     fetchJson("/api/body-measurements", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

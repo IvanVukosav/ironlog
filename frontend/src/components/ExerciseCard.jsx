@@ -61,7 +61,12 @@ function Exercise({
   const [showMenu, setShowMenu] = useState(false);
   const [editingSetId, setEditingSetId] = useState(null);
   const [editSet, setEditSet] = useState({ weight: "", reps: "", rpe: "", isWarmup: false });
+  const [supersetValue, setSupersetValue] = useState(exercise.supersetGroup || "");
   const menuRef = useRef(null);
+
+  useEffect(() => {
+    setSupersetValue(exercise.supersetGroup || "");
+  }, [exercise.supersetGroup]);
 
   const { draggedId: draggedSetId, hoveredId: hoveredSetId, startDrag: startSetDrag } = useDragReorder(
     exercise.sets || [],
@@ -225,8 +230,9 @@ function Exercise({
             type="text"
             className={supersetColor ? `${styles.supersetInput} ${styles.supersetInputActive}` : styles.supersetInput}
             placeholder={t("log.supersetPlaceholder")}
-            defaultValue={exercise.supersetGroup || ""}
+            value={supersetValue}
             maxLength={8}
+            onChange={(event) => setSupersetValue(event.target.value)}
             onBlur={(event) => updateSupersetGroup(event.target.value)}
             onKeyDown={(event) => {
               if (event.key === "Enter") event.target.blur();

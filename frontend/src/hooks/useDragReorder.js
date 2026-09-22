@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 function findRowId(clientX, clientY) {
   const el = document.elementFromPoint(clientX, clientY);
@@ -12,6 +12,7 @@ export function useDragReorder(items, onReorder) {
   const draggedIdRef = useRef(null);
   const itemsRef = useRef(items);
   itemsRef.current = items;
+  const activeListenersRef = useRef(null);
 
   const finishDrag = useCallback((targetId) => {
     const sourceId = draggedIdRef.current;
@@ -41,12 +42,24 @@ export function useDragReorder(items, onReorder) {
     const handlePointerUp = (event) => {
       document.removeEventListener("pointermove", handlePointerMove);
       document.removeEventListener("pointerup", handlePointerUp);
+      activeListenersRef.current = null;
       finishDrag(findRowId(event.clientX, event.clientY));
     };
 
     document.addEventListener("pointermove", handlePointerMove);
     document.addEventListener("pointerup", handlePointerUp);
+    activeListenersRef.current = { handlePointerMove, handlePointerUp };
   }, [finishDrag]);
+
+  useEffect(() => {
+    return () => {
+      if (activeListenersRef.current) {
+        document.removeEventListener("pointermove", activeListenersRef.current.handlePointerMove);
+        document.removeEventListener("pointerup", activeListenersRef.current.handlePointerUp);
+        activeListenersRef.current = null;
+      }
+    };
+  }, []);
 
   return { draggedId, hoveredId, startDrag };
 }
