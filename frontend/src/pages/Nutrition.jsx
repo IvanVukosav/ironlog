@@ -268,6 +268,52 @@ function Nutrition() {
             </div>
           </div>
 
+          <div className={styles.historyCard}>
+            <div className={styles.historyHeader}>
+              <h2 className={styles.historyHeading}>{t("nutrition.macroBreakdown")}</h2>
+            </div>
+            {macroChartData.length > 0 ? (
+              <div className={styles.macroChartRow}>
+                <PieChart width={MACRO_CHART_SIZE} height={MACRO_CHART_SIZE}>
+                  <Pie
+                    data={macroChartData}
+                    dataKey="value"
+                    nameKey="name"
+                    innerRadius={MACRO_CHART_INNER_RADIUS}
+                    outerRadius={MACRO_CHART_OUTER_RADIUS}
+                    paddingAngle={2}
+                  >
+                    {macroChartData.map((entry) => (
+                      <Cell key={entry.name} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{ background: chartBgCardColor, border: `1px solid ${chartBorderColor}`, fontFamily: "ui-monospace", fontSize: 12 }}
+                    labelStyle={{ color: chartTextDimColor }}
+                    itemStyle={{ color: chartTextColor }}
+                    formatter={(value, name) => [`${Math.round(value)} kcal`, name]}
+                  />
+                </PieChart>
+                <div className={styles.macroLegend}>
+                  <div className={styles.macroLegendRow}>
+                    <span className={styles.macroLegendDot} style={{ backgroundColor: chartProteinColor }} />
+                    Protein — {totals.protein}g ({macroPercent(macroKcal.protein)}%)
+                  </div>
+                  <div className={styles.macroLegendRow}>
+                    <span className={styles.macroLegendDot} style={{ backgroundColor: chartCarbsColor }} />
+                    Carbs — {totals.carbs}g ({macroPercent(macroKcal.carbs)}%)
+                  </div>
+                  <div className={styles.macroLegendRow}>
+                    <span className={styles.macroLegendDot} style={{ backgroundColor: chartFatColor }} />
+                    Fat — {totals.fat}g ({macroPercent(macroKcal.fat)}%)
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <p className={styles.emptyState}>{t("dashboard.noData")}</p>
+            )}
+          </div>
+
           <div className={styles.quickAddRow} style={{ position: "relative" }} ref={quickAddRef}>
             <input
               type="text"
@@ -362,52 +408,6 @@ function Nutrition() {
                 }
               />
             ))}
-          </div>
-
-          <div className={styles.historyCard}>
-            <div className={styles.historyHeader}>
-              <h2 className={styles.historyHeading}>{t("nutrition.macroBreakdown")}</h2>
-            </div>
-            {macroChartData.length > 0 ? (
-              <div className={styles.macroChartRow}>
-                <PieChart width={MACRO_CHART_SIZE} height={MACRO_CHART_SIZE}>
-                  <Pie
-                    data={macroChartData}
-                    dataKey="value"
-                    nameKey="name"
-                    innerRadius={MACRO_CHART_INNER_RADIUS}
-                    outerRadius={MACRO_CHART_OUTER_RADIUS}
-                    paddingAngle={2}
-                  >
-                    {macroChartData.map((entry) => (
-                      <Cell key={entry.name} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{ background: chartBgCardColor, border: `1px solid ${chartBorderColor}`, fontFamily: "ui-monospace", fontSize: 12 }}
-                    labelStyle={{ color: chartTextDimColor }}
-                    itemStyle={{ color: chartTextColor }}
-                    formatter={(value, name) => [`${Math.round(value)} kcal`, name]}
-                  />
-                </PieChart>
-                <div className={styles.macroLegend}>
-                  <div className={styles.macroLegendRow}>
-                    <span className={styles.macroLegendDot} style={{ backgroundColor: chartProteinColor }} />
-                    Protein — {totals.protein}g ({macroPercent(macroKcal.protein)}%)
-                  </div>
-                  <div className={styles.macroLegendRow}>
-                    <span className={styles.macroLegendDot} style={{ backgroundColor: chartCarbsColor }} />
-                    Carbs — {totals.carbs}g ({macroPercent(macroKcal.carbs)}%)
-                  </div>
-                  <div className={styles.macroLegendRow}>
-                    <span className={styles.macroLegendDot} style={{ backgroundColor: chartFatColor }} />
-                    Fat — {totals.fat}g ({macroPercent(macroKcal.fat)}%)
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <p className={styles.emptyState}>{t("dashboard.noData")}</p>
-            )}
           </div>
         </div>
       )}
