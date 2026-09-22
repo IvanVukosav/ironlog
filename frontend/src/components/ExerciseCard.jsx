@@ -266,16 +266,6 @@ function Exercise({
             setSet((prev) => ({ ...prev, rpe: event.target.value }))
           }
         />
-        <label className={styles.warmupToggle}>
-          <input
-            type="checkbox"
-            checked={set.isWarmup}
-            onChange={(event) =>
-              setSet((prev) => ({ ...prev, isWarmup: event.target.checked }))
-            }
-          />
-          {t("log.warmupLabel")}
-        </label>
         <button
           className={styles.addSetButton}
           onClick={() => addSet(exercise.id)}
@@ -309,16 +299,6 @@ function Exercise({
                   setEditSet((prev) => ({ ...prev, rpe: event.target.value }))
                 }
               />
-              <label className={styles.warmupToggle}>
-                <input
-                  type="checkbox"
-                  checked={editSet.isWarmup}
-                  onChange={(event) =>
-                    setEditSet((prev) => ({ ...prev, isWarmup: event.target.checked }))
-                  }
-                />
-                {t("log.warmupLabel")}
-              </label>
               <button
                 className={styles.saveSetButton}
                 onClick={() => saveEditingSet(workoutSet.id)}
@@ -356,7 +336,6 @@ function Exercise({
                 className={styles.setText}
                 onClick={() => startEditingSet(workoutSet)}
               >
-                {workoutSet.isWarmup && <span className={styles.warmupBadge}>{t("log.warmupBadge")}</span>}
                 {t("log.setSummary", { weight: workoutSet.weight, reps: workoutSet.reps, rpe: workoutSet.rpe })}
                 {showE1rm && Number.isFinite(workoutSet.rpe) && (
                   <span className={styles.e1rmText}>
