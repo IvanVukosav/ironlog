@@ -28,7 +28,7 @@ export function calculateEstimatedOneRepMax(weight, reps, rpe, formula) {
 }
 
 export function findBestSetByE1rm(sets, formula) {
-  return sets.reduce((best, set) => {
+  return sets.filter((set) => !set.isWarmup).reduce((best, set) => {
     const e1rm = calculateEstimatedOneRepMax(set.weight, set.reps, set.rpe, formula);
     if (!best || e1rm > best.e1rm) {
       return { ...set, e1rm };

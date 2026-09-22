@@ -141,6 +141,20 @@ router.post("/:id/exercises", async (req, res) => {
   }
 });
 
+router.patch("/exercises/:id", async (req, res) => {
+  try {
+    const { supersetGroup } = req.body;
+    const exercise = await prisma.exercise.update({
+      where: { id: parseInt(req.params.id) },
+      data: { supersetGroup: supersetGroup?.trim() || null },
+    });
+    res.json(exercise);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 router.patch("/:id/exercises/reorder", async (req, res) => {
   try {
     const { exerciseIds } = req.body;
@@ -190,7 +204,7 @@ router.delete("/exercises/:id", async (req, res) => {
 
 router.post("/exercises/:id/sets", async (req, res) => {
   try {
-    const { weight, reps, rpe } = req.body;
+    const { weight, reps, rpe, isWarmup } = req.body;
     const exerciseId = parseInt(req.params.id);
     const existingSetCount = await prisma.set.count({ where: { exerciseId } });
     const set = await prisma.set.create({
@@ -199,6 +213,7 @@ router.post("/exercises/:id/sets", async (req, res) => {
         reps: parseInt(reps),
         rpe: parseFloat(rpe),
         order: existingSetCount,
+        isWarmup: Boolean(isWarmup),
         exercise: { connect: { id: exerciseId } },
       },
     });
@@ -233,13 +248,14 @@ router.patch("/exercises/:id/sets/reorder", async (req, res) => {
 
 router.patch("/sets/:id", async (req, res) => {
   try {
-    const { weight, reps, rpe } = req.body;
+    const { weight, reps, rpe, isWarmup } = req.body;
     const set = await prisma.set.update({
       where: { id: parseInt(req.params.id) },
       data: {
         weight: parseFloat(weight),
         reps: parseInt(reps),
         rpe: parseFloat(rpe),
+        isWarmup: Boolean(isWarmup),
       },
     });
     res.json(set);

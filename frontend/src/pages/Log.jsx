@@ -551,6 +551,16 @@ function Log() {
                     ),
                   }))
                 }
+                onUpdateExercise={(updatedExercise) =>
+                  setWorkout((prev) => ({
+                    ...prev,
+                    exercises: prev.exercises.map((currentExercise) =>
+                      currentExercise.id === updatedExercise.id
+                        ? { ...currentExercise, supersetGroup: updatedExercise.supersetGroup }
+                        : currentExercise,
+                    ),
+                  }))
+                }
                 onDeleteExercise={(exerciseId) =>
                   setWorkout((prev) => ({
                     ...prev,

@@ -46,6 +46,7 @@ function Exercise({
   onDeleteSet,
   onDeleteExercise,
   onUpdateSet,
+  onUpdateExercise,
   onReorderSets,
   showE1rm,
   e1rmFormula,
@@ -55,10 +56,10 @@ function Exercise({
 }) {
   const { t } = useTranslation();
   const { showError, showSuccess } = useToast();
-  const [set, setSet] = useState({ weight: "", reps: "", rpe: "" });
+  const [set, setSet] = useState({ weight: "", reps: "", rpe: "", isWarmup: false });
   const [showMenu, setShowMenu] = useState(false);
   const [editingSetId, setEditingSetId] = useState(null);
-  const [editSet, setEditSet] = useState({ weight: "", reps: "", rpe: "" });
+  const [editSet, setEditSet] = useState({ weight: "", reps: "", rpe: "", isWarmup: false });
   const menuRef = useRef(null);
 
   const { draggedId: draggedSetId, hoveredId: hoveredSetId, startDrag: startSetDrag } = useDragReorder(
@@ -101,10 +102,10 @@ function Exercise({
           body: JSON.stringify(set),
         }).then((data) => {
           onAddSet(data);
-          setSet({ weight: "", reps: "", rpe: "" });
+          setSet({ weight: "", reps: "", rpe: "", isWarmup: false });
 
           const newSetE1rm = calculateEstimatedOneRepMax(data.weight, data.reps, data.rpe, e1rmFormula);
-          if (!previousBest || newSetE1rm > previousBest.e1rm) {
+          if (!set.isWarmup && (!previousBest || newSetE1rm > previousBest.e1rm)) {
             showSuccess(t("log.newPrToast", { name: exercise.name, value: newSetE1rm.toFixed(E1RM_DECIMAL_PLACES) }));
           }
         });
@@ -147,6 +148,7 @@ function Exercise({
         weight: workoutSet.weight,
         reps: workoutSet.reps,
         rpe: workoutSet.rpe,
+        isWarmup: workoutSet.isWarmup,
       }),
     })
       .then((data) => onAddSet(data))
@@ -162,7 +164,21 @@ function Exercise({
       weight: String(workoutSet.weight),
       reps: String(workoutSet.reps),
       rpe: String(workoutSet.rpe),
+      isWarmup: Boolean(workoutSet.isWarmup),
     });
+  };
+
+  const updateSupersetGroup = (value) => {
+    fetchJson(`/api/workouts/exercises/${exercise.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ supersetGroup: value }),
+    })
+      .then((data) => onUpdateExercise(data))
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
   };
 
   const saveEditingSet = (setId) => {
@@ -202,6 +218,17 @@ function Exercise({
             ⠿
           </span>
           <h3 className={styles.heading}>{exercise.name}</h3>
+          <input
+            type="text"
+            className={styles.supersetInput}
+            placeholder={t("log.supersetPlaceholder")}
+            defaultValue={exercise.supersetGroup || ""}
+            maxLength={8}
+            onBlur={(event) => updateSupersetGroup(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") event.target.blur();
+            }}
+          />
         </div>
         <div className={styles.menuWrapper} ref={menuRef}>
           <button className={styles.menuButton} onClick={() => setShowMenu((prev) => !prev)}>
@@ -239,6 +266,16 @@ function Exercise({
             setSet((prev) => ({ ...prev, rpe: event.target.value }))
           }
         />
+        <label className={styles.warmupToggle}>
+          <input
+            type="checkbox"
+            checked={set.isWarmup}
+            onChange={(event) =>
+              setSet((prev) => ({ ...prev, isWarmup: event.target.checked }))
+            }
+          />
+          {t("log.warmupLabel")}
+        </label>
         <button
           className={styles.addSetButton}
           onClick={() => addSet(exercise.id)}
@@ -272,6 +309,16 @@ function Exercise({
                   setEditSet((prev) => ({ ...prev, rpe: event.target.value }))
                 }
               />
+              <label className={styles.warmupToggle}>
+                <input
+                  type="checkbox"
+                  checked={editSet.isWarmup}
+                  onChange={(event) =>
+                    setEditSet((prev) => ({ ...prev, isWarmup: event.target.checked }))
+                  }
+                />
+                {t("log.warmupLabel")}
+              </label>
               <button
                 className={styles.saveSetButton}
                 onClick={() => saveEditingSet(workoutSet.id)}
@@ -290,6 +337,7 @@ function Exercise({
               key={workoutSet.id}
               className={[
                 styles.setRow,
+                workoutSet.isWarmup && styles.setRowWarmup,
                 draggedSetId === workoutSet.id && styles.setRowDragging,
                 hoveredSetId === String(workoutSet.id) && draggedSetId !== workoutSet.id && styles.setRowDropTarget,
               ].filter(Boolean).join(" ")}
@@ -308,6 +356,7 @@ function Exercise({
                 className={styles.setText}
                 onClick={() => startEditingSet(workoutSet)}
               >
+                {workoutSet.isWarmup && <span className={styles.warmupBadge}>{t("log.warmupBadge")}</span>}
                 {t("log.setSummary", { weight: workoutSet.weight, reps: workoutSet.reps, rpe: workoutSet.rpe })}
                 {showE1rm && Number.isFinite(workoutSet.rpe) && (
                   <span className={styles.e1rmText}>

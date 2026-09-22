@@ -71,7 +71,10 @@
     "setSummary": "{{weight}}kg — {{reps}} reps @ RPE {{rpe}}",
     "e1rmSuffix": " — e1RM: {{value}}kg",
     "duplicateSet": "Duplicate set",
-    "newPrToast": "🎉 New PR! {{name}} {{value}}kg e1RM"
+    "newPrToast": "🎉 New PR! {{name}} {{value}}kg e1RM",
+    "warmupLabel": "Warm-up",
+    "warmupBadge": "W",
+    "supersetPlaceholder": "—"
   },
   "nutrition": {
     "addDay": "Add day",

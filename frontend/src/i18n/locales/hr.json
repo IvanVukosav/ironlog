@@ -71,7 +71,10 @@
     "setSummary": "{{weight}}kg — {{reps}} reps @ RPE {{rpe}}",
     "e1rmSuffix": " — e1RM: {{value}}kg",
     "duplicateSet": "Kopiraj set",
-    "newPrToast": "🎉 Novi PR! {{name}} {{value}}kg e1RM"
+    "newPrToast": "🎉 Novi PR! {{name}} {{value}}kg e1RM",
+    "warmupLabel": "Zagrijavanje",
+    "warmupBadge": "W",
+    "supersetPlaceholder": "—"
   },
   "nutrition": {
     "addDay": "Dodaj dan",
