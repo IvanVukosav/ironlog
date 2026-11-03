@@ -350,3 +350,17 @@
   height: 2px;
   background-color: var(--color-accent);
 }
+
+@media (max-width: 640px) {
+  .page {
+    padding: 1rem;
+  }
+
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .fullWidth {
+    grid-column: auto;
+  }
+}

@@ -275,7 +275,10 @@ function Calendar() {
 
       <div className={styles.calendarGrid}>
         {t("calendar.weekdays", { returnObjects: true }).map((day) => (
-          <div key={day} className={styles.dayHeader}>{day}</div>
+          <div key={day} className={styles.dayHeader}>
+            <span className={styles.dayHeaderFull}>{day}</span>
+            <span className={styles.dayHeaderShort}>{day.slice(0, 3)}</span>
+          </div>
         ))}
         {cells.map((cell, index) => (
           <div
