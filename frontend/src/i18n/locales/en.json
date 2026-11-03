@@ -85,7 +85,10 @@
     "supersetPlaceholder": "—",
     "lastTime": "Last time ({{date}}):",
     "useLastSet": "Fill in the inputs",
-    "copyAllSets": "Copy all"
+    "copyAllSets": "Copy all",
+    "workoutNotesPlaceholder": "Workout notes (how it felt, sleep, gear...)",
+    "addNote": "Add note",
+    "exerciseNotesPlaceholder": "Note for this exercise"
   },
   "nutrition": {
     "addDay": "Add day",

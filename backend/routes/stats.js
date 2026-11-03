@@ -83,7 +83,7 @@ router.get("/exercise/:name/last", async (req, res) => {
       orderBy: [{ workout: { date: "desc" } }, { id: "desc" }],
     });
 
-    res.json(exercise ? { date: exercise.workout.date, sets: exercise.sets } : null);
+    res.json(exercise ? { date: exercise.workout.date, notes: exercise.notes, sets: exercise.sets } : null);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal server error" });

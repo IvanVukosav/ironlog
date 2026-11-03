@@ -173,6 +173,20 @@ function Log() {
       });
   };
 
+  const updateWorkoutNotes = (notes) => {
+    if (!workout || notes.trim() === (workout.notes || "")) return;
+    fetchJson(`/api/workouts/${workout.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ notes }),
+    })
+      .then((data) => setWorkout((prev) => ({ ...prev, notes: data.notes })))
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
+  };
+
   const saveExerciseTemplate = (name, muscleGroup) => {
     if (!muscleGroup) return;
     fetchJson("/api/exercise-templates", {
@@ -337,6 +351,17 @@ function Log() {
           onKeyDown={(event) => {
             if (event.key === "Enter") event.target.blur();
           }}
+        />
+      )}
+
+      {workout && (
+        <textarea
+          key={workout.id}
+          className={styles.workoutNotesInput}
+          placeholder={t("log.workoutNotesPlaceholder")}
+          rows={2}
+          defaultValue={workout.notes || ""}
+          onBlur={(event) => updateWorkoutNotes(event.target.value)}
         />
       )}
 
@@ -567,7 +592,11 @@ function Log() {
                     ...prev,
                     exercises: prev.exercises.map((currentExercise) =>
                       currentExercise.id === updatedExercise.id
-                        ? { ...currentExercise, supersetGroup: updatedExercise.supersetGroup }
+                        ? {
+                            ...currentExercise,
+                            supersetGroup: updatedExercise.supersetGroup,
+                            notes: updatedExercise.notes,
+                          }
                         : currentExercise,
                     ),
                   }))

@@ -140,6 +140,29 @@
   font-weight: 400;
 }
 
+.workoutNotesInput {
+  display: block;
+  background: transparent;
+  border: 1px solid var(--color-border-subtle);
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  padding: 6px 8px;
+  outline: none;
+  width: 100%;
+  max-width: 640px;
+  margin: -0.5rem 0 1.25rem;
+  resize: vertical;
+}
+
+.workoutNotesInput:focus {
+  border-color: var(--color-accent);
+}
+
+.workoutNotesInput::placeholder {
+  color: var(--color-text-placeholder);
+}
+
 .exercisePicker {
   position: absolute;
   top: 100%;

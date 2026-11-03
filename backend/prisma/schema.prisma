@@ -11,6 +11,7 @@ model Workout {
   id        Int        @id @default(autoincrement())
   date      DateTime
   name      String?
+  notes     String?
   exercises Exercise[]
 }
 
@@ -19,6 +20,7 @@ model Exercise {
   name           String
   order          Int     @default(0)
   supersetGroup  String?
+  notes          String?
   workoutId      Int
   workout        Workout @relation(fields: [workoutId], references: [id])
   sets           Set[]

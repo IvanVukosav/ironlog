@@ -73,6 +73,7 @@ function Exercise({
   const [editSet, setEditSet] = useState({ weight: "", reps: "", rpe: "", isWarmup: false });
   const [supersetValue, setSupersetValue] = useState(exercise.supersetGroup || "");
   const [lastSession, setLastSession] = useState(null);
+  const [showNotes, setShowNotes] = useState(Boolean(exercise.notes));
   const menuRef = useRef(null);
 
   useEffect(() => {
@@ -237,6 +238,20 @@ function Exercise({
       });
   };
 
+  const updateNotes = (notes) => {
+    if (notes.trim() === (exercise.notes || "")) return;
+    fetchJson(`/api/workouts/exercises/${exercise.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ notes }),
+    })
+      .then((data) => onUpdateExercise(data))
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
+  };
+
   const saveEditingSet = (setId) => {
     fetchJson(`/api/workouts/sets/${setId}`, {
       method: "PATCH",
@@ -295,6 +310,17 @@ function Exercise({
           </button>
           {showMenu && (
             <div className={styles.menuDropdown}>
+              {!showNotes && (
+                <button
+                  className={styles.menuItem}
+                  onClick={() => {
+                    setShowNotes(true);
+                    setShowMenu(false);
+                  }}
+                >
+                  {t("log.addNote")}
+                </button>
+              )}
               <button className={styles.menuItem} onClick={deleteExercise}>
                 {t("log.deleteExercise")}
               </button>
@@ -321,7 +347,18 @@ function Exercise({
           <button type="button" className={styles.copyAllButton} onClick={copyLastSession}>
             {t("log.copyAllSets")}
           </button>
+          {lastSession.notes && <span className={styles.lastSessionNotes}>“{lastSession.notes}”</span>}
         </div>
+      )}
+      {showNotes && (
+        <textarea
+          className={styles.notesInput}
+          placeholder={t("log.exerciseNotesPlaceholder")}
+          rows={2}
+          autoFocus={!exercise.notes}
+          defaultValue={exercise.notes || ""}
+          onBlur={(event) => updateNotes(event.target.value)}
+        />
       )}
       <div className={styles.inputRow}>
         <WeightInput

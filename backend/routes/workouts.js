@@ -95,10 +95,14 @@ router.post("/", async (req, res) => {
 
 router.patch("/:id", async (req, res) => {
   try {
-    const { name } = req.body;
+    // Only touch the fields that were sent, so saving notes keeps the name and vice versa.
+    const body = req.body ?? {};
+    const data = {};
+    if ("name" in body) data.name = body.name || null;
+    if ("notes" in body) data.notes = body.notes?.trim() || null;
     const workout = await prisma.workout.update({
       where: { id: parseInt(req.params.id) },
-      data: { name: name || null },
+      data,
     });
     res.json(workout);
   } catch (err) {
@@ -143,10 +147,13 @@ router.post("/:id/exercises", async (req, res) => {
 
 router.patch("/exercises/:id", async (req, res) => {
   try {
-    const { supersetGroup } = req.body;
+    const body = req.body ?? {};
+    const data = {};
+    if ("supersetGroup" in body) data.supersetGroup = body.supersetGroup?.trim() || null;
+    if ("notes" in body) data.notes = body.notes?.trim() || null;
     const exercise = await prisma.exercise.update({
       where: { id: parseInt(req.params.id) },
-      data: { supersetGroup: supersetGroup?.trim() || null },
+      data,
     });
     res.json(exercise);
   } catch (err) {

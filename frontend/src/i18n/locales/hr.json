@@ -85,7 +85,10 @@
     "supersetPlaceholder": "—",
     "lastTime": "Prošli put ({{date}}):",
     "useLastSet": "Upiši u polja",
-    "copyAllSets": "Kopiraj sve"
+    "copyAllSets": "Kopiraj sve",
+    "workoutNotesPlaceholder": "Bilješke o treningu (osjećaj, san, oprema...)",
+    "addNote": "Dodaj bilješku",
+    "exerciseNotesPlaceholder": "Bilješka za ovu vježbu"
   },
   "nutrition": {
     "addDay": "Dodaj dan",
