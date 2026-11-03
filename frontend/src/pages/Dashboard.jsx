@@ -6,10 +6,13 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, 
 import { useToast } from "../context/useToast";
 import { getCssVar } from "../utils/theme";
 import { findBestSetByE1rm } from "../utils/oneRepMax";
+import { addWeightTrend, weeklyTrendChange } from "../utils/weightTrend";
 import MuscleGroupVolumeChart from "../components/MuscleGroupVolumeChart";
 import styles from "./Dashboard.module.css";
 
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
+// Extra history fetched before the visible range so the trend has settled by its first day.
+const TREND_WARMUP_DAYS = 30;
 const DAYS_PER_WEEK = 7;
 const MAX_PROGRESS_PERCENT = 100;
 const PR_E1RM_DECIMAL_PLACES = 1;
@@ -20,6 +23,17 @@ const MACRO_CHART_SIZE = 110;
 const MACRO_CHART_INNER_RADIUS = 30;
 const MACRO_CHART_OUTER_RADIUS = 50;
 const PERCENT_MULTIPLIER = 100;
+
+// Trend over the whole fetch, then only the last `days` days for the chart.
+function toBodyweightChart(entries, days) {
+  const withTrend = addWeightTrend(entries);
+  const cutoff = Date.now() - days * MILLISECONDS_PER_DAY;
+  return {
+    entries: withTrend.filter((entry) => new Date(entry.date).getTime() >= cutoff),
+    latestTrend: withTrend.at(-1)?.trend ?? null,
+    weeklyChange: weeklyTrendChange(withTrend),
+  };
+}
 
 function getLatestPr(prs, formula) {
   let latest = null;
@@ -80,7 +94,7 @@ function Dashboard() {
   const [nutritionDay, setNutritionDay] = useState(null);
   const [settings, setSettings] = useState(null);
   const [kcalGoalInput, setKcalGoalInput] = useState(null);
-  const [bodyweightData, setBodyweightData] = useState([]);
+  const [bodyweightChart, setBodyweightChart] = useState({ entries: [], latestTrend: null, weeklyChange: null });
   const [recentWorkouts, setRecentWorkouts] = useState([]);
   const [bwRange, setBwRange] = useState(7);
   const [workoutRangeView, setWorkoutRangeView] = useState("week");
@@ -113,8 +127,8 @@ function Dashboard() {
         showError(err.message);
       });
 
-    fetchJson("/api/bodyweight?days=7")
-      .then((data) => setBodyweightData(data))
+    fetchJson(`/api/bodyweight?days=${DAYS_PER_WEEK + TREND_WARMUP_DAYS}`)
+      .then((data) => setBodyweightChart(toBodyweightChart(data, DAYS_PER_WEEK)))
       .catch((err) => {
         console.error(err);
         showError(err.message);
@@ -191,8 +205,8 @@ function Dashboard() {
 
   const handleBwRangeChange = (days) => {
     setBwRange(days);
-    fetchJson(`/api/bodyweight?days=${days}`)
-      .then((data) => setBodyweightData(data))
+    fetchJson(`/api/bodyweight?days=${days + TREND_WARMUP_DAYS}`)
+      .then((data) => setBodyweightChart(toBodyweightChart(data, days)))
       .catch((err) => {
         console.error(err);
         showError(err.message);
@@ -476,19 +490,59 @@ function Dashboard() {
               ))}
             </div>
           </div>
-          {bodyweightData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={180}>
-              <LineChart data={bodyweightData.map((entry) => ({ ...entry, label: formatBwDate(entry.date) }))}>
-                <XAxis dataKey="label" tick={{ fill: chartTextDimColor, fontFamily: "ui-monospace", fontSize: 11 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: chartTextDimColor, fontFamily: "ui-monospace", fontSize: 11 }} axisLine={false} tickLine={false} domain={["auto", "auto"]} />
-                <Tooltip
-                  contentStyle={{ background: chartBgCardColor, border: `1px solid ${chartBorderColor}`, fontFamily: "ui-monospace", fontSize: 12 }}
-                  labelStyle={{ color: chartTextDimColor }}
-                  itemStyle={{ color: chartTextColor }}
-                />
-                <Line type="monotone" dataKey="weight" stroke={chartAccentColor} strokeWidth={2} dot={{ fill: chartAccentColor, r: 3 }} activeDot={{ r: 5 }} />
-              </LineChart>
-            </ResponsiveContainer>
+          {bodyweightChart.latestTrend !== null && (
+            <p className={styles.bwTrendSummary}>
+              {t("dashboard.bodyweightTrend", { weight: bodyweightChart.latestTrend.toFixed(1) })}
+              {bodyweightChart.weeklyChange !== null && (
+                <span className={styles.bwTrendChange}>
+                  {t("dashboard.bodyweightWeeklyChange", {
+                    change: `${bodyweightChart.weeklyChange > 0 ? "+" : ""}${bodyweightChart.weeklyChange.toFixed(1)}`,
+                  })}
+                </span>
+              )}
+            </p>
+          )}
+          {bodyweightChart.entries.length > 0 ? (
+            <>
+              <ResponsiveContainer width="100%" height={180}>
+                <LineChart data={bodyweightChart.entries.map((entry) => ({ ...entry, label: formatBwDate(entry.date) }))}>
+                  <XAxis dataKey="label" tick={{ fill: chartTextDimColor, fontFamily: "ui-monospace", fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: chartTextDimColor, fontFamily: "ui-monospace", fontSize: 11 }} axisLine={false} tickLine={false} domain={["auto", "auto"]} />
+                  <Tooltip
+                    contentStyle={{ background: chartBgCardColor, border: `1px solid ${chartBorderColor}`, fontFamily: "ui-monospace", fontSize: 12 }}
+                    labelStyle={{ color: chartTextDimColor }}
+                    itemStyle={{ color: chartTextColor }}
+                    formatter={(value, name) => [`${value} kg`, name === "trend" ? t("dashboard.trendLegend") : t("dashboard.weighInLegend")]}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="weight"
+                    stroke="none"
+                    dot={{ fill: chartTextDimColor, stroke: "none", r: 3 }}
+                    activeDot={{ r: 4, fill: chartTextDimColor }}
+                    isAnimationActive={false}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="trend"
+                    stroke={chartAccentColor}
+                    strokeWidth={2}
+                    dot={false}
+                    activeDot={{ r: 5 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+              <div className={styles.bwLegend}>
+                <span className={styles.bwLegendItem}>
+                  <span className={styles.bwLegendDot} />
+                  {t("dashboard.weighInLegend")}
+                </span>
+                <span className={styles.bwLegendItem}>
+                  <span className={styles.bwLegendLine} />
+                  {t("dashboard.trendLegend")}
+                </span>
+              </div>
+            </>
           ) : (
             <p className={styles.value}>{t("dashboard.noData")}</p>
           )}

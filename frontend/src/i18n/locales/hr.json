@@ -224,7 +224,11 @@
     "longestStreakSuffix": "Najduži niz: {{count}} dana",
     "latestPr": "Zadnji PR",
     "latestPrDetail": "{{e1rm}}kg e1RM — {{weight}}kg × {{reps}} @ RPE {{rpe}}",
-    "noSetsLogged": "Nema zabilježenih setova"
+    "noSetsLogged": "Nema zabilježenih setova",
+    "bodyweightTrend": "Trend: {{weight}} kg",
+    "bodyweightWeeklyChange": "{{change}} kg u zadnjih 7 dana",
+    "weighInLegend": "vaganje",
+    "trendLegend": "trend"
   },
   "calendar": {
     "weekdays": ["Nedjelja", "Ponedjeljak", "Utorak", "Srijeda", "Četvrtak", "Petak", "Subota"],

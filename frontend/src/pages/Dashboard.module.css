@@ -308,3 +308,45 @@
   color: var(--color-text-dim);
   font-size: 0.8rem;
 }
+
+.bwTrendSummary {
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.bwTrendChange {
+  color: var(--color-text-dim);
+  font-weight: 400;
+  margin-left: 0.5rem;
+}
+
+.bwLegend {
+  display: flex;
+  gap: 1rem;
+  color: var(--color-text-dim);
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  margin-top: 0.25rem;
+}
+
+.bwLegendItem {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.bwLegendDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--color-text-dim);
+}
+
+.bwLegendLine {
+  width: 12px;
+  height: 2px;
+  background-color: var(--color-accent);
+}
