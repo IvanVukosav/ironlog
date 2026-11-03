@@ -131,7 +131,11 @@
     "perSide": "Po strani: {{plates}}",
     "emptyBar": "Prazna šipka",
     "closestLoad": "Najbliže moguće: {{loaded}} kg (fali {{missing}} kg)",
-    "belowBar": "Lakše od prazne šipke ({{weight}} kg)"
+    "belowBar": "Lakše od prazne šipke ({{weight}} kg)",
+    "warmupHeading": "Zagrijavanje",
+    "workingWeightPlaceholder": "Radna kilaža",
+    "emptyBarShort": "Šipka",
+    "warmupSet": "{{weight}} kg × {{reps}}"
   },
   "dashboard": {
     "workoutToday": "Trening danas",

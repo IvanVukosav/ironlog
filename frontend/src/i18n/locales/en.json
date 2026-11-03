@@ -131,7 +131,11 @@
     "perSide": "Per side: {{plates}}",
     "emptyBar": "Empty bar",
     "closestLoad": "Closest possible: {{loaded}} kg ({{missing}} kg short)",
-    "belowBar": "Lighter than the empty bar ({{weight}} kg)"
+    "belowBar": "Lighter than the empty bar ({{weight}} kg)",
+    "warmupHeading": "Warm-up",
+    "workingWeightPlaceholder": "Working weight",
+    "emptyBarShort": "Bar",
+    "warmupSet": "{{weight}} kg × {{reps}}"
   },
   "dashboard": {
     "workoutToday": "Training today",

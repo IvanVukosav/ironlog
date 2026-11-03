@@ -5,6 +5,7 @@ import { calculateOneRepMax, ONE_REP_MAX_FORMULAS } from "../utils/oneRepMax";
 import { BAR_WEIGHTS_KG, DEFAULT_PLATE_SETUP, STANDARD_PLATES_KG } from "../utils/plates";
 import { useToast } from "../context/useToast";
 import PlateCalculator from "../components/PlateCalculator";
+import WarmupGenerator from "../components/WarmupGenerator";
 import styles from "./Calculator.module.css";
 
 const BRZYCKI_MAX_REPS = 37;
@@ -177,6 +178,11 @@ function Calculator() {
           setup={plateSetup}
           onSetupChange={changePlateSetup}
         />
+      </section>
+
+      <section className={styles.section}>
+        <h2 className={styles.sectionHeading}>{t("calculator.warmupHeading")}</h2>
+        <WarmupGenerator setup={plateSetup} onSelectWeight={loadIntoPlateCalculator} />
       </section>
     </div>
   );
