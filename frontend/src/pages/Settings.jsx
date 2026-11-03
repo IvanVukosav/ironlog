@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { fetchJson, getToken, setToken, UNAUTHORIZED_EVENT } from "../api";
+import { downloadFile, fetchJson, getToken, setToken, UNAUTHORIZED_EVENT } from "../api";
 import { ONE_REP_MAX_FORMULAS } from "../utils/oneRepMax";
 import { SEXES } from "../utils/strengthScores";
 import { useToast } from "../context/useToast";
@@ -127,6 +127,40 @@ function Settings() {
       console.error(err);
       showError(err.message);
     });
+  };
+
+  const download = (path, fallbackName) => {
+    downloadFile(path, fallbackName).catch((err) => {
+      console.error(err);
+      showError(err.message);
+    });
+  };
+
+  const importBackup = async (file) => {
+    if (!file) return;
+    let backup;
+    try {
+      backup = JSON.parse(await file.text());
+    } catch {
+      showError(t("settings.backupInvalidFile"));
+      return;
+    }
+    if (!window.confirm(t("settings.backupConfirmImport", { name: file.name }))) return;
+
+    fetchJson("/api/backup/import", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(backup),
+    })
+      .then(() => {
+        showSuccess(t("settings.backupImported"));
+        // Everything changed, including theme and language: start fresh.
+        window.location.reload();
+      })
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
   };
 
   const logout = () => {
@@ -446,6 +480,29 @@ function Settings() {
       <button className={styles.saveButton} onClick={save}>
         {t("settings.save")}
       </button>
+
+      <p className={styles.sectionLabel}>{t("settings.backupSection")}</p>
+      <p className={styles.backupHint}>{t("settings.backupHint")}</p>
+      <div className={styles.backupActions}>
+        <button type="button" className={styles.backupButton} onClick={() => download("/api/backup/export", "ironlog-backup.json")}>
+          {t("settings.backupExportJson")}
+        </button>
+        <button type="button" className={styles.backupButton} onClick={() => download("/api/backup/sets.csv", "ironlog-sets.csv")}>
+          {t("settings.backupExportCsv")}
+        </button>
+        <label className={styles.backupButton}>
+          {t("settings.backupImport")}
+          <input
+            type="file"
+            accept="application/json,.json"
+            className={styles.hiddenFileInput}
+            onChange={(event) => {
+              importBackup(event.target.files[0]);
+              event.target.value = "";
+            }}
+          />
+        </label>
+      </div>
 
       {getToken() && (
         <button type="button" className={styles.logoutButton} onClick={logout}>

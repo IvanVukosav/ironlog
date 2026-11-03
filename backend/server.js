@@ -13,8 +13,17 @@ const allowedOrigins = (process.env.CORS_ORIGIN || "")
   .split(",")
   .map((origin) => origin.trim())
   .filter(Boolean);
-app.use(cors(allowedOrigins.length ? { origin: allowedOrigins } : undefined));
-app.use(express.json());
+app.use(cors({
+  origin: allowedOrigins.length ? allowedOrigins : "*",
+  // Lets the frontend read the file name of backup downloads.
+  exposedHeaders: ["Content-Disposition"],
+}));
+
+// Backup import parses its own (much larger) body after the auth check,
+// so the default 100 kb limit stays in front of everything else.
+const BACKUP_IMPORT_PATH = "/api/backup/import";
+const jsonParser = express.json();
+app.use((req, res, next) => (req.path === BACKUP_IMPORT_PATH ? next() : jsonParser(req, res, next)));
 
 app.get("/", (req, res) => {
   res.json({ message: "IronLog API running" });
@@ -33,6 +42,7 @@ const foodItemTemplatesRouter = require("./routes/foodItemTemplates");
 const workoutTemplatesRouter = require("./routes/workoutTemplates");
 const authRouter = require("./routes/auth");
 const programsRouter = require("./routes/programs");
+const backupRouter = require("./routes/backup");
 
 app.use("/api/auth", authRouter);
 app.use("/api", requireAuth);
@@ -46,6 +56,7 @@ app.use("/api/exercise-templates", exerciseTemplatesRouter);
 app.use("/api/food-item-templates", foodItemTemplatesRouter);
 app.use("/api/workout-templates", workoutTemplatesRouter);
 app.use("/api/programs", programsRouter);
+app.use("/api/backup", backupRouter);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

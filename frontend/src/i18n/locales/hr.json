@@ -44,7 +44,15 @@
       "male": "Muško",
       "female": "Žensko"
     },
-    "liftAuto": "Automatski (po imenu)"
+    "liftAuto": "Automatski (po imenu)",
+    "backupSection": "Backup i izvoz",
+    "backupHint": "JSON backup sadrži sve podatke i može se vratiti uvozom. CSV sadrži sve setove za Excel ili Google Sheets.",
+    "backupExportJson": "Preuzmi backup (JSON)",
+    "backupExportCsv": "Izvezi setove (CSV)",
+    "backupImport": "Vrati iz backupa...",
+    "backupInvalidFile": "Datoteka nije ispravan JSON",
+    "backupConfirmImport": "Vratiti podatke iz \"{{name}}\"? Ovo ZAMJENJUJE sve trenutne podatke i ne može se poništiti.",
+    "backupImported": "Backup vraćen"
   },
   "common": {
     "save": "Spremi",

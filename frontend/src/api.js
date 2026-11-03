@@ -28,22 +28,46 @@ export function setToken(token) {
   }
 }
 
-export async function fetchJson(path, options = {}) {
+async function authorizedFetch(path, options = {}) {
   const token = getToken();
   const headers = { ...options.headers };
   if (token) headers.Authorization = `Bearer ${token}`;
 
   const response = await fetch(`${API_BASE_URL}${path}`, { ...options, headers });
-  const data = await response.json().catch(() => null);
-
   if (response.status === 401 && !path.startsWith("/api/auth/")) {
     setToken(null);
     window.dispatchEvent(new Event(UNAUTHORIZED_EVENT));
   }
+  return response;
+}
+
+export async function fetchJson(path, options = {}) {
+  const response = await authorizedFetch(path, options);
+  const data = await response.json().catch(() => null);
 
   if (!response.ok) {
     throw new Error(data?.error || `Request failed with status ${response.status}`);
   }
 
   return data;
+}
+
+// Downloads a file response, named by the server's Content-Disposition.
+export async function downloadFile(path, fallbackName) {
+  const response = await authorizedFetch(path);
+  if (!response.ok) {
+    const data = await response.json().catch(() => null);
+    throw new Error(data?.error || `Request failed with status ${response.status}`);
+  }
+
+  const disposition = response.headers.get("Content-Disposition") || "";
+  const fileName = /filename="([^"]+)"/.exec(disposition)?.[1] || fallbackName;
+  const url = URL.createObjectURL(await response.blob());
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
 }

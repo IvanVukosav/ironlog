@@ -44,7 +44,15 @@
       "male": "Male",
       "female": "Female"
     },
-    "liftAuto": "Automatic (by name)"
+    "liftAuto": "Automatic (by name)",
+    "backupSection": "Backup and export",
+    "backupHint": "The JSON backup holds all your data and can be restored by importing it. The CSV has every set, for Excel or Google Sheets.",
+    "backupExportJson": "Download backup (JSON)",
+    "backupExportCsv": "Export sets (CSV)",
+    "backupImport": "Restore from backup...",
+    "backupInvalidFile": "The file isn't valid JSON",
+    "backupConfirmImport": "Restore data from \"{{name}}\"? This REPLACES all current data and can't be undone.",
+    "backupImported": "Backup restored"
   },
   "common": {
     "save": "Save",
