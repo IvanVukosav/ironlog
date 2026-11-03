@@ -59,6 +59,37 @@ router.get("/exercise/:name/history", async (req, res) => {
   }
 });
 
+// Most recent earlier session of this exercise, relative to the given workout.
+router.get("/exercise/:name/last", async (req, res) => {
+  try {
+    const workoutId = parseInt(req.query.workoutId);
+    const currentWorkout = Number.isInteger(workoutId)
+      ? await prisma.workout.findUnique({ where: { id: workoutId }, select: { date: true } })
+      : null;
+
+    const exercise = await prisma.exercise.findFirst({
+      where: {
+        name: req.params.name,
+        sets: { some: {} },
+        ...(currentWorkout && {
+          workoutId: { not: workoutId },
+          workout: { date: { lte: currentWorkout.date } },
+        }),
+      },
+      include: {
+        sets: { orderBy: { order: "asc" } },
+        workout: { select: { date: true } },
+      },
+      orderBy: [{ workout: { date: "desc" } }, { id: "desc" }],
+    });
+
+    res.json(exercise ? { date: exercise.workout.date, sets: exercise.sets } : null);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 router.get("/volume", async (req, res) => {
   try {
     const { range, date } = req.query;

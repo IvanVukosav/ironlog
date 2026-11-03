@@ -82,7 +82,10 @@
     "newPrToast": "🎉 New PR! {{name}} {{value}}kg e1RM",
     "warmupLabel": "Warm-up",
     "warmupBadge": "W",
-    "supersetPlaceholder": "—"
+    "supersetPlaceholder": "—",
+    "lastTime": "Last time ({{date}}):",
+    "useLastSet": "Fill in the inputs",
+    "copyAllSets": "Copy all"
   },
   "nutrition": {
     "addDay": "Add day",

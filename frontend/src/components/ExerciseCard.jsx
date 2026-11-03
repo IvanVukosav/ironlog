@@ -10,6 +10,16 @@ const WEIGHT_STEP_KG = 1;
 const MINIMUM_WEIGHT_KG = 0;
 const E1RM_DECIMAL_PLACES = 1;
 
+function formatShortDate(dateString) {
+  const date = new Date(dateString);
+  return `${date.getUTCDate()}/${date.getUTCMonth() + 1}`;
+}
+
+function formatSetShort(workoutSet) {
+  const base = `${workoutSet.weight}×${workoutSet.reps}`;
+  return Number.isFinite(workoutSet.rpe) ? `${base} @${workoutSet.rpe}` : base;
+}
+
 function WeightInput({ value, onChange }) {
   const { t } = useTranslation();
   const adjust = (amount) => {
@@ -62,11 +72,51 @@ function Exercise({
   const [editingSetId, setEditingSetId] = useState(null);
   const [editSet, setEditSet] = useState({ weight: "", reps: "", rpe: "", isWarmup: false });
   const [supersetValue, setSupersetValue] = useState(exercise.supersetGroup || "");
+  const [lastSession, setLastSession] = useState(null);
   const menuRef = useRef(null);
 
   useEffect(() => {
     setSupersetValue(exercise.supersetGroup || "");
   }, [exercise.supersetGroup]);
+
+  useEffect(() => {
+    fetchJson(`/api/stats/exercise/${encodeURIComponent(exercise.name)}/last?workoutId=${exercise.workoutId}`)
+      .then((data) => setLastSession(data))
+      .catch((err) => console.error(err));
+  }, [exercise.name, exercise.workoutId]);
+
+  const lastWorkingSets = lastSession?.sets.filter((previousSet) => !previousSet.isWarmup) ?? [];
+
+  const fillFromLastSet = (previousSet) => {
+    setSet({
+      weight: String(previousSet.weight),
+      reps: String(previousSet.reps),
+      rpe: Number.isFinite(previousSet.rpe) ? String(previousSet.rpe) : "",
+      isWarmup: false,
+    });
+  };
+
+  const copyLastSession = async () => {
+    try {
+      // Sequential so the copied sets keep their original order.
+      for (const previousSet of lastWorkingSets) {
+        const data = await fetchJson(`/api/workouts/exercises/${exercise.id}/sets`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            weight: previousSet.weight,
+            reps: previousSet.reps,
+            rpe: previousSet.rpe,
+            isWarmup: false,
+          }),
+        });
+        onAddSet(data);
+      }
+    } catch (err) {
+      console.error(err);
+      showError(err.message);
+    }
+  };
 
   const { draggedId: draggedSetId, hoveredId: hoveredSetId, startDrag: startSetDrag } = useDragReorder(
     exercise.sets || [],
@@ -252,6 +302,27 @@ function Exercise({
           )}
         </div>
       </div>
+      {lastWorkingSets.length > 0 && (
+        <div className={styles.lastSession}>
+          <span className={styles.lastSessionLabel}>
+            {t("log.lastTime", { date: formatShortDate(lastSession.date) })}
+          </span>
+          {lastWorkingSets.map((previousSet) => (
+            <button
+              type="button"
+              key={previousSet.id}
+              className={styles.lastSessionChip}
+              title={t("log.useLastSet")}
+              onClick={() => fillFromLastSet(previousSet)}
+            >
+              {formatSetShort(previousSet)}
+            </button>
+          ))}
+          <button type="button" className={styles.copyAllButton} onClick={copyLastSession}>
+            {t("log.copyAllSets")}
+          </button>
+        </div>
+      )}
       <div className={styles.inputRow}>
         <WeightInput
           value={set.weight}
