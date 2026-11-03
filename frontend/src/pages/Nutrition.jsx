@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Tooltip, PieChart, Pie, Cell } from "recharts";
 import { fetchJson } from "../api";
 import MealCard from "../components/MealCard";
+import TdeeCard from "../components/TdeeCard";
 import { useToast } from "../context/useToast";
 import { getCssVar } from "../utils/theme";
 import styles from "./Nutrition.module.css";
@@ -51,7 +52,8 @@ function Nutrition() {
   const chartProteinColor = getCssVar("--color-protein");
   const chartCarbsColor = getCssVar("--color-carbs");
   const chartFatColor = getCssVar("--color-fat");
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [today] = useState(() => new Date().toISOString().split("T")[0]);
+  const [date, setDate] = useState(today);
   const [day, setDay] = useState(null);
   const [mealName, setMealName] = useState("");
   const [foodItemTemplates, setFoodItemTemplates] = useState([]);
@@ -234,6 +236,12 @@ function Nutrition() {
           onChange={(event) => setDate(event.target.value)}
         />
       </div>
+
+      <TdeeCard
+        today={today}
+        kcalGoal={settings?.kcalGoal}
+        onGoalChange={(kcalGoal) => setSettings((prev) => ({ ...prev, kcalGoal }))}
+      />
 
       {!day && (
         <button className={styles.startButton} onClick={createDay}>

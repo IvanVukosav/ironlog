@@ -144,6 +144,16 @@
     "addItem": "Dodaj",
     "saveAsFoodPrompt": "Spremi \"{{name}}\" kao namirnicu?"
   },
+  "tdee": {
+    "title": "Procjena potrošnje (TDEE)",
+    "perDay": "≈ {{kcal}} kcal/dan",
+    "basis": "Zadnjih {{days}} dana: prosječni unos {{intake}} kcal ({{intakeDays}} dana), težina {{change}} kg/tj ({{weighIns}} vaganja).",
+    "goalProjection": "Uz trenutni cilj od {{kcal}} kcal očekuj {{change}} kg/tj.",
+    "preset": "{{change}} kg/tj · {{kcal}}",
+    "maintenance": "Održavanje · {{kcal}}",
+    "goalSet": "Cilj kalorija postavljen na {{kcal}} kcal",
+    "notEnoughData": "Za procjenu treba barem {{minIntakeDays}} dana unosa i {{minWeighIns}} vaganja kroz {{weeks}} tjedna. Zadnjih 28 dana: {{intakeDays}} dana unosa, {{weighIns}} vaganja."
+  },
   "stats": {
     "recentPrs": "Nedavno oboreni rekordi",
     "allExercisesHeader": "Sve vježbe",

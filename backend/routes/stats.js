@@ -6,6 +6,23 @@ const { getWeekRange, getMonthRange, getYearRange } = require("../utils/dateRang
 const UNCATEGORIZED_MUSCLE_GROUP = "Ostalo";
 const VOLUME_RANGE_GETTERS = { week: getWeekRange, month: getMonthRange, year: getYearRange };
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
+const DAYS_PER_WEEK = 7;
+
+const KCAL_PER_KG_BODYWEIGHT = 7700;
+const TDEE_WINDOW_DAYS = 28;
+const TDEE_MIN_INTAKE_DAYS = 10;
+const TDEE_MIN_WEIGH_INS = 8;
+const TDEE_MIN_WEIGH_IN_SPAN_DAYS = 14;
+
+// Least-squares slope of weight over time, in kg per day.
+function weightSlopePerDay(weighIns) {
+  const points = weighIns.map((entry) => ({ x: entry.date.getTime() / MS_PER_DAY, y: entry.weight }));
+  const meanX = points.reduce((sum, point) => sum + point.x, 0) / points.length;
+  const meanY = points.reduce((sum, point) => sum + point.y, 0) / points.length;
+  const covariance = points.reduce((sum, point) => sum + (point.x - meanX) * (point.y - meanY), 0);
+  const variance = points.reduce((sum, point) => sum + (point.x - meanX) ** 2, 0);
+  return variance > 0 ? covariance / variance : 0;
+}
 
 function toDateKey(date) {
   return new Date(date).toISOString().split("T")[0];
@@ -121,6 +138,65 @@ router.get("/volume", async (req, res) => {
       .sort((entryA, entryB) => entryB.volume - entryA.volume);
 
     res.json(result);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Estimated energy expenditure from the last 28 days: average logged intake
+// minus the energy of the weight change (regression slope × 7700 kcal/kg).
+// `date` is the client's today; that day is left out of intake as it's
+// usually not fully logged yet.
+router.get("/tdee", async (req, res) => {
+  try {
+    const today = req.query.date ? new Date(req.query.date) : new Date(toDateKey(new Date()));
+    if (Number.isNaN(today.getTime())) {
+      return res.status(400).json({ error: "Invalid date" });
+    }
+    const windowStart = new Date(today.getTime() - TDEE_WINDOW_DAYS * MS_PER_DAY);
+
+    const nutritionDays = await prisma.nutritionDay.findMany({
+      where: { date: { gte: windowStart, lt: today } },
+      include: { meals: { include: { items: { select: { kcal: true } } } } },
+    });
+    const dailyIntakes = nutritionDays
+      .map((day) => day.meals.flatMap((meal) => meal.items).reduce((sum, item) => sum + item.kcal, 0))
+      .filter((kcal) => kcal > 0);
+
+    const weighIns = await prisma.bodyweight.findMany({
+      where: { date: { gte: windowStart, lte: today } },
+      orderBy: { date: "asc" },
+    });
+    const weighInSpanDays = weighIns.length > 1
+      ? (weighIns.at(-1).date - weighIns[0].date) / MS_PER_DAY
+      : 0;
+
+    const enoughData = dailyIntakes.length >= TDEE_MIN_INTAKE_DAYS
+      && weighIns.length >= TDEE_MIN_WEIGH_INS
+      && weighInSpanDays >= TDEE_MIN_WEIGH_IN_SPAN_DAYS;
+
+    const result = {
+      windowDays: TDEE_WINDOW_DAYS,
+      intakeDays: dailyIntakes.length,
+      weighIns: weighIns.length,
+      minIntakeDays: TDEE_MIN_INTAKE_DAYS,
+      minWeighIns: TDEE_MIN_WEIGH_INS,
+      minWeighInSpanDays: TDEE_MIN_WEIGH_IN_SPAN_DAYS,
+      enoughData,
+    };
+    if (!enoughData) {
+      return res.json(result);
+    }
+
+    const averageIntake = dailyIntakes.reduce((sum, kcal) => sum + kcal, 0) / dailyIntakes.length;
+    const slopePerDay = weightSlopePerDay(weighIns);
+    res.json({
+      ...result,
+      averageIntake: Math.round(averageIntake),
+      weightChangePerWeek: Math.round(slopePerDay * DAYS_PER_WEEK * 100) / 100,
+      tdee: Math.round(averageIntake - slopePerDay * KCAL_PER_KG_BODYWEIGHT),
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal server error" });

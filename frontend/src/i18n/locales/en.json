@@ -144,6 +144,16 @@
     "addItem": "Add",
     "saveAsFoodPrompt": "Save \"{{name}}\" as a food item?"
   },
+  "tdee": {
+    "title": "Estimated expenditure (TDEE)",
+    "perDay": "≈ {{kcal}} kcal/day",
+    "basis": "Last {{days}} days: average intake {{intake}} kcal ({{intakeDays}} days), weight {{change}} kg/wk ({{weighIns}} weigh-ins).",
+    "goalProjection": "At your current goal of {{kcal}} kcal expect {{change}} kg/wk.",
+    "preset": "{{change}} kg/wk · {{kcal}}",
+    "maintenance": "Maintenance · {{kcal}}",
+    "goalSet": "Calorie goal set to {{kcal}} kcal",
+    "notEnoughData": "The estimate needs at least {{minIntakeDays}} days of food logs and {{minWeighIns}} weigh-ins over {{weeks}} weeks. Last 28 days: {{intakeDays}} days logged, {{weighIns}} weigh-ins."
+  },
   "stats": {
     "recentPrs": "Recently broken records",
     "allExercisesHeader": "All exercises",
