@@ -15,6 +15,7 @@ import Calculator from "./pages/Calculator";
 import Stats from "./pages/Stats";
 import Settings from "./pages/Settings";
 import Login from "./pages/Login";
+import Programs from "./pages/Programs";
 
 const AUTH_STATES = {
   checking: "checking",
@@ -75,6 +76,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/log" element={<Log />} />
+            <Route path="/programs" element={<Programs />} />
             <Route path="/nutrition" element={<Nutrition />} />
             <Route path="/calendar" element={<Calendar />} />
             <Route path="/calculator" element={<Calculator />} />

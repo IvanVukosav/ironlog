@@ -8,6 +8,7 @@ function NavBar() {
     <nav>
       <Link to="/">{t("nav.dashboard")}</Link>
       <Link to="/log">{t("nav.log")}</Link>
+      <Link to="/programs">{t("nav.programs")}</Link>
       <Link to="/nutrition">{t("nav.nutrition")}</Link>
       <Link to="/calendar">{t("nav.calendar")}</Link>
       <Link to="/calculator">{t("nav.calculator")}</Link>

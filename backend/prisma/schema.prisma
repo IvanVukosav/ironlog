@@ -12,6 +12,10 @@ model Workout {
   date      DateTime
   name      String?
   notes     String?
+  // Set when the workout was loaded from a program; used to suggest the next day.
+  programId   Int?
+  programWeek Int?
+  programDay  Int?
   exercises Exercise[]
 }
 
@@ -138,4 +142,32 @@ model WorkoutTemplateSet {
   rpe                       Float?
   workoutTemplateExerciseId Int
   workoutTemplateExercise   WorkoutTemplateExercise @relation(fields: [workoutTemplateExerciseId], references: [id])
+}
+
+model Program {
+  id                 Int          @id @default(autoincrement())
+  name               String       @unique
+  weeks              Int
+  // Percentages in the schemes are of this share of e1RM (e.g. 90 for a 5/3/1-style training max).
+  trainingMaxPercent Float        @default(100)
+  days               ProgramDay[]
+}
+
+model ProgramDay {
+  id        Int               @id @default(autoincrement())
+  dayNumber Int
+  name      String?
+  programId Int
+  program   Program           @relation(fields: [programId], references: [id], onDelete: Cascade)
+  exercises ProgramExercise[]
+}
+
+model ProgramExercise {
+  id           Int        @id @default(autoincrement())
+  name         String
+  order        Int        @default(0)
+  // JSON array with one set scheme per week, e.g. ["5x5@75", "5x4@80", "1x1@90, 3x5@75"].
+  weekSchemes  String
+  programDayId Int
+  programDay   ProgramDay @relation(fields: [programDayId], references: [id], onDelete: Cascade)
 }

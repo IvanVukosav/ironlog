@@ -32,6 +32,7 @@ const exerciseTemplatesRouter = require("./routes/exerciseTemplates");
 const foodItemTemplatesRouter = require("./routes/foodItemTemplates");
 const workoutTemplatesRouter = require("./routes/workoutTemplates");
 const authRouter = require("./routes/auth");
+const programsRouter = require("./routes/programs");
 
 app.use("/api/auth", authRouter);
 app.use("/api", requireAuth);
@@ -44,6 +45,7 @@ app.use("/api/body-measurements", bodyMeasurementsRouter);
 app.use("/api/exercise-templates", exerciseTemplatesRouter);
 app.use("/api/food-item-templates", foodItemTemplatesRouter);
 app.use("/api/workout-templates", workoutTemplatesRouter);
+app.use("/api/programs", programsRouter);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

@@ -220,7 +220,7 @@ function Exercise({
     setEditSet({
       weight: String(workoutSet.weight),
       reps: String(workoutSet.reps),
-      rpe: String(workoutSet.rpe),
+      rpe: Number.isFinite(workoutSet.rpe) ? String(workoutSet.rpe) : "",
       isWarmup: Boolean(workoutSet.isWarmup),
     });
   };
@@ -453,7 +453,9 @@ function Exercise({
                 className={styles.setText}
                 onClick={() => startEditingSet(workoutSet)}
               >
-                {t("log.setSummary", { weight: workoutSet.weight, reps: workoutSet.reps, rpe: workoutSet.rpe })}
+                {Number.isFinite(workoutSet.rpe)
+                  ? t("log.setSummary", { weight: workoutSet.weight, reps: workoutSet.reps, rpe: workoutSet.rpe })
+                  : t("log.setSummaryNoRpe", { weight: workoutSet.weight, reps: workoutSet.reps })}
                 {showE1rm && Number.isFinite(workoutSet.rpe) && (
                   <span className={styles.e1rmText}>
                     {t("log.e1rmSuffix", { value: calculateEstimatedOneRepMax(workoutSet.weight, workoutSet.reps, workoutSet.rpe, e1rmFormula).toFixed(E1RM_DECIMAL_PLACES) })}

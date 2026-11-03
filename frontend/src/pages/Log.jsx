@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import ExerciseCard from "../components/ExerciseCard";
 import DatePicker from "../components/DatePicker";
+import ProgramLoader from "../components/ProgramLoader";
 import { fetchJson } from "../api";
 import { useToast } from "../context/useToast";
 import { useDragReorder } from "../hooks/useDragReorder";
@@ -32,6 +33,8 @@ function Log() {
   const [workoutTemplates, setWorkoutTemplates] = useState([]);
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
   const [saveTemplateName, setSaveTemplateName] = useState(null);
+  const [programs, setPrograms] = useState([]);
+  const [showProgramLoader, setShowProgramLoader] = useState(false);
   const exercisePickerRef = useRef(null);
   const templatePickerRef = useRef(null);
   const pickerMode = settings?.exercisePickerMode ?? "chips";
@@ -77,6 +80,13 @@ function Log() {
 
     fetchJson("/api/workout-templates")
       .then((data) => setWorkoutTemplates(data))
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
+
+    fetchJson("/api/programs")
+      .then((data) => setPrograms(data))
       .catch((err) => {
         console.error(err);
         showError(err.message);
@@ -281,6 +291,10 @@ function Log() {
     return matchesSearch && matchesGroup;
   });
 
+  const workoutProgram = workout?.programId
+    ? programs.find((program) => program.id === workout.programId)
+    : null;
+
   const supersetGroups = [...new Set(
     (workout?.exercises || [])
       .map((exercise) => exercise.supersetGroup)
@@ -299,6 +313,11 @@ function Log() {
         {workout && (
           <>
             <span className={styles.meta}>{t("log.workoutId", { id: workout.id })}</span>
+            {workoutProgram && (
+              <span className={styles.meta}>
+                {t("log.programTag", { name: workoutProgram.name, week: workout.programWeek, day: workout.programDay })}
+              </span>
+            )}
             <button className={styles.cancelButton} onClick={cancelWorkout}>
               {t("common.cancel")}
             </button>
@@ -422,6 +441,11 @@ function Log() {
                 )}
               </div>
             )}
+            {programs.length > 0 && (
+              <button className={styles.addButton} onClick={() => setShowProgramLoader((prev) => !prev)}>
+                {t("log.loadProgram")}
+              </button>
+            )}
             {showExercisePicker && (
               <div className={styles.exercisePicker}>
                 {pickerMode === "chips" && (
@@ -531,6 +555,19 @@ function Log() {
                 {t("common.no")}
               </button>
             </div>
+          )}
+
+          {showProgramLoader && (
+            <ProgramLoader
+              workout={workout}
+              programs={programs}
+              formula={settings?.e1rmFormula ?? "brzycki"}
+              onLoaded={(updatedWorkout) => {
+                setWorkout(updatedWorkout);
+                setShowProgramLoader(false);
+              }}
+              onClose={() => setShowProgramLoader(false)}
+            />
           )}
 
           <div className={styles.cardList}>

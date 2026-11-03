@@ -1,0 +1,105 @@
+.panel {
+  background-color: var(--color-bg-card);
+  border: 1px solid var(--color-border-subtle);
+  padding: 1rem;
+  margin-bottom: 1rem;
+  max-width: 640px;
+  font-family: var(--font-mono);
+}
+
+.selectors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.select {
+  background: var(--color-bg-card);
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  padding: 4px 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+.preview {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  margin-bottom: 0.75rem;
+}
+
+.preview li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+}
+
+.previewName {
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+.previewSets {
+  color: var(--color-text-dim);
+}
+
+.warning {
+  flex-basis: 100%;
+  color: var(--color-accent);
+  font-size: 0.75rem;
+}
+
+.hint {
+  color: var(--color-text-dim);
+  font-size: 0.8rem;
+  margin-bottom: 0.75rem;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.loadButton {
+  background: transparent;
+  border: none;
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.loadButton:not(:disabled)::before {
+  content: "[ ";
+}
+
+.loadButton:not(:disabled)::after {
+  content: " ]";
+}
+
+.loadButton:disabled {
+  color: var(--color-text-dim);
+  cursor: not-allowed;
+}
+
+.cancelButton {
+  background: transparent;
+  border: none;
+  color: var(--color-text-dim);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.cancelButton:hover {
+  color: var(--color-accent);
+}

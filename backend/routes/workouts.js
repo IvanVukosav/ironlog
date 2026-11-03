@@ -124,6 +124,69 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
+// Adds several exercises with their sets at once (used when loading a program day).
+// Sets for an exercise already in the workout are appended to it instead of
+// creating a duplicate card. Optionally tags the workout with its program day.
+router.post("/:id/exercises/bulk", async (req, res) => {
+  try {
+    const { exercises, program } = req.body ?? {};
+    if (!Array.isArray(exercises) || exercises.some((exercise) => !exercise.name?.trim() || !Array.isArray(exercise.sets))) {
+      return res.status(400).json({ error: "exercises must be an array of { name, sets }" });
+    }
+
+    const workoutId = parseInt(req.params.id);
+    const workout = await prisma.$transaction(async (tx) => {
+      const existing = await tx.exercise.findMany({
+        where: { workoutId },
+        include: { _count: { select: { sets: true } } },
+      });
+      const existingByName = new Map(existing.map((exercise) => [exercise.name.toLowerCase(), exercise]));
+      let nextOrder = existing.length;
+
+      for (const { name, sets } of exercises) {
+        const setData = (startOrder) => sets.map((set, index) => ({
+          weight: parseFloat(set.weight) || 0,
+          reps: parseInt(set.reps) || 0,
+          rpe: Number.isFinite(parseFloat(set.rpe)) ? parseFloat(set.rpe) : null,
+          order: startOrder + index,
+        }));
+        const match = existingByName.get(name.trim().toLowerCase());
+        if (match) {
+          await tx.set.createMany({
+            data: setData(match._count.sets).map((set) => ({ ...set, exerciseId: match.id })),
+          });
+        } else {
+          await tx.exercise.create({
+            data: { name: name.trim(), order: nextOrder++, workoutId, sets: { create: setData(0) } },
+          });
+        }
+      }
+
+      return tx.workout.update({
+        where: { id: workoutId },
+        data: program
+          ? {
+              programId: parseInt(program.id),
+              programWeek: parseInt(program.week),
+              programDay: parseInt(program.day),
+            }
+          : {},
+        include: {
+          exercises: {
+            orderBy: { order: "asc" },
+            include: { sets: { orderBy: { order: "asc" } } },
+          },
+        },
+      });
+    });
+
+    res.json(workout);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 router.post("/:id/exercises", async (req, res) => {
   try {
     const { name } = req.body;
