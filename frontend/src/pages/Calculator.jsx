@@ -1,8 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { fetchJson } from "../api";
 import { calculateOneRepMax, ONE_REP_MAX_FORMULAS } from "../utils/oneRepMax";
+import { BAR_WEIGHTS_KG, DEFAULT_PLATE_SETUP, STANDARD_PLATES_KG } from "../utils/plates";
 import { useToast } from "../context/useToast";
+import PlateCalculator from "../components/PlateCalculator";
 import styles from "./Calculator.module.css";
 
 const BRZYCKI_MAX_REPS = 37;
@@ -10,6 +12,23 @@ const MIN_PERCENTAGE = 0;
 const MAX_PERCENTAGE = 100;
 const MIN_STEP = 1;
 const RESULT_DECIMAL_PLACES = 2;
+const PLATE_SETUP_STORAGE_KEY = "ironlog-plate-setup";
+
+function loadPlateSetup() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(PLATE_SETUP_STORAGE_KEY));
+    if (!stored) return DEFAULT_PLATE_SETUP;
+    return {
+      barWeight: BAR_WEIGHTS_KG.includes(stored.barWeight) ? stored.barWeight : DEFAULT_PLATE_SETUP.barWeight,
+      useCollars: Boolean(stored.useCollars),
+      availablePlates: Array.isArray(stored.availablePlates)
+        ? stored.availablePlates.filter((plate) => STANDARD_PLATES_KG.includes(plate))
+        : DEFAULT_PLATE_SETUP.availablePlates,
+    };
+  } catch {
+    return DEFAULT_PLATE_SETUP;
+  }
+}
 
 function Calculator() {
   const { t } = useTranslation();
@@ -21,7 +40,24 @@ function Calculator() {
   const [minPct, setMinPct] = useState(70);
   const [error, setError] = useState(null);
   const [settings, setSettings] = useState(null);
+  const [plateTarget, setPlateTarget] = useState("");
+  const [plateSetup, setPlateSetup] = useState(loadPlateSetup);
+  const plateSectionRef = useRef(null);
   const formula = settings?.e1rmFormula ?? ONE_REP_MAX_FORMULAS.brzycki;
+
+  const changePlateSetup = (nextSetup) => {
+    setPlateSetup(nextSetup);
+    try {
+      localStorage.setItem(PLATE_SETUP_STORAGE_KEY, JSON.stringify(nextSetup));
+    } catch {
+      // Storage unavailable: the setup just resets on reload.
+    }
+  };
+
+  const loadIntoPlateCalculator = (weightKg) => {
+    setPlateTarget(String(weightKg));
+    plateSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   useEffect(() => {
     fetchJson("/api/settings")
@@ -119,7 +155,12 @@ function Calculator() {
         <table className={styles.table}>
           <tbody>
             {percentages.map((pct) => (
-              <tr key={pct}>
+              <tr
+                key={pct}
+                className={styles.clickableRow}
+                title={t("calculator.loadIntoPlates")}
+                onClick={() => loadIntoPlateCalculator(((oneRM * pct) / 100).toFixed(2))}
+              >
                 <td>{pct}%</td>
                 <td>{((oneRM * pct) / 100).toFixed(2)} kg</td>
               </tr>
@@ -127,6 +168,16 @@ function Calculator() {
           </tbody>
         </table>
       )}
+
+      <section ref={plateSectionRef} className={styles.section}>
+        <h2 className={styles.sectionHeading}>{t("calculator.platesHeading")}</h2>
+        <PlateCalculator
+          target={plateTarget}
+          onTargetChange={setPlateTarget}
+          setup={plateSetup}
+          onSetupChange={changePlateSetup}
+        />
+      </section>
     </div>
   );
 }

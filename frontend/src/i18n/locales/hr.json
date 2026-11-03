@@ -121,7 +121,17 @@
     "errorPercentageRange": "Postotak mora biti između {{min}} i {{max}}",
     "errorBrzyckiMaxReps": "Brzycki formula ne radi za 37+ ponavljanja",
     "stepPlaceholder": "Unesi korak postotka",
-    "minPercentagePlaceholder": "Unesi postotak (zadano do 70%)"
+    "minPercentagePlaceholder": "Unesi postotak (zadano do 70%)",
+    "loadIntoPlates": "Prikaži u kalkulatoru pločica",
+    "platesHeading": "Kalkulator pločica",
+    "targetWeightPlaceholder": "Ukupna kilaža",
+    "bar": "Šipka",
+    "collars": "Obruči ({{weight}} kg svaki)",
+    "availablePlates": "Pločice",
+    "perSide": "Po strani: {{plates}}",
+    "emptyBar": "Prazna šipka",
+    "closestLoad": "Najbliže moguće: {{loaded}} kg (fali {{missing}} kg)",
+    "belowBar": "Lakše od prazne šipke ({{weight}} kg)"
   },
   "dashboard": {
     "workoutToday": "Trening danas",

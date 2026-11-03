@@ -121,7 +121,17 @@
     "errorPercentageRange": "Percentage must be between {{min}} and {{max}}",
     "errorBrzyckiMaxReps": "Brzycki formula does not work for 37+ reps",
     "stepPlaceholder": "Enter percentage step",
-    "minPercentagePlaceholder": "Enter percentage (default down to 70%)"
+    "minPercentagePlaceholder": "Enter percentage (default down to 70%)",
+    "loadIntoPlates": "Show in plate calculator",
+    "platesHeading": "Plate calculator",
+    "targetWeightPlaceholder": "Total weight",
+    "bar": "Bar",
+    "collars": "Collars ({{weight}} kg each)",
+    "availablePlates": "Plates",
+    "perSide": "Per side: {{plates}}",
+    "emptyBar": "Empty bar",
+    "closestLoad": "Closest possible: {{loaded}} kg ({{missing}} kg short)",
+    "belowBar": "Lighter than the empty bar ({{weight}} kg)"
   },
   "dashboard": {
     "workoutToday": "Training today",

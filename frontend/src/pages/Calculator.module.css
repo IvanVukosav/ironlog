@@ -106,3 +106,24 @@
 .table tr:last-child td {
   border-bottom: none;
 }
+
+.clickableRow {
+  cursor: pointer;
+}
+
+.clickableRow:hover td {
+  color: var(--color-accent);
+}
+
+.section {
+  margin-top: 2rem;
+  scroll-margin-top: 1rem;
+}
+
+.sectionHeading {
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 0.75rem;
+}
