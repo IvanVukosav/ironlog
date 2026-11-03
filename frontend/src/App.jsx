@@ -1,7 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import i18n from "./i18n";
-import { fetchJson } from "./api";
+import { fetchJson, UNAUTHORIZED_EVENT } from "./api";
 import { ToastProvider } from "./context/ToastContext";
 import ToastContainer from "./components/ToastContainer";
 import RestTimer from "./components/RestTimer";
@@ -14,9 +14,36 @@ import Calendar from "./pages/Calendar";
 import Calculator from "./pages/Calculator";
 import Stats from "./pages/Stats";
 import Settings from "./pages/Settings";
+import Login from "./pages/Login";
+
+const AUTH_STATES = {
+  checking: "checking",
+  required: "required",
+  ok: "ok",
+};
 
 function App() {
+  const [authState, setAuthState] = useState(AUTH_STATES.checking);
+
   useEffect(() => {
+    fetchJson("/api/auth/status")
+      .then((data) => {
+        setAuthState(data.required && !data.authenticated ? AUTH_STATES.required : AUTH_STATES.ok);
+      })
+      .catch((err) => {
+        // Backend unreachable: let the pages show their own errors.
+        console.error(err);
+        setAuthState(AUTH_STATES.ok);
+      });
+
+    const handleUnauthorized = () => setAuthState(AUTH_STATES.required);
+    window.addEventListener(UNAUTHORIZED_EVENT, handleUnauthorized);
+    return () => window.removeEventListener(UNAUTHORIZED_EVENT, handleUnauthorized);
+  }, []);
+
+  useEffect(() => {
+    if (authState !== AUTH_STATES.ok) return;
+
     fetchJson("/api/settings")
       .then((data) => {
         if (data?.language && data.language !== i18n.language) {
@@ -30,7 +57,15 @@ function App() {
         }
       })
       .catch((err) => console.error(err));
-  }, []);
+  }, [authState]);
+
+  if (authState === AUTH_STATES.checking) {
+    return null;
+  }
+
+  if (authState === AUTH_STATES.required) {
+    return <Login onLogin={() => setAuthState(AUTH_STATES.ok)} />;
+  }
 
   return (
     <ToastProvider>

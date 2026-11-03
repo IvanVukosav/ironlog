@@ -126,3 +126,19 @@
   composes: button from "../styles/shared.module.css";
   margin-top: 1.5rem;
 }
+
+.logoutButton {
+  display: block;
+  background: transparent;
+  border: none;
+  color: var(--color-text-dim);
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  margin-top: 2rem;
+  padding: 0;
+  cursor: pointer;
+}
+
+.logoutButton:hover {
+  color: var(--color-accent);
+}

@@ -8,6 +8,13 @@
     "stats": "Stats",
     "settings": "Settings"
   },
+  "auth": {
+    "password": "Password",
+    "login": "Log in",
+    "logout": "Log out",
+    "wrongPassword": "Wrong password",
+    "tooManyAttempts": "Too many attempts, try again in 15 minutes"
+  },
   "settings": {
     "title": "Settings",
     "kcalGoal": "Calorie goal",

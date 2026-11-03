@@ -8,6 +8,13 @@
     "stats": "Statistika",
     "settings": "Postavke"
   },
+  "auth": {
+    "password": "Lozinka",
+    "login": "Prijava",
+    "logout": "Odjava",
+    "wrongPassword": "Pogrešna lozinka",
+    "tooManyAttempts": "Previše pokušaja, pokušaj ponovo za 15 minuta"
+  },
   "settings": {
     "title": "Postavke",
     "kcalGoal": "Kcal cilj",

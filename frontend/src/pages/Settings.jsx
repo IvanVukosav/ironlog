@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { fetchJson } from "../api";
+import { fetchJson, getToken, setToken, UNAUTHORIZED_EVENT } from "../api";
 import { ONE_REP_MAX_FORMULAS } from "../utils/oneRepMax";
 import { useToast } from "../context/useToast";
 import styles from "./Settings.module.css";
@@ -112,6 +112,11 @@ function Settings() {
       console.error(err);
       showError(err.message);
     });
+  };
+
+  const logout = () => {
+    setToken(null);
+    window.dispatchEvent(new Event(UNAUTHORIZED_EVENT));
   };
 
   const save = () => {
@@ -388,6 +393,12 @@ function Settings() {
       <button className={styles.saveButton} onClick={save}>
         {t("settings.save")}
       </button>
+
+      {getToken() && (
+        <button type="button" className={styles.logoutButton} onClick={logout}>
+          {t("auth.logout")}
+        </button>
+      )}
     </div>
   );
 }
