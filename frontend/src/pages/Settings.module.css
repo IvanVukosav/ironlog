@@ -37,6 +37,17 @@
   cursor: pointer;
 }
 
+.firstLiftField {
+  margin-top: 1rem;
+}
+
+.liftSelect {
+  composes: input from "../styles/shared.module.css";
+  background: var(--color-bg-card);
+  width: 220px;
+  cursor: pointer;
+}
+
 .themePicker {
   position: relative;
 }

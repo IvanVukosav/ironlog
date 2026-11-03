@@ -37,7 +37,13 @@
     "save": "Spremi",
     "allFieldsRequired": "Sva polja moraju biti popunjena",
     "saved": "Postavke spremljene!",
-    "saveError": "Greška kod spremanja postavki"
+    "saveError": "Greška kod spremanja postavki",
+    "powerliftingSection": "Powerlifting (total, DOTS, Wilks)",
+    "sexes": {
+      "male": "Muško",
+      "female": "Žensko"
+    },
+    "liftAuto": "Automatski (po imenu)"
   },
   "common": {
     "save": "Spremi",
@@ -113,7 +119,17 @@
     "deleteAllRecords": "Obriši sve zapise",
     "confirmDeleteAllRecords": "Obrisati SVE zapise vježbe \"{{name}}\" iz svih treninga? Ovo se ne može poništiti. (Za brisanje samo pojedinih dana, koristi \"Prikaži po datumima\" umjesto ovoga.)",
     "noSets": "bez setova",
-    "progress": "Napredak"
+    "progress": "Napredak",
+    "powerliftingTotal": "Powerlifting total",
+    "lifts": {
+      "squat": "Čučanj",
+      "bench": "Bench",
+      "deadlift": "Mrtvo dizanje"
+    },
+    "total": "Total",
+    "atBodyweight": "pri {{weight}} kg",
+    "totalMissingLifts": "Za total, DOTS i Wilks trebaju sva tri dizanja. Odaberi ih u Postavkama ako se ne prepoznaju po imenu.",
+    "totalMissingBodyweight": "Upiši tjelesnu težinu u Kalendaru za DOTS i Wilks."
   },
   "calculator": {
     "weightPlaceholder": "Unesi kilažu",

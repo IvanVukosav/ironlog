@@ -4,12 +4,15 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "rec
 import { useTranslation } from "react-i18next";
 import { fetchJson } from "../api";
 import { findBestSetByE1rm, ONE_REP_MAX_FORMULAS } from "../utils/oneRepMax";
+import { MAIN_LIFTS, calculateDots, calculateWilks, findMainLiftBests } from "../utils/strengthScores";
 import { useToast } from "../context/useToast";
 import { getCssVar } from "../utils/theme";
 import MuscleGroupVolumeChart from "../components/MuscleGroupVolumeChart";
 import styles from "./Stats.module.css";
 
 const E1RM_DECIMAL_PLACES = 1;
+const SCORE_DECIMAL_PLACES = 1;
+const BODYWEIGHT_LOOKBACK_DAYS = 3650;
 
 function getRecentPr(sets, formula) {
   if (sets.length === 0) return null;
@@ -43,6 +46,7 @@ function Stats() {
   const [manageMenuFor, setManageMenuFor] = useState(null);
   const [expandedHistoryFor, setExpandedHistoryFor] = useState(null);
   const [expandedHistoryEntries, setExpandedHistoryEntries] = useState([]);
+  const [latestBodyweight, setLatestBodyweight] = useState(null);
   const chartSectionRef = useRef(null);
   const formula = settings?.e1rmFormula ?? ONE_REP_MAX_FORMULAS.brzycki;
 
@@ -67,6 +71,13 @@ function Stats() {
 
     fetchJson("/api/settings")
       .then((data) => setSettings(data))
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
+
+    fetchJson(`/api/bodyweight?days=${BODYWEIGHT_LOOKBACK_DAYS}`)
+      .then((entries) => setLatestBodyweight(entries.at(-1) ?? null))
       .catch((err) => {
         console.error(err);
         showError(err.message);
@@ -164,6 +175,15 @@ function Stats() {
     .filter(Boolean)
     .sort((rowA, rowB) => (rowA.date < rowB.date ? 1 : -1));
 
+  const mainLiftBests = findMainLiftBests(prs, settings, formula);
+  const hasAllMainLifts = MAIN_LIFTS.every((lift) => mainLiftBests[lift]);
+  const hasAnyMainLift = MAIN_LIFTS.some((lift) => mainLiftBests[lift]);
+  const total = hasAllMainLifts
+    ? MAIN_LIFTS.reduce((sum, lift) => sum + mainLiftBests[lift].e1rm, 0)
+    : null;
+  const dots = total && latestBodyweight ? calculateDots(total, latestBodyweight.weight, settings?.sex) : null;
+  const wilks = total && latestBodyweight ? calculateWilks(total, latestBodyweight.weight, settings?.sex) : null;
+
   const chartData = history
     .map((entry) => {
       const bestSet = findBestSetByE1rm(entry.sets, formula);
@@ -179,6 +199,44 @@ function Stats() {
   return (
     <div className={styles.page}>
       <h1 className={styles.heading}>{t("nav.stats")}</h1>
+      {hasAnyMainLift && (
+        <div className={styles.totalSection}>
+          <h2 className={styles.recentPrHeading}>{t("stats.powerliftingTotal")}</h2>
+          <div className={styles.totalGrid}>
+            {MAIN_LIFTS.map((lift) => (
+              <div key={lift} className={styles.totalCard}>
+                <span className={styles.totalLabel}>{t(`stats.lifts.${lift}`)}</span>
+                <span className={styles.totalValue}>
+                  {mainLiftBests[lift] ? `${mainLiftBests[lift].e1rm.toFixed(E1RM_DECIMAL_PLACES)}kg` : "—"}
+                </span>
+                {mainLiftBests[lift] && (
+                  <span className={styles.totalDetail}>{mainLiftBests[lift].name}</span>
+                )}
+              </div>
+            ))}
+            <div className={styles.totalCard}>
+              <span className={styles.totalLabel}>{t("stats.total")}</span>
+              <span className={styles.totalValue}>{total ? `${total.toFixed(E1RM_DECIMAL_PLACES)}kg` : "—"}</span>
+              <span className={styles.totalDetail}>e1RM</span>
+            </div>
+            <div className={styles.totalCard}>
+              <span className={styles.totalLabel}>DOTS</span>
+              <span className={styles.totalValue}>{dots ? dots.toFixed(SCORE_DECIMAL_PLACES) : "—"}</span>
+              {latestBodyweight && (
+                <span className={styles.totalDetail}>
+                  {t("stats.atBodyweight", { weight: latestBodyweight.weight })}
+                </span>
+              )}
+            </div>
+            <div className={styles.totalCard}>
+              <span className={styles.totalLabel}>Wilks</span>
+              <span className={styles.totalValue}>{wilks ? wilks.toFixed(SCORE_DECIMAL_PLACES) : "—"}</span>
+            </div>
+          </div>
+          {!hasAllMainLifts && <p className={styles.totalHint}>{t("stats.totalMissingLifts")}</p>}
+          {hasAllMainLifts && !latestBodyweight && <p className={styles.totalHint}>{t("stats.totalMissingBodyweight")}</p>}
+        </div>
+      )}
       {recentPrRows.length > 0 && (
         <div className={styles.recentPrSection}>
           <h2 className={styles.recentPrHeading}>{t("stats.recentPrs")}</h2>

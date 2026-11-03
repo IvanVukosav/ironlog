@@ -2,8 +2,15 @@ import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { fetchJson, getToken, setToken, UNAUTHORIZED_EVENT } from "../api";
 import { ONE_REP_MAX_FORMULAS } from "../utils/oneRepMax";
+import { SEXES } from "../utils/strengthScores";
 import { useToast } from "../context/useToast";
 import styles from "./Settings.module.css";
+
+const LIFT_SETTING_FIELDS = [
+  { lift: "squat", field: "squatExercise" },
+  { lift: "bench", field: "benchExercise" },
+  { lift: "deadlift", field: "deadliftExercise" },
+];
 
 const E1RM_FORMULA_LABELS = {
   [ONE_REP_MAX_FORMULAS.brzycki]: "Brzycki",
@@ -31,12 +38,20 @@ function Settings() {
   const { t, i18n } = useTranslation();
   const { showError, showSuccess } = useToast();
   const [settings, setSettings] = useState(null);
+  const [exerciseTemplates, setExerciseTemplates] = useState([]);
   const [themeMenuOpen, setThemeMenuOpen] = useState(false);
   const [templateMenuOpen, setTemplateMenuOpen] = useState(false);
 
   useEffect(() => {
     fetchJson("/api/settings")
       .then((data) => setSettings(data))
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
+
+    fetchJson("/api/exercise-templates")
+      .then((data) => setExerciseTemplates(data))
       .catch((err) => {
         console.error(err);
         showError(err.message);
@@ -136,6 +151,9 @@ function Settings() {
         trainingsPerWeek: parseInt(settings.trainingsPerWeek),
         carbsGoal: parseInt(settings.carbsGoal),
         fatGoal: parseInt(settings.fatGoal),
+        squatExercise: settings.squatExercise || null,
+        benchExercise: settings.benchExercise || null,
+        deadliftExercise: settings.deadliftExercise || null,
       }),
     })
       .then(() => showSuccess(t("settings.saved")))
@@ -388,6 +406,41 @@ function Settings() {
           />
           {E1RM_FORMULA_LABELS[formula]}
         </label>
+      ))}
+
+      <p className={styles.sectionLabel}>{t("settings.powerliftingSection")}</p>
+
+      {Object.values(SEXES).map((sex) => (
+        <label key={sex} className={styles.checkboxRow}>
+          <input
+            type="radio"
+            name="sex"
+            checked={(settings?.sex ?? SEXES.male) === sex}
+            onChange={() => setSettings((prev) => ({ ...prev, sex }))}
+          />
+          {t(`settings.sexes.${sex}`)}
+        </label>
+      ))}
+
+      {LIFT_SETTING_FIELDS.map(({ lift, field }, index) => (
+        <div key={field} className={index === 0 ? `${styles.field} ${styles.firstLiftField}` : styles.field}>
+          <span className={styles.fieldLabel}>{t(`stats.lifts.${lift}`)}</span>
+          <select
+            className={styles.liftSelect}
+            value={settings?.[field] || ""}
+            onChange={(event) => setSettings((prev) => ({ ...prev, [field]: event.target.value }))}
+          >
+            <option value="">{t("settings.liftAuto")}</option>
+            {settings?.[field] && !exerciseTemplates.some((template) => template.name === settings[field]) && (
+              <option value={settings[field]}>{settings[field]}</option>
+            )}
+            {exerciseTemplates.map((template) => (
+              <option key={template.id} value={template.name}>
+                {template.name}
+              </option>
+            ))}
+          </select>
+        </div>
       ))}
 
       <button className={styles.saveButton} onClick={save}>

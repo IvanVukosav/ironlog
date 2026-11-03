@@ -37,7 +37,13 @@
     "save": "Save",
     "allFieldsRequired": "All fields must be filled in",
     "saved": "Settings saved!",
-    "saveError": "Error saving settings"
+    "saveError": "Error saving settings",
+    "powerliftingSection": "Powerlifting (total, DOTS, Wilks)",
+    "sexes": {
+      "male": "Male",
+      "female": "Female"
+    },
+    "liftAuto": "Automatic (by name)"
   },
   "common": {
     "save": "Save",
@@ -113,7 +119,17 @@
     "deleteAllRecords": "Delete all records",
     "confirmDeleteAllRecords": "Delete ALL records for \"{{name}}\" across every workout? This cannot be undone. (To delete only individual days, use \"Show by date\" instead.)",
     "noSets": "no sets",
-    "progress": "Progress"
+    "progress": "Progress",
+    "powerliftingTotal": "Powerlifting total",
+    "lifts": {
+      "squat": "Squat",
+      "bench": "Bench",
+      "deadlift": "Deadlift"
+    },
+    "total": "Total",
+    "atBodyweight": "at {{weight}} kg",
+    "totalMissingLifts": "Total, DOTS and Wilks need all three lifts. Pick them in Settings if they aren't detected by name.",
+    "totalMissingBodyweight": "Log your bodyweight in Calendar to get DOTS and Wilks."
   },
   "calculator": {
     "weightPlaceholder": "Enter weight",

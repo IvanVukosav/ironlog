@@ -79,6 +79,10 @@ model Settings {
   language   String @default("hr")
   theme      String @default("dark-red")
   template   String @default("terminal")
+  sex              String  @default("male")
+  squatExercise    String?
+  benchExercise    String?
+  deadliftExercise String?
 
 }
 
