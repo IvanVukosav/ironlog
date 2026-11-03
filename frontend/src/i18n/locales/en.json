@@ -142,6 +142,10 @@
     "macroCarbs": "carbs",
     "macroFat": "fat",
     "addItem": "Add",
+    "copyPreviousDay": "Copy previous day",
+    "nothingToCopy": "The previous day has no meals to copy",
+    "recentItems": "Recent",
+    "savedItems": "Saved foods",
     "saveAsFoodPrompt": "Save \"{{name}}\" as a food item?"
   },
   "tdee": {

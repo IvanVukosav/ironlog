@@ -142,6 +142,10 @@
     "macroCarbs": "ugljikohidrati",
     "macroFat": "masti",
     "addItem": "Dodaj",
+    "copyPreviousDay": "Kopiraj prethodni dan",
+    "nothingToCopy": "Prethodni dan nema obroka za kopirati",
+    "recentItems": "Nedavno",
+    "savedItems": "Spremljene namirnice",
     "saveAsFoodPrompt": "Spremi \"{{name}}\" kao namirnicu?"
   },
   "tdee": {

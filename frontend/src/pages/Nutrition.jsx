@@ -17,6 +17,12 @@ const MACRO_CHART_OUTER_RADIUS = 65;
 const PERCENT_MULTIPLIER = 100;
 
 const DEFAULT_MEAL_NAME = "Ostalo";
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+const RECENT_ITEMS_LIMIT = 8;
+
+function previousDateString(dateString) {
+  return new Date(new Date(dateString).getTime() - MS_PER_DAY).toISOString().split("T")[0];
+}
 
 function getBarSegments(value, goal) {
   if (!goal) return { normalPercent: 0, overPercent: 0 };
@@ -57,6 +63,7 @@ function Nutrition() {
   const [day, setDay] = useState(null);
   const [mealName, setMealName] = useState("");
   const [foodItemTemplates, setFoodItemTemplates] = useState([]);
+  const [recentItems, setRecentItems] = useState([]);
   const [settings, setSettings] = useState(null);
   const [quickAddName, setQuickAddName] = useState("");
   const [showQuickPicker, setShowQuickPicker] = useState(false);
@@ -90,6 +97,13 @@ function Nutrition() {
         showError(err.message);
       });
 
+    fetchJson(`/api/nutrition/recent-items?limit=${RECENT_ITEMS_LIMIT}`)
+      .then((data) => setRecentItems(data))
+      .catch((err) => {
+        console.error(err);
+        showError(err.message);
+      });
+
     fetchJson("/api/settings")
       .then((data) => setSettings(data))
       .catch((err) => {
@@ -108,6 +122,19 @@ function Nutrition() {
       .catch((err) => {
         console.error(err);
         showError(err.message);
+      });
+  };
+
+  const copyPreviousDay = () => {
+    fetchJson("/api/nutrition/days/copy", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fromDate: previousDateString(date), toDate: date }),
+    })
+      .then((data) => setDay(data))
+      .catch((err) => {
+        console.error(err);
+        showError(err.message === "Nothing to copy from that day" ? t("nutrition.nothingToCopy") : err.message);
       });
   };
 
@@ -193,11 +220,11 @@ function Nutrition() {
       });
   };
 
-  const filteredQuickTemplates = quickAddName.trim()
-    ? foodItemTemplates.filter((template) =>
-        template.name.toLowerCase().includes(quickAddName.trim().toLowerCase()),
-      )
+  const quickAddQuery = quickAddName.trim().toLowerCase();
+  const filteredQuickTemplates = quickAddQuery
+    ? foodItemTemplates.filter((template) => template.name.toLowerCase().includes(quickAddQuery))
     : foodItemTemplates;
+  const filteredRecentItems = recentItems.filter((item) => item.name.toLowerCase().includes(quickAddQuery));
 
   const allItems = day?.meals?.flatMap((meal) => meal.items || []) || [];
   const totals = allItems.reduce(
@@ -244,9 +271,14 @@ function Nutrition() {
       />
 
       {!day && (
-        <button className={styles.startButton} onClick={createDay}>
-          {t("nutrition.addDay")}
-        </button>
+        <div className={styles.startRow}>
+          <button className={styles.startButton} onClick={createDay}>
+            {t("nutrition.addDay")}
+          </button>
+          <button className={styles.copyDayButton} onClick={copyPreviousDay}>
+            {t("nutrition.copyPreviousDay")}
+          </button>
+        </div>
       )}
 
       {day && (
@@ -329,8 +361,26 @@ function Nutrition() {
               }}
               onFocus={() => setShowQuickPicker(true)}
             />
-            {showQuickPicker && filteredQuickTemplates.length > 0 && (
+            {showQuickPicker && (filteredQuickTemplates.length > 0 || filteredRecentItems.length > 0) && (
               <div className={styles.quickAddPicker}>
+                {filteredRecentItems.length > 0 && (
+                  <>
+                    <div className={styles.quickAddSection}>{t("nutrition.recentItems")}</div>
+                    {filteredRecentItems.map((item) => (
+                      <button
+                        key={`recent-${item.name}`}
+                        className={styles.quickAddOption}
+                        onClick={() => quickAddItem(item)}
+                      >
+                        {item.name}
+                        <span className={styles.quickAddMacros}>{item.kcal} kcal</span>
+                      </button>
+                    ))}
+                  </>
+                )}
+                {filteredQuickTemplates.length > 0 && filteredRecentItems.length > 0 && (
+                  <div className={styles.quickAddSection}>{t("nutrition.savedItems")}</div>
+                )}
                 {filteredQuickTemplates.map((template) => (
                   <button
                     key={template.id}
@@ -355,6 +405,9 @@ function Nutrition() {
             />
             <button className={styles.addMealButton} onClick={addMeal}>
               {t("nutrition.addMeal")}
+            </button>
+            <button className={styles.copyDayButton} onClick={copyPreviousDay}>
+              {t("nutrition.copyPreviousDay")}
             </button>
           </div>
 
