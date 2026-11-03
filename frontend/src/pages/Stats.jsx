@@ -8,10 +8,13 @@ import { MAIN_LIFTS, calculateDots, calculateWilks, findMainLiftBests } from "..
 import { useToast } from "../context/useToast";
 import { getCssVar } from "../utils/theme";
 import MuscleGroupVolumeChart from "../components/MuscleGroupVolumeChart";
+import MainLiftsChart from "../components/MainLiftsChart";
 import styles from "./Stats.module.css";
 
 const E1RM_DECIMAL_PLACES = 1;
 const SCORE_DECIMAL_PLACES = 1;
+const PR_DOT_RADIUS = 4;
+const POINT_DOT_RADIUS = 2;
 const BODYWEIGHT_LOOKBACK_DAYS = 3650;
 
 function getRecentPr(sets, formula) {
@@ -27,6 +30,24 @@ function getRecentPr(sets, formula) {
 function formatChartDate(dateString) {
   const date = new Date(dateString);
   return `${date.getUTCDate()}/${date.getUTCMonth() + 1}`;
+}
+
+// Best e1RM per session; isPr marks sessions that beat every earlier one.
+function buildProgressData(history, formula) {
+  let runningBest = null;
+  return history
+    .map((entry) => {
+      const bestSet = findBestSetByE1rm(entry.sets, formula);
+      if (!bestSet) return null;
+      const isPr = runningBest !== null && bestSet.e1rm > runningBest;
+      runningBest = runningBest === null ? bestSet.e1rm : Math.max(runningBest, bestSet.e1rm);
+      return {
+        label: formatChartDate(entry.date),
+        e1rm: parseFloat(bestSet.e1rm.toFixed(E1RM_DECIMAL_PLACES)),
+        isPr,
+      };
+    })
+    .filter(Boolean);
 }
 
 function Stats() {
@@ -184,17 +205,19 @@ function Stats() {
   const dots = total && latestBodyweight ? calculateDots(total, latestBodyweight.weight, settings?.sex) : null;
   const wilks = total && latestBodyweight ? calculateWilks(total, latestBodyweight.weight, settings?.sex) : null;
 
-  const chartData = history
-    .map((entry) => {
-      const bestSet = findBestSetByE1rm(entry.sets, formula);
-      return bestSet
-        ? {
-            label: formatChartDate(entry.date),
-            e1rm: parseFloat(bestSet.e1rm.toFixed(E1RM_DECIMAL_PLACES)),
-          }
-        : null;
-    })
-    .filter(Boolean);
+  const chartData = buildProgressData(history, formula);
+
+  const renderProgressDot = ({ cx, cy, index, payload }) => (
+    <circle
+      key={index}
+      cx={cx}
+      cy={cy}
+      r={payload.isPr ? PR_DOT_RADIUS : POINT_DOT_RADIUS}
+      fill={chartAccentColor}
+      stroke={payload.isPr ? getCssVar("--color-bg") : "none"}
+      strokeWidth={2}
+    />
+  );
 
   return (
     <div className={styles.page}>
@@ -237,6 +260,7 @@ function Stats() {
           {hasAllMainLifts && !latestBodyweight && <p className={styles.totalHint}>{t("stats.totalMissingBodyweight")}</p>}
         </div>
       )}
+      {hasAnyMainLift && <MainLiftsChart exerciseSets={prs} mainLiftBests={mainLiftBests} formula={formula} />}
       {recentPrRows.length > 0 && (
         <div className={styles.recentPrSection}>
           <h2 className={styles.recentPrHeading}>{t("stats.recentPrs")}</h2>
@@ -358,7 +382,7 @@ function Stats() {
                 itemStyle={{ color: chartTextColor }}
                 formatter={(value) => [`${value}kg`, "e1RM"]}
               />
-              <Line type="monotone" dataKey="e1rm" stroke={chartAccentColor} strokeWidth={2} dot={{ fill: chartAccentColor, r: 3 }} activeDot={{ r: 5 }} />
+              <Line type="monotone" dataKey="e1rm" stroke={chartAccentColor} strokeWidth={2} dot={renderProgressDot} activeDot={{ r: 5 }} />
             </LineChart>
           </ResponsiveContainer>
         ) : (

@@ -162,7 +162,9 @@
     "total": "Total",
     "atBodyweight": "pri {{weight}} kg",
     "totalMissingLifts": "Za total, DOTS i Wilks trebaju sva tri dizanja. Odaberi ih u Postavkama ako se ne prepoznaju po imenu.",
-    "totalMissingBodyweight": "Upiši tjelesnu težinu u Kalendaru za DOTS i Wilks."
+    "totalMissingBodyweight": "Upiši tjelesnu težinu u Kalendaru za DOTS i Wilks.",
+    "mainLiftsChart": "e1RM glavnih dizanja",
+    "prMarkerLegend": "novi PR"
   },
   "calculator": {
     "weightPlaceholder": "Unesi kilažu",

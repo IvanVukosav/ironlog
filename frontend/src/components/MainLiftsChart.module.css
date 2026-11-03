@@ -1,0 +1,80 @@
+.section {
+  margin-bottom: 2rem;
+}
+
+.heading {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: var(--heading-weight);
+  color: var(--color-text);
+  letter-spacing: 0.03em;
+  margin-bottom: 0.5rem;
+}
+
+.legend {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  margin-bottom: 0.75rem;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  color: var(--color-text);
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legendValue {
+  color: var(--color-text-dim);
+}
+
+.swatch {
+  display: inline-block;
+  width: 12px;
+  height: 2px;
+  flex-shrink: 0;
+}
+
+.prMarker {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--color-text-dim);
+  flex-shrink: 0;
+}
+
+.tooltip {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  color: var(--color-text);
+  padding: 6px 10px;
+}
+
+.tooltipDate {
+  color: var(--color-text-dim);
+  margin-bottom: 4px;
+}
+
+.tooltipRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tooltipValue {
+  font-weight: 700;
+}
+
+.prTag {
+  color: var(--color-text-dim);
+  font-size: 10px;
+  border: 1px solid var(--color-border);
+  padding: 0 3px;
+}

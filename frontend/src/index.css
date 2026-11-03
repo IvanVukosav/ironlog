@@ -16,6 +16,10 @@
   --color-carbs: #d99a5c;
   --color-fat: #d9c25c;
   --color-success: #5cb87a;
+  /* Main-lift chart series, validated as a categorical set on the dark surfaces. */
+  --color-lift-squat: #3987e5;
+  --color-lift-bench: #d95926;
+  --color-lift-deadlift: #199e70;
   --font-body: var(--font-mono);
   --heading-weight: 700;
   --card-bg: var(--color-bg-card);
@@ -58,6 +62,9 @@
   --color-text-placeholder: #999999;
   --color-border: #d8d5cf;
   --color-border-subtle: #e8e6e0;
+  --color-lift-squat: #2a78d6;
+  --color-lift-bench: #eb6834;
+  --color-lift-deadlift: #1baf7a;
 }
 
 [data-theme="dark-blue"] {

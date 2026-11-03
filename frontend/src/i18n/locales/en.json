@@ -162,7 +162,9 @@
     "total": "Total",
     "atBodyweight": "at {{weight}} kg",
     "totalMissingLifts": "Total, DOTS and Wilks need all three lifts. Pick them in Settings if they aren't detected by name.",
-    "totalMissingBodyweight": "Log your bodyweight in Calendar to get DOTS and Wilks."
+    "totalMissingBodyweight": "Log your bodyweight in Calendar to get DOTS and Wilks.",
+    "mainLiftsChart": "Main lifts e1RM",
+    "prMarkerLegend": "new PR"
   },
   "calculator": {
     "weightPlaceholder": "Enter weight",
