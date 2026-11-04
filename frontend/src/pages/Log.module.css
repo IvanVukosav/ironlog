@@ -62,7 +62,7 @@
 
 .exerciseInput {
   composes: input from "../styles/shared.module.css";
-  width: 200px;
+  width: 260px;
 }
 
 .exerciseInput::placeholder {

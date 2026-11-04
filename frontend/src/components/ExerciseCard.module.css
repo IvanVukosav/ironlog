@@ -206,6 +206,12 @@
   color: var(--color-text-placeholder);
 }
 
+/* Wide enough for the longest reps placeholder ("Broj ponavljanja") in the monospace Terminal font. */
+.repsInput {
+  composes: setInput;
+  width: 140px;
+}
+
 .weightGroup {
   display: flex;
   align-items: center;

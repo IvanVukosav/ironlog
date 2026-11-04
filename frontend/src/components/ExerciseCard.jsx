@@ -367,7 +367,7 @@ function Exercise({
         />
         <input
           type="text"
-          className={styles.setInput}
+          className={styles.repsInput}
           placeholder={t("log.repsPlaceholder")}
           value={set.reps}
           onChange={(event) =>
@@ -400,7 +400,7 @@ function Exercise({
               />
               <input
                 type="text"
-                className={styles.setInput}
+                className={styles.repsInput}
                 placeholder={t("log.repsPlaceholder")}
                 value={editSet.reps}
                 onChange={(event) =>
