@@ -1,4 +1,4 @@
-.card {
+:where(.card) {
   background: var(--card-bg);
   border: var(--card-border);
   border-radius: var(--card-radius);
@@ -8,21 +8,21 @@
   font-family: var(--font-body);
 }
 
-.label {
+:where(.label) {
   color: var(--color-text-dim);
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
-.value {
+:where(.value) {
   color: var(--color-text);
   font-size: 1.2rem;
   font-weight: 700;
   margin-top: 0.25rem;
 }
 
-.button {
+:where(.button) {
   background: var(--button-bg);
   color: var(--button-color);
   border: var(--button-border);
@@ -36,15 +36,15 @@
   cursor: pointer;
 }
 
-.button::before {
+:where(.button)::before {
   content: var(--button-before);
 }
 
-.button::after {
+:where(.button)::after {
   content: var(--button-after);
 }
 
-.input {
+:where(.input) {
   background: var(--input-bg);
   border: var(--input-border);
   border-bottom: var(--input-border-bottom);
@@ -56,11 +56,11 @@
   outline: none;
 }
 
-.input:focus {
+:where(.input):focus {
   border-bottom-color: var(--color-accent);
 }
 
-.dropdown {
+:where(.dropdown) {
   background: var(--dropdown-bg);
   border: var(--dropdown-border);
   border-radius: var(--dropdown-radius);
@@ -68,7 +68,7 @@
   font-family: var(--font-body);
 }
 
-.dropdownItem {
+:where(.dropdownItem) {
   display: block;
   width: 100%;
   background: transparent;
@@ -81,7 +81,7 @@
   cursor: pointer;
 }
 
-.dropdownItem:hover {
+:where(.dropdownItem):hover {
   background-color: var(--color-bg-hover);
   color: var(--color-accent);
 }
