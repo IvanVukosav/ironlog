@@ -60,6 +60,7 @@ function Stats() {
   const chartBgCardColor = getCssVar("--color-bg-card");
   const chartBorderColor = getCssVar("--color-border");
   const chartTextColor = getCssVar("--color-text");
+  const chartFontFamily = getCssVar("--font-body");
   const [prs, setPrs] = useState([]);
   const [settings, setSettings] = useState(null);
   const [selectedExercise, setSelectedExercise] = useState("");
@@ -374,10 +375,10 @@ function Stats() {
         {chartData.length > 0 ? (
           <ResponsiveContainer width="100%" height={220}>
             <LineChart data={chartData}>
-              <XAxis dataKey="label" tick={{ fill: chartTextDimColor, fontFamily: "ui-monospace", fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: chartTextDimColor, fontFamily: "ui-monospace", fontSize: 11 }} axisLine={false} tickLine={false} domain={["auto", "auto"]} />
+              <XAxis dataKey="label" tick={{ fill: chartTextDimColor, fontFamily: chartFontFamily, fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: chartTextDimColor, fontFamily: chartFontFamily, fontSize: 11 }} axisLine={false} tickLine={false} domain={["auto", "auto"]} />
               <Tooltip
-                contentStyle={{ background: chartBgCardColor, border: `1px solid ${chartBorderColor}`, fontFamily: "ui-monospace", fontSize: 12 }}
+                contentStyle={{ background: chartBgCardColor, border: `1px solid ${chartBorderColor}`, fontFamily: chartFontFamily, fontSize: 12 }}
                 labelStyle={{ color: chartTextDimColor }}
                 itemStyle={{ color: chartTextColor }}
                 formatter={(value) => [`${value}kg`, "e1RM"]}

@@ -51,7 +51,7 @@
 .tooltip {
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
-  font-family: ui-monospace, monospace;
+  font-family: var(--font-body);
   font-size: 12px;
   color: var(--color-text);
   padding: 6px 10px;

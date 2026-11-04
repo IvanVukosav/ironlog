@@ -55,6 +55,7 @@ function Nutrition() {
   const chartBorderColor = getCssVar("--color-border");
   const chartTextDimColor = getCssVar("--color-text-dim");
   const chartTextColor = getCssVar("--color-text");
+  const chartFontFamily = getCssVar("--font-body");
   const chartProteinColor = getCssVar("--color-protein");
   const chartCarbsColor = getCssVar("--color-carbs");
   const chartFatColor = getCssVar("--color-fat");
@@ -301,7 +302,7 @@ function Nutrition() {
                       ))}
                     </Pie>
                     <Tooltip
-                      contentStyle={{ background: chartBgCardColor, border: `1px solid ${chartBorderColor}`, fontFamily: "ui-monospace", fontSize: 12 }}
+                      contentStyle={{ background: chartBgCardColor, border: `1px solid ${chartBorderColor}`, fontFamily: chartFontFamily, fontSize: 12 }}
                       labelStyle={{ color: chartTextDimColor }}
                       itemStyle={{ color: chartTextColor }}
                       formatter={(value, name) => [`${Math.round(value)} kcal`, name]}

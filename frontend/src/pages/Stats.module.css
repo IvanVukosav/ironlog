@@ -3,9 +3,9 @@
 }
 
 .heading {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 1.5rem;
-  font-weight: 700;
+  font-weight: var(--heading-weight);
   color: var(--color-text);
   margin-bottom: 1rem;
 }
@@ -13,7 +13,7 @@
 .table {
   width: 100%;
   border-collapse: collapse;
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.85rem;
 }
 
@@ -50,25 +50,26 @@
 }
 
 .chartHeading {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 1rem;
-  font-weight: 700;
+  font-weight: var(--heading-weight);
   color: var(--color-text);
   letter-spacing: 0.03em;
 }
 
 .exerciseSelect {
+  border-radius: var(--input-radius);
   background-color: var(--color-bg-card);
   border: 1px solid var(--color-border);
   color: var(--color-text);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.8rem;
   padding: 4px 8px;
 }
 
 .emptyState {
   color: var(--color-text-dim);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.85rem;
 }
 
@@ -93,14 +94,13 @@
 }
 
 .manageMenuDropdown {
+  composes: dropdown from "../styles/shared.module.css";
   position: absolute;
   top: 100%;
   right: 0;
   z-index: 20;
-  background-color: var(--color-bg-elevated);
-  border: 1px solid var(--color-border);
   min-width: 190px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
 }
 
 .manageMenuItem {
@@ -109,7 +109,7 @@
   background: transparent;
   border: none;
   color: var(--color-text);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.8rem;
   padding: 10px 14px;
   text-align: left;
@@ -175,9 +175,9 @@
 }
 
 .recentPrHeading {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 1rem;
-  font-weight: 700;
+  font-weight: var(--heading-weight);
   color: var(--color-text);
   letter-spacing: 0.03em;
   margin-bottom: 0.75rem;
@@ -190,15 +190,13 @@
 }
 
 .recentPrRow {
+  composes: card from "../styles/shared.module.css";
   display: flex;
   align-items: center;
   gap: 1rem;
   width: 100%;
-  background-color: var(--color-bg-card);
-  border: none;
-  border-left: 3px solid var(--color-accent);
   padding: 0.6rem 1rem;
-  font-family: var(--font-mono);
+  color: inherit;
   cursor: pointer;
   text-align: left;
 }
@@ -208,8 +206,8 @@
 }
 
 .recentPrRowActive {
-  border-left-width: 6px;
   background-color: rgba(var(--color-accent-rgb), 0.08);
+  box-shadow: var(--card-shadow), inset 0 0 0 1px rgba(var(--color-accent-rgb), 0.6);
 }
 
 .recentPrRowActive:hover {

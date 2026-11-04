@@ -1,17 +1,6 @@
 .input {
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid var(--color-border);
-  color: var(--color-text);
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  padding: 4px 2px;
-  outline: none;
+  composes: input from "../styles/shared.module.css";
   width: 160px;
-}
-
-.input:focus {
-  border-bottom-color: var(--color-accent);
 }
 
 .input::placeholder {
@@ -21,7 +10,7 @@
 .table {
   width: auto;
   border-collapse: collapse;
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.85rem;
   margin-top: 1rem;
 }

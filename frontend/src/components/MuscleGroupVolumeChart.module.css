@@ -5,10 +5,11 @@
 }
 
 .rangeTab {
+  border-radius: var(--input-radius);
   background: transparent;
   border: 1px solid var(--color-border);
   color: var(--color-text-dim);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.7rem;
   padding: 3px 8px;
   cursor: pointer;
@@ -17,10 +18,11 @@
 }
 
 .rangeTabActive {
+  border-radius: var(--input-radius);
   background: var(--color-accent);
   border: 1px solid var(--color-accent);
   color: var(--color-bg);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.7rem;
   padding: 3px 8px;
   cursor: pointer;
@@ -39,7 +41,7 @@
   grid-template-columns: 90px 1fr 70px;
   align-items: center;
   gap: 0.6rem;
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.8rem;
 }
 
@@ -67,6 +69,6 @@
 
 .emptyState {
   color: var(--color-text-dim);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.85rem;
 }

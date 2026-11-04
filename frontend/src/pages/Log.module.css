@@ -3,9 +3,9 @@
 }
 
 .heading {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 1.5rem;
-  font-weight: 700;
+  font-weight: var(--heading-weight);
   color: var(--color-text);
   margin-bottom: 1rem;
 }
@@ -20,46 +20,32 @@
 
 .meta {
   color: var(--color-text-dim);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
 .startButton {
-  background: transparent;
-  border: none;
-  color: var(--color-accent);
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  cursor: pointer;
-  padding: 4px 0;
-}
-
-.startButton::before {
-  content: "[ ";
-}
-
-.startButton::after {
-  content: " ]";
+  composes: button from "../styles/shared.module.css";
 }
 
 .cancelButton {
   background: transparent;
   border: none;
   color: var(--color-text-dim);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.8rem;
   cursor: pointer;
   padding: 4px 0;
 }
 
 .cancelButton::before {
-  content: "[ ";
+  content: var(--button-before);
 }
 
 .cancelButton::after {
-  content: " ]";
+  content: var(--button-after);
 }
 
 .cancelButton:hover {
@@ -71,22 +57,12 @@
   align-items: center;
   gap: 1rem;
   margin-bottom: 1.5rem;
+  flex-wrap: wrap;
 }
 
 .exerciseInput {
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid var(--color-border);
-  color: var(--color-text);
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  padding: 4px 2px;
-  outline: none;
+  composes: input from "../styles/shared.module.css";
   width: 200px;
-}
-
-.exerciseInput:focus {
-  border-bottom-color: var(--color-accent);
 }
 
 .exerciseInput::placeholder {
@@ -94,21 +70,7 @@
 }
 
 .addButton {
-  background: transparent;
-  border: none;
-  color: var(--color-accent);
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  cursor: pointer;
-  padding: 4px 0;
-}
-
-.addButton::before {
-  content: "[ ";
-}
-
-.addButton::after {
-  content: " ]";
+  composes: button from "../styles/shared.module.css";
 }
 
 .cardList {
@@ -118,21 +80,11 @@
 }
 
 .workoutNameInput {
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid var(--color-border);
-  color: var(--color-text);
-  font-family: var(--font-mono);
+  composes: input from "../styles/shared.module.css";
   font-size: 1rem;
   font-weight: 700;
-  padding: 4px 2px;
-  outline: none;
   width: 260px;
   margin-bottom: 1.25rem;
-}
-
-.workoutNameInput:focus {
-  border-bottom-color: var(--color-accent);
 }
 
 .workoutNameInput::placeholder {
@@ -142,10 +94,11 @@
 
 .workoutNotesInput {
   display: block;
-  background: transparent;
+  background: var(--input-bg);
   border: 1px solid var(--color-border-subtle);
+  border-radius: var(--input-radius);
   color: var(--color-text);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.8rem;
   padding: 6px 8px;
   outline: none;
@@ -164,16 +117,14 @@
 }
 
 .exercisePicker {
+  composes: dropdown from "../styles/shared.module.css";
   position: absolute;
   top: 100%;
   left: 0;
   z-index: 20;
-  background-color: var(--color-bg-elevated);
-  border: 1px solid var(--color-border);
   min-width: 260px;
   max-height: 240px;
   overflow-y: auto;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
 .exercisePickerItem {
@@ -192,7 +143,7 @@
   background: transparent;
   border: none;
   color: var(--color-text);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.85rem;
   padding: 10px 14px;
   text-align: left;
@@ -216,7 +167,7 @@
   border: none;
   border-bottom: 1px solid var(--color-border-subtle);
   color: var(--color-text);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.85rem;
   padding: 10px 14px;
   text-align: left;
@@ -233,7 +184,7 @@
   border: none;
   border-bottom: 1px solid var(--color-border-subtle);
   color: var(--color-text-dim);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.8rem;
   padding: 8px 14px;
   text-align: left;
@@ -256,8 +207,9 @@
 .muscleGroupChip {
   background: transparent;
   border: 1px solid var(--color-border);
+  border-radius: var(--input-radius);
   color: var(--color-text-dim);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.7rem;
   padding: 3px 8px;
   cursor: pointer;
@@ -273,8 +225,9 @@
 .muscleGroupChipActive {
   background: var(--color-accent);
   border: 1px solid var(--color-accent);
+  border-radius: var(--input-radius);
   color: var(--color-bg);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.7rem;
   padding: 3px 8px;
   cursor: pointer;
@@ -308,7 +261,7 @@
   border-top: 1px solid var(--color-border-subtle);
   padding: 9px 14px;
   color: var(--color-text-dim);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.8rem;
   text-align: left;
   cursor: pointer;
@@ -320,14 +273,13 @@
 }
 
 .savePrompt {
-  background-color: var(--color-bg-card);
-  border-left: 3px solid var(--color-accent);
+  composes: card from "../styles/shared.module.css";
   padding: 10px 14px;
   margin-bottom: 1rem;
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 1rem;
-  font-family: var(--font-mono);
   font-size: 0.8rem;
 }
 
@@ -339,35 +291,28 @@
 .savePromptSelect {
   background-color: var(--color-bg);
   border: 1px solid var(--color-border);
+  border-radius: var(--input-radius);
   color: var(--color-text);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.8rem;
   padding: 4px 6px;
 }
 
 .savePromptYes {
-  background: transparent;
-  border: none;
-  color: var(--color-accent);
-  font-family: var(--font-mono);
+  composes: button from "../styles/shared.module.css";
   font-size: 0.8rem;
-  cursor: pointer;
-  padding: 0;
 }
 
 .savePromptYes:disabled {
-  color: var(--color-text-dim);
+  opacity: 0.5;
   cursor: not-allowed;
 }
-
-.savePromptYes::before { content: "[ "; }
-.savePromptYes::after { content: " ]"; }
 
 .savePromptNo {
   background: transparent;
   border: none;
   color: var(--color-text-dim);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.8rem;
   cursor: pointer;
   padding: 0;

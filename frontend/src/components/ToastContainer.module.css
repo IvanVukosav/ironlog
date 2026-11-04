@@ -11,6 +11,7 @@
 
 .toastError,
 .toastSuccess {
+  border-radius: var(--card-radius);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -18,7 +19,7 @@
   background-color: var(--color-bg-elevated);
   border-left: 3px solid var(--color-accent);
   padding: 0.65rem 0.85rem;
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.8rem;
   color: var(--color-text);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);

@@ -1,8 +1,5 @@
 .card {
-  background-color: var(--color-bg-card);
-  border-left: 3px solid var(--color-accent);
-  padding: 1rem;
-  font-family: var(--font-mono);
+  composes: card from "../styles/shared.module.css";
   max-width: 640px;
 }
 
@@ -15,9 +12,11 @@
   outline-offset: -2px;
 }
 
+/* Superset color wins over every template's card shadow: grouping matters more than style. */
 .cardGrouped {
-  border-left-color: var(--group-color);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--group-color) 35%, transparent);
+  box-shadow:
+    inset 3px 0 0 var(--group-color),
+    inset 0 0 0 1px color-mix(in srgb, var(--group-color) 35%, transparent);
 }
 
 .cardHeader {
@@ -35,7 +34,7 @@
 
 .heading {
   font-size: 1rem;
-  font-weight: 700;
+  font-weight: var(--heading-weight);
   color: var(--color-text);
   letter-spacing: 0.03em;
 }
@@ -43,8 +42,9 @@
 .supersetInput {
   background: transparent;
   border: 1px solid var(--color-border);
+  border-radius: var(--input-radius);
   color: var(--color-accent);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.7rem;
   text-align: center;
   text-transform: uppercase;
@@ -86,14 +86,13 @@
 }
 
 .menuDropdown {
+  composes: dropdown from "../styles/shared.module.css";
   position: absolute;
   top: 100%;
   right: 0;
   z-index: 20;
-  background-color: var(--color-bg-elevated);
-  border: 1px solid var(--color-border);
   min-width: 160px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
 }
 
 .menuItem {
@@ -102,7 +101,7 @@
   background: transparent;
   border: none;
   color: var(--color-text);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.8rem;
   padding: 10px 14px;
   text-align: left;
@@ -138,8 +137,9 @@
 .lastSessionChip {
   background: transparent;
   border: 1px solid var(--color-border-subtle);
+  border-radius: var(--input-radius);
   color: var(--color-text-dim);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.75rem;
   padding: 2px 6px;
   cursor: pointer;
@@ -154,18 +154,18 @@
   background: transparent;
   border: none;
   color: var(--color-accent);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.75rem;
   padding: 2px 0;
   cursor: pointer;
 }
 
 .copyAllButton::before {
-  content: "[ ";
+  content: var(--button-before);
 }
 
 .copyAllButton::after {
-  content: " ]";
+  content: var(--button-after);
 }
 
 .lastSessionNotes {
@@ -176,10 +176,11 @@
 
 .notesInput {
   display: block;
-  background: transparent;
+  background: var(--input-bg);
   border: 1px solid var(--color-border-subtle);
+  border-radius: var(--input-radius);
   color: var(--color-text);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.8rem;
   padding: 6px 8px;
   outline: none;
@@ -197,19 +198,8 @@
 }
 
 .setInput {
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid var(--color-border);
-  color: var(--color-text);
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  padding: 4px 2px;
-  outline: none;
+  composes: input from "../styles/shared.module.css";
   width: 80px;
-}
-
-.setInput:focus {
-  border-bottom-color: var(--color-accent);
 }
 
 .setInput::placeholder {
@@ -230,15 +220,16 @@
 
 .weightUnit {
   color: var(--color-text-dim);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.75rem;
 }
 
 .stepButton {
   background: transparent;
   border: 1px solid var(--color-border);
+  border-radius: var(--input-radius);
   color: var(--color-text-dim);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.85rem;
   width: 22px;
   height: 22px;
@@ -257,28 +248,14 @@
   align-items: center;
   gap: 4px;
   color: var(--color-text-dim);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.75rem;
   cursor: pointer;
   user-select: none;
 }
 
 .addSetButton {
-  background: transparent;
-  border: none;
-  color: var(--color-accent);
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  cursor: pointer;
-  padding: 4px 0;
-}
-
-.addSetButton::before {
-  content: "[ ";
-}
-
-.addSetButton::after {
-  content: " ]";
+  composes: button from "../styles/shared.module.css";
 }
 
 .setList {
@@ -362,7 +339,7 @@
   background: none;
   border: none;
   color: var(--color-text-dim);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.8rem;
   cursor: pointer;
   padding: 0;
@@ -400,28 +377,15 @@
 }
 
 .saveSetButton {
-  background: transparent;
-  border: none;
-  color: var(--color-accent);
-  font-family: var(--font-mono);
+  composes: button from "../styles/shared.module.css";
   font-size: 0.8rem;
-  cursor: pointer;
-  padding: 4px 0;
-}
-
-.saveSetButton::before {
-  content: "[ ";
-}
-
-.saveSetButton::after {
-  content: " ]";
 }
 
 .cancelSetButton {
   background: transparent;
   border: none;
   color: var(--color-text-dim);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.8rem;
   cursor: pointer;
   padding: 4px 0;

@@ -87,6 +87,7 @@ function Dashboard() {
   const chartBgCardColor = getCssVar("--color-bg-card");
   const chartBorderColor = getCssVar("--color-border");
   const chartTextColor = getCssVar("--color-text");
+  const chartFontFamily = getCssVar("--font-body");
   const chartProteinColor = getCssVar("--color-protein");
   const chartCarbsColor = getCssVar("--color-carbs");
   const chartFatColor = getCssVar("--color-fat");
@@ -356,7 +357,7 @@ function Dashboard() {
                     ))}
                   </Pie>
                   <Tooltip
-                    contentStyle={{ background: chartBgCardColor, border: `1px solid ${chartBorderColor}`, fontFamily: "ui-monospace", fontSize: 12 }}
+                    contentStyle={{ background: chartBgCardColor, border: `1px solid ${chartBorderColor}`, fontFamily: chartFontFamily, fontSize: 12 }}
                     labelStyle={{ color: chartTextDimColor }}
                     itemStyle={{ color: chartTextColor }}
                     formatter={(value, name) => [`${Math.round(value)} kcal`, name]}
@@ -506,10 +507,10 @@ function Dashboard() {
             <>
               <ResponsiveContainer width="100%" height={180}>
                 <LineChart data={bodyweightChart.entries.map((entry) => ({ ...entry, label: formatBwDate(entry.date) }))}>
-                  <XAxis dataKey="label" tick={{ fill: chartTextDimColor, fontFamily: "ui-monospace", fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: chartTextDimColor, fontFamily: "ui-monospace", fontSize: 11 }} axisLine={false} tickLine={false} domain={["auto", "auto"]} />
+                  <XAxis dataKey="label" tick={{ fill: chartTextDimColor, fontFamily: chartFontFamily, fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: chartTextDimColor, fontFamily: chartFontFamily, fontSize: 11 }} axisLine={false} tickLine={false} domain={["auto", "auto"]} />
                   <Tooltip
-                    contentStyle={{ background: chartBgCardColor, border: `1px solid ${chartBorderColor}`, fontFamily: "ui-monospace", fontSize: 12 }}
+                    contentStyle={{ background: chartBgCardColor, border: `1px solid ${chartBorderColor}`, fontFamily: chartFontFamily, fontSize: 12 }}
                     labelStyle={{ color: chartTextDimColor }}
                     itemStyle={{ color: chartTextColor }}
                     formatter={(value, name) => [`${value} kg`, name === "trend" ? t("dashboard.trendLegend") : t("dashboard.weighInLegend")]}

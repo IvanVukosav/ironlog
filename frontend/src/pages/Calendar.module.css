@@ -14,7 +14,7 @@
   background: transparent;
   border: none;
   color: var(--color-accent);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 1.2rem;
   cursor: pointer;
   padding: 4px 8px;
@@ -22,9 +22,9 @@
 }
 
 .monthHeading {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 1.5rem;
-  font-weight: 700;
+  font-weight: var(--heading-weight);
   color: var(--color-text);
   margin: 0;
   min-width: 220px;
@@ -37,10 +37,12 @@
   gap: 1px;
   background-color: var(--color-border-subtle);
   border: 1px solid var(--color-border-subtle);
+  border-radius: var(--card-radius);
+  overflow: hidden;
 }
 
 .dayHeader {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.7rem;
   color: var(--color-text-dim);
   text-transform: uppercase;
@@ -70,7 +72,7 @@
 }
 
 .dayNumberOverflow {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.85rem;
   color: var(--color-text-dim);
   display: block;
@@ -83,7 +85,7 @@
 }
 
 .dayNumber {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.85rem;
   color: var(--color-text);
   display: block;
@@ -99,27 +101,17 @@
 }
 
 .dropdown {
+  composes: dropdown from "../styles/shared.module.css";
   position: absolute;
   top: 100%;
   left: 0;
   z-index: 50;
-  background-color: var(--color-bg-elevated);
-  border: 1px solid var(--color-border);
   min-width: 130px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
 }
 
 .dropdownItem {
-  display: block;
-  width: 100%;
-  background: transparent;
-  border: none;
-  color: var(--color-text);
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  padding: 10px 14px;
-  text-align: left;
-  cursor: pointer;
+  composes: dropdownItem from "../styles/shared.module.css";
 }
 
 .dropdownItem:hover {
@@ -138,10 +130,8 @@
 }
 
 .bwModal {
-  background-color: var(--color-bg-card);
-  border-left: 3px solid var(--color-accent);
+  composes: card from "../styles/shared.module.css";
   padding: 1.5rem;
-  font-family: var(--font-mono);
   min-width: 280px;
 }
 
@@ -164,7 +154,7 @@
   background: none;
   border: none;
   color: var(--color-text-dim);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.85rem;
   cursor: pointer;
   padding: 0;
@@ -175,21 +165,11 @@
 }
 
 .bwInput {
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid var(--color-border);
-  color: var(--color-text);
-  font-family: var(--font-mono);
+  composes: input from "../styles/shared.module.css";
   font-size: 1.5rem;
   font-weight: 700;
-  padding: 4px 2px;
-  outline: none;
   width: 100%;
   margin-bottom: 1rem;
-}
-
-.bwInput:focus {
-  border-bottom-color: var(--color-accent);
 }
 
 .bwInput::placeholder {
@@ -197,21 +177,7 @@
 }
 
 .bwSaveButton {
-  background: transparent;
-  border: none;
-  color: var(--color-accent);
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  cursor: pointer;
-  padding: 4px 0;
-}
-
-.bwSaveButton::before {
-  content: "[ ";
-}
-
-.bwSaveButton::after {
-  content: " ]";
+  composes: button from "../styles/shared.module.css";
 }
 
 .bwModalFooter {
@@ -224,7 +190,7 @@
   background: none;
   border: none;
   color: var(--color-text-dim);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.85rem;
   cursor: pointer;
   padding: 4px 0;
@@ -287,20 +253,10 @@
 }
 
 .measurementInput {
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid var(--color-border);
-  color: var(--color-text);
-  font-family: var(--font-mono);
+  composes: input from "../styles/shared.module.css";
   font-size: 1rem;
   font-weight: 700;
-  padding: 4px 2px;
-  outline: none;
   width: 100%;
-}
-
-.measurementInput:focus {
-  border-bottom-color: var(--color-accent);
 }
 
 .measurementInput::placeholder {

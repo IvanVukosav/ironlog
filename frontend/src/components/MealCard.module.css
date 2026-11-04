@@ -1,8 +1,5 @@
 .card {
-  background-color: var(--color-bg-card);
-  border-left: 3px solid var(--color-accent);
-  padding: 1rem;
-  font-family: var(--font-mono);
+  composes: card from "../styles/shared.module.css";
   max-width: 640px;
 }
 
@@ -15,7 +12,7 @@
 
 .heading {
   font-size: 1rem;
-  font-weight: 700;
+  font-weight: var(--heading-weight);
   color: var(--color-text);
   letter-spacing: 0.03em;
 }
@@ -39,14 +36,13 @@
 }
 
 .menuDropdown {
+  composes: dropdown from "../styles/shared.module.css";
   position: absolute;
   top: 100%;
   right: 0;
   z-index: 20;
-  background-color: var(--color-bg-elevated);
-  border: 1px solid var(--color-border);
   min-width: 160px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
 }
 
 .menuItem {
@@ -55,7 +51,7 @@
   background: transparent;
   border: none;
   color: var(--color-text);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.8rem;
   padding: 10px 14px;
   text-align: left;
@@ -76,19 +72,8 @@
 }
 
 .itemInput {
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid var(--color-border);
-  color: var(--color-text);
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  padding: 4px 2px;
-  outline: none;
+  composes: input from "../styles/shared.module.css";
   width: 80px;
-}
-
-.itemInput:focus {
-  border-bottom-color: var(--color-accent);
 }
 
 .itemInput::placeholder {
@@ -96,19 +81,8 @@
 }
 
 .itemNameInput {
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid var(--color-border);
-  color: var(--color-text);
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  padding: 4px 2px;
-  outline: none;
+  composes: input from "../styles/shared.module.css";
   width: 160px;
-}
-
-.itemNameInput:focus {
-  border-bottom-color: var(--color-accent);
 }
 
 .itemNameInput::placeholder {
@@ -116,34 +90,18 @@
 }
 
 .addItemButton {
-  background: transparent;
-  border: none;
-  color: var(--color-accent);
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  cursor: pointer;
-  padding: 4px 0;
-}
-
-.addItemButton::before {
-  content: "[ ";
-}
-
-.addItemButton::after {
-  content: " ]";
+  composes: button from "../styles/shared.module.css";
 }
 
 .itemPicker {
+  composes: dropdown from "../styles/shared.module.css";
   position: absolute;
   top: 100%;
   left: 0;
   z-index: 20;
-  background-color: var(--color-bg-elevated);
-  border: 1px solid var(--color-border);
   min-width: 220px;
   max-height: 220px;
   overflow-y: auto;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
 .itemPickerOption {
@@ -155,7 +113,7 @@
   background: transparent;
   border: none;
   color: var(--color-text);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.85rem;
   padding: 10px 14px;
   text-align: left;
@@ -173,6 +131,7 @@
 }
 
 .savePrompt {
+  border-radius: var(--card-radius);
   background-color: var(--color-bg);
   border-left: 3px solid var(--color-accent);
   padding: 10px 14px;
@@ -180,7 +139,7 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.8rem;
 }
 
@@ -190,26 +149,8 @@
 }
 
 .savePromptYes {
-  background: transparent;
-  border: none;
-  color: var(--color-accent);
-  font-family: var(--font-mono);
+  composes: button from "../styles/shared.module.css";
   font-size: 0.8rem;
-  cursor: pointer;
-  padding: 0;
-}
-
-.savePromptYes::before { content: "[ "; }
-.savePromptYes::after { content: " ]"; }
-
-.savePromptNo {
-  background: transparent;
-  border: none;
-  color: var(--color-text-dim);
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  cursor: pointer;
-  padding: 0;
 }
 
 .itemList {
@@ -260,7 +201,7 @@
   background: none;
   border: none;
   color: var(--color-text-dim);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.8rem;
   cursor: pointer;
   padding: 0;
@@ -286,26 +227,8 @@
 }
 
 .saveItemButton {
-  background: transparent;
-  border: none;
-  color: var(--color-accent);
-  font-family: var(--font-mono);
+  composes: button from "../styles/shared.module.css";
   font-size: 0.8rem;
-  cursor: pointer;
-  padding: 4px 0;
-}
-
-.saveItemButton::before { content: "[ "; }
-.saveItemButton::after { content: " ]"; }
-
-.cancelItemButton {
-  background: transparent;
-  border: none;
-  color: var(--color-text-dim);
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  cursor: pointer;
-  padding: 4px 0;
 }
 
 .cancelItemButton:hover {

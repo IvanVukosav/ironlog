@@ -4,13 +4,7 @@
 }
 
 .trigger {
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid var(--color-border);
-  color: var(--color-text);
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  padding: 4px 2px;
+  composes: input from "../styles/shared.module.css";
   cursor: pointer;
 }
 
@@ -19,14 +13,12 @@
 }
 
 .dropdown {
+  composes: dropdown from "../styles/shared.module.css";
   position: absolute;
   top: 100%;
   left: 0;
   z-index: 20;
-  background-color: var(--color-bg-elevated);
-  border: 1px solid var(--color-border);
   padding: 0.75rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
   width: 220px;
 }
 
@@ -52,7 +44,7 @@
 
 .monthLabel {
   color: var(--color-text);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.8rem;
   font-weight: 700;
 }
@@ -65,7 +57,7 @@
 
 .weekdayLabel {
   color: var(--color-text-dim);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.65rem;
   text-align: center;
   text-transform: uppercase;
@@ -83,7 +75,7 @@
   background: transparent;
   border: none;
   color: var(--color-text);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.75rem;
   padding: 5px 0;
   cursor: pointer;
@@ -95,6 +87,7 @@
 }
 
 .dayCellSelected {
+  border-radius: var(--input-radius);
   background-color: var(--color-accent);
   color: var(--color-bg);
   font-weight: 700;

@@ -63,6 +63,7 @@ function MainLiftsChart({ exerciseSets, mainLiftBests, formula }) {
   const surfaceColor = getCssVar("--color-bg");
   const textDimColor = getCssVar("--color-text-dim");
   const gridColor = getCssVar("--color-border-subtle");
+  const chartFontFamily = getCssVar("--font-body");
   const liftColors = Object.fromEntries(MAIN_LIFTS.map((lift) => [lift, getCssVar(`--color-lift-${lift}`)]));
 
   const lifts = MAIN_LIFTS.filter((lift) => mainLiftBests[lift]);
@@ -126,12 +127,12 @@ function MainLiftsChart({ exerciseSets, mainLiftBests, formula }) {
             scale="time"
             domain={["dataMin", "dataMax"]}
             tickFormatter={formatChartDate}
-            tick={{ fill: textDimColor, fontFamily: "ui-monospace", fontSize: 11 }}
+            tick={{ fill: textDimColor, fontFamily: chartFontFamily, fontSize: 11 }}
             axisLine={false}
             tickLine={false}
           />
           <YAxis
-            tick={{ fill: textDimColor, fontFamily: "ui-monospace", fontSize: 11 }}
+            tick={{ fill: textDimColor, fontFamily: chartFontFamily, fontSize: 11 }}
             axisLine={false}
             tickLine={false}
             domain={["auto", "auto"]}
