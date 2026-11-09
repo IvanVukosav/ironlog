@@ -15,6 +15,8 @@ import styles from "./MainLiftsChart.module.css";
 
 const E1RM_DECIMAL_PLACES = 1;
 const PR_DOT_RADIUS = 4;
+// Same size as a PR marker (8px across) but without the ring, so it doesn't read as a PR.
+const SINGLE_POINT_DOT_RADIUS = 4;
 
 function formatChartDate(time) {
   const date = new Date(time);
@@ -84,9 +86,12 @@ function MainLiftsChart({ exerciseSets, mainLiftBests, formula }) {
 
   // One row per session date; a lift trained another day is left empty there.
   const rowsByTime = new Map();
+  const pointCounts = {};
   for (const lift of lifts) {
     const sets = exerciseSets.find((exercise) => exercise.name === liftNames[lift])?.sets ?? [];
-    for (const point of buildTimeline(sets, formula)) {
+    const timeline = buildTimeline(sets, formula);
+    pointCounts[lift] = timeline.length;
+    for (const point of timeline) {
       const row = rowsByTime.get(point.time) ?? { time: point.time };
       row[lift] = point.e1rm;
       row[`${lift}Pr`] = point.isPr;
@@ -97,22 +102,33 @@ function MainLiftsChart({ exerciseSets, mainLiftBests, formula }) {
 
   if (lifts.length === 0 || data.length < 2) return null;
 
-  const renderPrDot = (lift) => (props) => {
+  // PR sessions get a marker. A lift trained only once has no line to draw, so its one
+  // session gets a plain dot instead of vanishing from the chart.
+  const renderDot = (lift) => (props) => {
     const { cx, cy, payload } = props;
-    if (!payload[`${lift}Pr`] || cx === undefined || cy === undefined) {
-      return <g key={`${lift}-${payload.time}`} />;
+    const key = `${lift}-${payload.time}`;
+    if (cx === undefined || cy === undefined || payload[lift] === undefined) {
+      return <g key={key} />;
     }
-    return (
-      <circle
-        key={`${lift}-${payload.time}`}
-        cx={cx}
-        cy={cy}
-        r={PR_DOT_RADIUS}
-        fill={liftColors[lift]}
-        stroke={surfaceColor}
-        strokeWidth={2}
-      />
-    );
+    if (payload[`${lift}Pr`]) {
+      return (
+        <circle
+          key={key}
+          cx={cx}
+          cy={cy}
+          r={PR_DOT_RADIUS}
+          fill={liftColors[lift]}
+          stroke={surfaceColor}
+          strokeWidth={2}
+        />
+      );
+    }
+    if (pointCounts[lift] === 1) {
+      return (
+        <circle key={key} cx={cx} cy={cy} r={SINGLE_POINT_DOT_RADIUS} fill={liftColors[lift]} />
+      );
+    }
+    return <g key={key} />;
   };
 
   return (
@@ -163,7 +179,7 @@ function MainLiftsChart({ exerciseSets, mainLiftBests, formula }) {
               stroke={liftColors[lift]}
               strokeWidth={2}
               connectNulls
-              dot={renderPrDot(lift)}
+              dot={renderDot(lift)}
               activeDot={{ r: 5, stroke: surfaceColor, strokeWidth: 2 }}
               isAnimationActive={false}
             />
