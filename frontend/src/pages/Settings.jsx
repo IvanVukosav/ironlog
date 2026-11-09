@@ -169,7 +169,13 @@ function Settings() {
   };
 
   const save = () => {
-    const fields = [settings.kcalGoal, settings.proteinGoal, settings.trainingsPerWeek, settings.carbsGoal, settings.fatGoal];
+    const fields = [
+      settings.kcalGoal,
+      settings.proteinGoal,
+      settings.trainingsPerWeek,
+      settings.carbsGoal,
+      settings.fatGoal,
+    ];
     if (fields.some((field) => !field && field !== 0)) {
       showError(t("settings.allFieldsRequired"));
       return;
@@ -223,9 +229,15 @@ function Settings() {
           >
             <span
               className={styles.themeDot}
-              style={{ backgroundColor: THEMES.find((theme) => theme.value === (settings?.theme || "dark-red"))?.swatch }}
+              style={{
+                backgroundColor: THEMES.find(
+                  (theme) => theme.value === (settings?.theme || "dark-red"),
+                )?.swatch,
+              }}
             />
-            <span>{THEMES.find((theme) => theme.value === (settings?.theme || "dark-red"))?.label}</span>
+            <span>
+              {THEMES.find((theme) => theme.value === (settings?.theme || "dark-red"))?.label}
+            </span>
             <span className={styles.themeCaret}>{themeMenuOpen ? "▴" : "▾"}</span>
           </button>
           {themeMenuOpen && (
@@ -258,7 +270,12 @@ function Settings() {
             className={styles.themeTrigger}
             onClick={() => setTemplateMenuOpen((prev) => !prev)}
           >
-            <span>{TEMPLATES.find((template) => template.value === (settings?.template || "terminal"))?.label}</span>
+            <span>
+              {
+                TEMPLATES.find((template) => template.value === (settings?.template || "terminal"))
+                  ?.label
+              }
+            </span>
             <span className={styles.themeCaret}>{templateMenuOpen ? "▴" : "▾"}</span>
           </button>
           {templateMenuOpen && (
@@ -288,9 +305,7 @@ function Settings() {
           type="number"
           className={styles.fieldInput}
           value={settings?.kcalGoal || ""}
-          onChange={(event) =>
-            setSettings((prev) => ({ ...prev, kcalGoal: event.target.value }))
-          }
+          onChange={(event) => setSettings((prev) => ({ ...prev, kcalGoal: event.target.value }))}
         />
       </div>
 
@@ -324,9 +339,7 @@ function Settings() {
           type="number"
           className={styles.fieldInput}
           value={settings?.carbsGoal || ""}
-          onChange={(event) =>
-            setSettings((prev) => ({ ...prev, carbsGoal: event.target.value }))
-          }
+          onChange={(event) => setSettings((prev) => ({ ...prev, carbsGoal: event.target.value }))}
         />
       </div>
 
@@ -336,9 +349,7 @@ function Settings() {
           type="number"
           className={styles.fieldInput}
           value={settings?.fatGoal || ""}
-          onChange={(event) =>
-            setSettings((prev) => ({ ...prev, fatGoal: event.target.value }))
-          }
+          onChange={(event) => setSettings((prev) => ({ ...prev, fatGoal: event.target.value }))}
         />
       </div>
 
@@ -393,9 +404,7 @@ function Settings() {
           type="radio"
           name="exercisePickerMode"
           checked={(settings?.exercisePickerMode ?? "chips") === "chips"}
-          onChange={() =>
-            setSettings((prev) => ({ ...prev, exercisePickerMode: "chips" }))
-          }
+          onChange={() => setSettings((prev) => ({ ...prev, exercisePickerMode: "chips" }))}
         />
         {t("settings.exercisePickerChips")}
       </label>
@@ -405,9 +414,7 @@ function Settings() {
           type="radio"
           name="exercisePickerMode"
           checked={settings?.exercisePickerMode === "twoStep"}
-          onChange={() =>
-            setSettings((prev) => ({ ...prev, exercisePickerMode: "twoStep" }))
-          }
+          onChange={() => setSettings((prev) => ({ ...prev, exercisePickerMode: "twoStep" }))}
         />
         {t("settings.exercisePickerTwoStep")}
       </label>
@@ -434,9 +441,7 @@ function Settings() {
             type="radio"
             name="e1rmFormula"
             checked={(settings?.e1rmFormula ?? "brzycki") === formula}
-            onChange={() =>
-              setSettings((prev) => ({ ...prev, e1rmFormula: formula }))
-            }
+            onChange={() => setSettings((prev) => ({ ...prev, e1rmFormula: formula }))}
           />
           {E1RM_FORMULA_LABELS[formula]}
         </label>
@@ -457,7 +462,10 @@ function Settings() {
       ))}
 
       {LIFT_SETTING_FIELDS.map(({ lift, field }, index) => (
-        <div key={field} className={index === 0 ? `${styles.field} ${styles.firstLiftField}` : styles.field}>
+        <div
+          key={field}
+          className={index === 0 ? `${styles.field} ${styles.firstLiftField}` : styles.field}
+        >
           <span className={styles.fieldLabel}>{t(`stats.lifts.${lift}`)}</span>
           <select
             className={styles.liftSelect}
@@ -465,9 +473,10 @@ function Settings() {
             onChange={(event) => setSettings((prev) => ({ ...prev, [field]: event.target.value }))}
           >
             <option value="">{t("settings.liftAuto")}</option>
-            {settings?.[field] && !exerciseTemplates.some((template) => template.name === settings[field]) && (
-              <option value={settings[field]}>{settings[field]}</option>
-            )}
+            {settings?.[field] &&
+              !exerciseTemplates.some((template) => template.name === settings[field]) && (
+                <option value={settings[field]}>{settings[field]}</option>
+              )}
             {exerciseTemplates.map((template) => (
               <option key={template.id} value={template.name}>
                 {template.name}
@@ -484,10 +493,18 @@ function Settings() {
       <p className={styles.sectionLabel}>{t("settings.backupSection")}</p>
       <p className={styles.backupHint}>{t("settings.backupHint")}</p>
       <div className={styles.backupActions}>
-        <button type="button" className={styles.backupButton} onClick={() => download("/api/backup/export", "ironlog-backup.json")}>
+        <button
+          type="button"
+          className={styles.backupButton}
+          onClick={() => download("/api/backup/export", "ironlog-backup.json")}
+        >
           {t("settings.backupExportJson")}
         </button>
-        <button type="button" className={styles.backupButton} onClick={() => download("/api/backup/sets.csv", "ironlog-sets.csv")}>
+        <button
+          type="button"
+          className={styles.backupButton}
+          onClick={() => download("/api/backup/sets.csv", "ironlog-sets.csv")}
+        >
           {t("settings.backupExportCsv")}
         </button>
         <label className={styles.backupButton}>

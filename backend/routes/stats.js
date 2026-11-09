@@ -16,7 +16,10 @@ const TDEE_MIN_WEIGH_IN_SPAN_DAYS = 14;
 
 // Least-squares slope of weight over time, in kg per day.
 function weightSlopePerDay(weighIns) {
-  const points = weighIns.map((entry) => ({ x: entry.date.getTime() / MS_PER_DAY, y: entry.weight }));
+  const points = weighIns.map((entry) => ({
+    x: entry.date.getTime() / MS_PER_DAY,
+    y: entry.weight,
+  }));
   const meanX = points.reduce((sum, point) => sum + point.x, 0) / points.length;
   const meanY = points.reduce((sum, point) => sum + point.y, 0) / points.length;
   const covariance = points.reduce((sum, point) => sum + (point.x - meanX) * (point.y - meanY), 0);
@@ -46,9 +49,7 @@ router.get("/prs", async (req, res) => {
       setsByExerciseName[exercise.name] = (setsByExerciseName[exercise.name] || []).concat(sets);
     });
 
-    res.json(
-      Object.entries(setsByExerciseName).map(([name, sets]) => ({ name, sets })),
-    );
+    res.json(Object.entries(setsByExerciseName).map(([name, sets]) => ({ name, sets })));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal server error" });
@@ -100,7 +101,9 @@ router.get("/exercise/:name/last", async (req, res) => {
       orderBy: [{ workout: { date: "desc" } }, { id: "desc" }],
     });
 
-    res.json(exercise ? { date: exercise.workout.date, notes: exercise.notes, sets: exercise.sets } : null);
+    res.json(
+      exercise ? { date: exercise.workout.date, notes: exercise.notes, sets: exercise.sets } : null,
+    );
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal server error" });
@@ -128,7 +131,8 @@ router.get("/volume", async (req, res) => {
 
     const volumeByMuscleGroup = {};
     sets.forEach((set) => {
-      const muscleGroup = muscleGroupByExerciseName[set.exercise.name] || UNCATEGORIZED_MUSCLE_GROUP;
+      const muscleGroup =
+        muscleGroupByExerciseName[set.exercise.name] || UNCATEGORIZED_MUSCLE_GROUP;
       const volume = set.weight * set.reps;
       volumeByMuscleGroup[muscleGroup] = (volumeByMuscleGroup[muscleGroup] || 0) + volume;
     });
@@ -161,20 +165,22 @@ router.get("/tdee", async (req, res) => {
       include: { meals: { include: { items: { select: { kcal: true } } } } },
     });
     const dailyIntakes = nutritionDays
-      .map((day) => day.meals.flatMap((meal) => meal.items).reduce((sum, item) => sum + item.kcal, 0))
+      .map((day) =>
+        day.meals.flatMap((meal) => meal.items).reduce((sum, item) => sum + item.kcal, 0),
+      )
       .filter((kcal) => kcal > 0);
 
     const weighIns = await prisma.bodyweight.findMany({
       where: { date: { gte: windowStart, lte: today } },
       orderBy: { date: "asc" },
     });
-    const weighInSpanDays = weighIns.length > 1
-      ? (weighIns.at(-1).date - weighIns[0].date) / MS_PER_DAY
-      : 0;
+    const weighInSpanDays =
+      weighIns.length > 1 ? (weighIns.at(-1).date - weighIns[0].date) / MS_PER_DAY : 0;
 
-    const enoughData = dailyIntakes.length >= TDEE_MIN_INTAKE_DAYS
-      && weighIns.length >= TDEE_MIN_WEIGH_INS
-      && weighInSpanDays >= TDEE_MIN_WEIGH_IN_SPAN_DAYS;
+    const enoughData =
+      dailyIntakes.length >= TDEE_MIN_INTAKE_DAYS &&
+      weighIns.length >= TDEE_MIN_WEIGH_INS &&
+      weighInSpanDays >= TDEE_MIN_WEIGH_IN_SPAN_DAYS;
 
     const result = {
       windowDays: TDEE_WINDOW_DAYS,

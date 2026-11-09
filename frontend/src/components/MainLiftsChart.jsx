@@ -1,4 +1,12 @@
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid,
+} from "recharts";
 import { useTranslation } from "react-i18next";
 import { calculateEstimatedOneRepMax } from "../utils/oneRepMax";
 import { MAIN_LIFTS } from "../utils/strengthScores";
@@ -35,7 +43,9 @@ function buildTimeline(sets, formula) {
 }
 
 function ChartTooltip({ active, payload, label, liftNames }) {
-  const entries = (payload ?? []).filter((entry) => entry.value !== null && entry.value !== undefined);
+  const entries = (payload ?? []).filter(
+    (entry) => entry.value !== null && entry.value !== undefined,
+  );
   if (!active || entries.length === 0) return null;
 
   return (
@@ -64,7 +74,9 @@ function MainLiftsChart({ exerciseSets, mainLiftBests, formula }) {
   const textDimColor = getCssVar("--color-text-dim");
   const gridColor = getCssVar("--color-border-subtle");
   const chartFontFamily = getCssVar("--font-body");
-  const liftColors = Object.fromEntries(MAIN_LIFTS.map((lift) => [lift, getCssVar(`--color-lift-${lift}`)]));
+  const liftColors = Object.fromEntries(
+    MAIN_LIFTS.map((lift) => [lift, getCssVar(`--color-lift-${lift}`)]),
+  );
 
   const lifts = MAIN_LIFTS.filter((lift) => mainLiftBests[lift]);
   const liftNames = Object.fromEntries(lifts.map((lift) => [lift, mainLiftBests[lift].name]));
@@ -110,7 +122,9 @@ function MainLiftsChart({ exerciseSets, mainLiftBests, formula }) {
           <li key={lift} className={styles.legendItem}>
             <span className={styles.swatch} style={{ backgroundColor: liftColors[lift] }} />
             <span>{liftNames[lift]}</span>
-            <span className={styles.legendValue}>{mainLiftBests[lift].e1rm.toFixed(E1RM_DECIMAL_PLACES)}kg</span>
+            <span className={styles.legendValue}>
+              {mainLiftBests[lift].e1rm.toFixed(E1RM_DECIMAL_PLACES)}kg
+            </span>
           </li>
         ))}
         <li className={styles.legendItem}>

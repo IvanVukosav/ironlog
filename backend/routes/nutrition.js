@@ -75,7 +75,14 @@ router.post("/days/copy", async (req, res) => {
           mealIdByName.set(meal.name, mealId);
         }
         await tx.foodItem.createMany({
-          data: meal.items.map(({ name, kcal, protein, carbs, fat }) => ({ name, kcal, protein, carbs, fat, mealId })),
+          data: meal.items.map(({ name, kcal, protein, carbs, fat }) => ({
+            name,
+            kcal,
+            protein,
+            carbs,
+            fat,
+            mealId,
+          })),
         });
       }
 
@@ -96,7 +103,10 @@ router.post("/days/copy", async (req, res) => {
 // Distinct food items (by name) from the most recently logged days.
 router.get("/recent-items", async (req, res) => {
   try {
-    const limit = Math.min(parseInt(req.query.limit) || RECENT_ITEMS_DEFAULT_LIMIT, RECENT_ITEMS_MAX_LIMIT);
+    const limit = Math.min(
+      parseInt(req.query.limit) || RECENT_ITEMS_DEFAULT_LIMIT,
+      RECENT_ITEMS_MAX_LIMIT,
+    );
     const items = await prisma.foodItem.findMany({
       orderBy: [{ meal: { nutritionDay: { date: "desc" } } }, { id: "desc" }],
       take: RECENT_ITEMS_SCAN_SIZE,
@@ -165,12 +175,8 @@ router.post("/meals/:id/items", async (req, res) => {
     const parsedCarbs = parseFloat(carbs);
     const parsedFat = parseFloat(fat);
 
-    if (
-      [parsedKcal, parsedProtein, parsedCarbs, parsedFat].some(Number.isNaN)
-    ) {
-      return res
-        .status(400)
-        .json({ error: "Kcal, protein, carbs and fat must be valid numbers" });
+    if ([parsedKcal, parsedProtein, parsedCarbs, parsedFat].some(Number.isNaN)) {
+      return res.status(400).json({ error: "Kcal, protein, carbs and fat must be valid numbers" });
     }
 
     const item = await prisma.foodItem.create({
@@ -204,12 +210,8 @@ router.patch("/items/:id", async (req, res) => {
     const parsedCarbs = parseFloat(carbs);
     const parsedFat = parseFloat(fat);
 
-    if (
-      [parsedKcal, parsedProtein, parsedCarbs, parsedFat].some(Number.isNaN)
-    ) {
-      return res
-        .status(400)
-        .json({ error: "Kcal, protein, carbs and fat must be valid numbers" });
+    if ([parsedKcal, parsedProtein, parsedCarbs, parsedFat].some(Number.isNaN)) {
+      return res.status(400).json({ error: "Kcal, protein, carbs and fat must be valid numbers" });
     }
 
     const item = await prisma.foodItem.update({

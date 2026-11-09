@@ -26,12 +26,8 @@ router.post("/", async (req, res) => {
     const parsedCarbs = parseFloat(carbs);
     const parsedFat = parseFloat(fat);
 
-    if (
-      [parsedKcal, parsedProtein, parsedCarbs, parsedFat].some(Number.isNaN)
-    ) {
-      return res
-        .status(400)
-        .json({ error: "Kcal, protein, carbs and fat must be valid numbers" });
+    if ([parsedKcal, parsedProtein, parsedCarbs, parsedFat].some(Number.isNaN)) {
+      return res.status(400).json({ error: "Kcal, protein, carbs and fat must be valid numbers" });
     }
 
     const template = await prisma.foodItemTemplate.create({

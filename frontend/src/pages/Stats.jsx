@@ -4,7 +4,12 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "rec
 import { useTranslation } from "react-i18next";
 import { fetchJson } from "../api";
 import { findBestSetByE1rm, ONE_REP_MAX_FORMULAS } from "../utils/oneRepMax";
-import { MAIN_LIFTS, calculateDots, calculateWilks, findMainLiftBests } from "../utils/strengthScores";
+import {
+  MAIN_LIFTS,
+  calculateDots,
+  calculateWilks,
+  findMainLiftBests,
+} from "../utils/strengthScores";
 import { useToast } from "../context/useToast";
 import { getCssVar } from "../utils/theme";
 import MuscleGroupVolumeChart from "../components/MuscleGroupVolumeChart";
@@ -203,8 +208,12 @@ function Stats() {
   const total = hasAllMainLifts
     ? MAIN_LIFTS.reduce((sum, lift) => sum + mainLiftBests[lift].e1rm, 0)
     : null;
-  const dots = total && latestBodyweight ? calculateDots(total, latestBodyweight.weight, settings?.sex) : null;
-  const wilks = total && latestBodyweight ? calculateWilks(total, latestBodyweight.weight, settings?.sex) : null;
+  const dots =
+    total && latestBodyweight ? calculateDots(total, latestBodyweight.weight, settings?.sex) : null;
+  const wilks =
+    total && latestBodyweight
+      ? calculateWilks(total, latestBodyweight.weight, settings?.sex)
+      : null;
 
   const chartData = buildProgressData(history, formula);
 
@@ -231,7 +240,9 @@ function Stats() {
               <div key={lift} className={styles.totalCard}>
                 <span className={styles.totalLabel}>{t(`stats.lifts.${lift}`)}</span>
                 <span className={styles.totalValue}>
-                  {mainLiftBests[lift] ? `${mainLiftBests[lift].e1rm.toFixed(E1RM_DECIMAL_PLACES)}kg` : "—"}
+                  {mainLiftBests[lift]
+                    ? `${mainLiftBests[lift].e1rm.toFixed(E1RM_DECIMAL_PLACES)}kg`
+                    : "—"}
                 </span>
                 {mainLiftBests[lift] && (
                   <span className={styles.totalDetail}>{mainLiftBests[lift].name}</span>
@@ -240,12 +251,16 @@ function Stats() {
             ))}
             <div className={styles.totalCard}>
               <span className={styles.totalLabel}>{t("stats.total")}</span>
-              <span className={styles.totalValue}>{total ? `${total.toFixed(E1RM_DECIMAL_PLACES)}kg` : "—"}</span>
+              <span className={styles.totalValue}>
+                {total ? `${total.toFixed(E1RM_DECIMAL_PLACES)}kg` : "—"}
+              </span>
               <span className={styles.totalDetail}>e1RM</span>
             </div>
             <div className={styles.totalCard}>
               <span className={styles.totalLabel}>DOTS</span>
-              <span className={styles.totalValue}>{dots ? dots.toFixed(SCORE_DECIMAL_PLACES) : "—"}</span>
+              <span className={styles.totalValue}>
+                {dots ? dots.toFixed(SCORE_DECIMAL_PLACES) : "—"}
+              </span>
               {latestBodyweight && (
                 <span className={styles.totalDetail}>
                   {t("stats.atBodyweight", { weight: latestBodyweight.weight })}
@@ -254,14 +269,20 @@ function Stats() {
             </div>
             <div className={styles.totalCard}>
               <span className={styles.totalLabel}>Wilks</span>
-              <span className={styles.totalValue}>{wilks ? wilks.toFixed(SCORE_DECIMAL_PLACES) : "—"}</span>
+              <span className={styles.totalValue}>
+                {wilks ? wilks.toFixed(SCORE_DECIMAL_PLACES) : "—"}
+              </span>
             </div>
           </div>
           {!hasAllMainLifts && <p className={styles.totalHint}>{t("stats.totalMissingLifts")}</p>}
-          {hasAllMainLifts && !latestBodyweight && <p className={styles.totalHint}>{t("stats.totalMissingBodyweight")}</p>}
+          {hasAllMainLifts && !latestBodyweight && (
+            <p className={styles.totalHint}>{t("stats.totalMissingBodyweight")}</p>
+          )}
         </div>
       )}
-      {hasAnyMainLift && <MainLiftsChart exerciseSets={prs} mainLiftBests={mainLiftBests} formula={formula} />}
+      {hasAnyMainLift && (
+        <MainLiftsChart exerciseSets={prs} mainLiftBests={mainLiftBests} formula={formula} />
+      )}
       {recentPrRows.length > 0 && (
         <div className={styles.recentPrSection}>
           <h2 className={styles.recentPrHeading}>{t("stats.recentPrs")}</h2>
@@ -269,7 +290,11 @@ function Stats() {
             {recentPrRows.map((row) => (
               <button
                 key={row.name}
-                className={row.name === selectedExercise ? `${styles.recentPrRow} ${styles.recentPrRowActive}` : styles.recentPrRow}
+                className={
+                  row.name === selectedExercise
+                    ? `${styles.recentPrRow} ${styles.recentPrRowActive}`
+                    : styles.recentPrRow
+                }
                 onClick={() => {
                   setSelectedExercise(row.name);
                   chartSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -277,7 +302,8 @@ function Stats() {
               >
                 <span className={styles.recentPrName}>{row.name}</span>
                 <span className={styles.recentPrDetail}>
-                  {row.e1rm.toFixed(E1RM_DECIMAL_PLACES)}kg e1RM — {row.weight}kg × {row.reps} @ RPE {row.rpe ?? "—"}
+                  {row.e1rm.toFixed(E1RM_DECIMAL_PLACES)}kg e1RM — {row.weight}kg × {row.reps} @ RPE{" "}
+                  {row.rpe ?? "—"}
                 </span>
                 <span className={styles.recentPrDate}>{formatChartDate(row.date)}</span>
               </button>
@@ -333,7 +359,9 @@ function Stats() {
                   <td colSpan={4} className={styles.historyPanel}>
                     {expandedHistoryEntries.map((entry) => (
                       <div key={entry.id} className={styles.historyEntryRow}>
-                        <span className={styles.historyEntryDate}>{formatChartDate(entry.date)}</span>
+                        <span className={styles.historyEntryDate}>
+                          {formatChartDate(entry.date)}
+                        </span>
                         <span className={styles.historyEntryDetail}>
                           {entry.sets.length > 0
                             ? entry.sets.map((set) => `${set.weight}kg×${set.reps}`).join(", ")
@@ -375,15 +403,37 @@ function Stats() {
         {chartData.length > 0 ? (
           <ResponsiveContainer width="100%" height={220}>
             <LineChart data={chartData}>
-              <XAxis dataKey="label" tick={{ fill: chartTextDimColor, fontFamily: chartFontFamily, fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: chartTextDimColor, fontFamily: chartFontFamily, fontSize: 11 }} axisLine={false} tickLine={false} domain={["auto", "auto"]} />
+              <XAxis
+                dataKey="label"
+                tick={{ fill: chartTextDimColor, fontFamily: chartFontFamily, fontSize: 11 }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <YAxis
+                tick={{ fill: chartTextDimColor, fontFamily: chartFontFamily, fontSize: 11 }}
+                axisLine={false}
+                tickLine={false}
+                domain={["auto", "auto"]}
+              />
               <Tooltip
-                contentStyle={{ background: chartBgCardColor, border: `1px solid ${chartBorderColor}`, fontFamily: chartFontFamily, fontSize: 12 }}
+                contentStyle={{
+                  background: chartBgCardColor,
+                  border: `1px solid ${chartBorderColor}`,
+                  fontFamily: chartFontFamily,
+                  fontSize: 12,
+                }}
                 labelStyle={{ color: chartTextDimColor }}
                 itemStyle={{ color: chartTextColor }}
                 formatter={(value) => [`${value}kg`, "e1RM"]}
               />
-              <Line type="monotone" dataKey="e1rm" stroke={chartAccentColor} strokeWidth={2} dot={renderProgressDot} activeDot={{ r: 5 }} />
+              <Line
+                type="monotone"
+                dataKey="e1rm"
+                stroke={chartAccentColor}
+                strokeWidth={2}
+                dot={renderProgressDot}
+                activeDot={{ r: 5 }}
+              />
             </LineChart>
           </ResponsiveContainer>
         ) : (

@@ -190,7 +190,13 @@
 [data-template="glass"] {
   --font-body: -apple-system, "Segoe UI", sans-serif;
   --heading-weight: 700;
-  --card-bg: linear-gradient(135deg, rgba(var(--color-accent-rgb), 0.12), rgba(var(--color-accent-rgb), 0.03)), var(--color-bg-card);
+  --card-bg:
+    linear-gradient(
+      135deg,
+      rgba(var(--color-accent-rgb), 0.12),
+      rgba(var(--color-accent-rgb), 0.03)
+    ),
+    var(--color-bg-card);
   --card-border: 1px solid rgba(var(--color-accent-rgb), 0.3);
   --card-radius: 14px;
   --card-shadow: none;

@@ -66,7 +66,9 @@ function PlateCalculator({ target, onTargetChange, setup, onSetupChange }) {
           <select
             className={styles.select}
             value={setup.barWeight}
-            onChange={(event) => onSetupChange({ ...setup, barWeight: parseFloat(event.target.value) })}
+            onChange={(event) =>
+              onSetupChange({ ...setup, barWeight: parseFloat(event.target.value) })
+            }
           >
             {BAR_WEIGHTS_KG.map((barWeight) => (
               <option key={barWeight} value={barWeight}>
@@ -93,7 +95,11 @@ function PlateCalculator({ target, onTargetChange, setup, onSetupChange }) {
             <button
               type="button"
               key={plate}
-              className={isAvailable ? `${styles.plateToggle} ${styles.plateToggleActive}` : styles.plateToggle}
+              className={
+                isAvailable
+                  ? `${styles.plateToggle} ${styles.plateToggleActive}`
+                  : styles.plateToggle
+              }
               aria-pressed={isAvailable}
               onClick={() => togglePlate(plate)}
             >
@@ -103,23 +109,29 @@ function PlateCalculator({ target, onTargetChange, setup, onSetupChange }) {
         })}
       </div>
 
-      {Number.isFinite(targetKg) && (result ? (
-        <>
-          <Barbell plates={result.platesPerSide} />
-          <p className={styles.result}>
-            {result.platesPerSide.length > 0
-              ? t("calculator.perSide", { plates: result.platesPerSide.join(" + ") })
-              : t("calculator.emptyBar")}
-          </p>
-          {result.remainderKg > 0 && (
-            <p className={styles.warning}>
-              {t("calculator.closestLoad", { loaded: result.loadedKg, missing: result.remainderKg })}
+      {Number.isFinite(targetKg) &&
+        (result ? (
+          <>
+            <Barbell plates={result.platesPerSide} />
+            <p className={styles.result}>
+              {result.platesPerSide.length > 0
+                ? t("calculator.perSide", { plates: result.platesPerSide.join(" + ") })
+                : t("calculator.emptyBar")}
             </p>
-          )}
-        </>
-      ) : targetKg < emptyBarKg && (
-        <p className={styles.warning}>{t("calculator.belowBar", { weight: emptyBarKg })}</p>
-      ))}
+            {result.remainderKg > 0 && (
+              <p className={styles.warning}>
+                {t("calculator.closestLoad", {
+                  loaded: result.loadedKg,
+                  missing: result.remainderKg,
+                })}
+              </p>
+            )}
+          </>
+        ) : (
+          targetKg < emptyBarKg && (
+            <p className={styles.warning}>{t("calculator.belowBar", { weight: emptyBarKg })}</p>
+          )
+        ))}
     </div>
   );
 }

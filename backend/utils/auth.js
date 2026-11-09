@@ -18,7 +18,9 @@ function sign(payload) {
 }
 
 function createToken() {
-  const payload = Buffer.from(JSON.stringify({ exp: Date.now() + TOKEN_TTL_MS })).toString("base64url");
+  const payload = Buffer.from(JSON.stringify({ exp: Date.now() + TOKEN_TTL_MS })).toString(
+    "base64url",
+  );
   return `${payload}.${sign(payload)}`;
 }
 
@@ -44,7 +46,10 @@ function verifyToken(token) {
 
 // Hashing both sides first gives equal-length buffers for timingSafeEqual.
 function passwordMatches(candidate) {
-  const given = crypto.createHash("sha256").update(String(candidate ?? "")).digest();
+  const given = crypto
+    .createHash("sha256")
+    .update(String(candidate ?? ""))
+    .digest();
   const expected = crypto.createHash("sha256").update(process.env.APP_PASSWORD).digest();
   return crypto.timingSafeEqual(given, expected);
 }

@@ -10,7 +10,14 @@ import { useDragReorder } from "../hooks/useDragReorder";
 import styles from "./Log.module.css";
 
 const MUSCLE_GROUPS = [
-  "Leđa", "Prsa", "Kvadriceps", "Stražnja loža", "Ramena", "Gluteus", "Ruke", "Trbušnjaci",
+  "Leđa",
+  "Prsa",
+  "Kvadriceps",
+  "Stražnja loža",
+  "Ramena",
+  "Gluteus",
+  "Ruke",
+  "Trbušnjaci",
 ];
 const ALL_MUSCLE_GROUPS_FILTER = "Sve";
 const SUPERSET_COLORS = ["#3ba7ff", "#3ec95c", "#ffb020", "#c678dd", "#ff6b9d"];
@@ -39,20 +46,21 @@ function Log() {
   const templatePickerRef = useRef(null);
   const pickerMode = settings?.exercisePickerMode ?? "chips";
 
-  const { draggedId: draggedExerciseId, hoveredId: hoveredExerciseId, startDrag: startExerciseDrag } = useDragReorder(
-    workout?.exercises || [],
-    (newExercises) => {
-      setWorkout((prev) => ({ ...prev, exercises: newExercises }));
-      fetchJson(`/api/workouts/${workout.id}/exercises/reorder`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ exerciseIds: newExercises.map((exercise) => exercise.id) }),
-      }).catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
-    },
-  );
+  const {
+    draggedId: draggedExerciseId,
+    hoveredId: hoveredExerciseId,
+    startDrag: startExerciseDrag,
+  } = useDragReorder(workout?.exercises || [], (newExercises) => {
+    setWorkout((prev) => ({ ...prev, exercises: newExercises }));
+    fetchJson(`/api/workouts/${workout.id}/exercises/reorder`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ exerciseIds: newExercises.map((exercise) => exercise.id) }),
+    }).catch((err) => {
+      console.error(err);
+      showError(err.message);
+    });
+  });
 
   useEffect(() => {
     fetchJson(`/api/workouts?date=${date}`)
@@ -136,14 +144,14 @@ function Log() {
     if (!exerciseName.trim()) return;
 
     const isKnown = exerciseTemplates.some(
-      (template) => template.name.toLowerCase() === exerciseName.trim().toLowerCase()
+      (template) => template.name.toLowerCase() === exerciseName.trim().toLowerCase(),
     );
     if (!isKnown) {
       setSavePromptName(exerciseName.trim());
     }
 
     const alreadyInWorkout = workout.exercises?.some(
-      (exercise) => exercise.name.toLowerCase() === exerciseName.trim().toLowerCase()
+      (exercise) => exercise.name.toLowerCase() === exerciseName.trim().toLowerCase(),
     );
     if (alreadyInWorkout) {
       showError(t("log.exerciseAlreadyAdded", { name: exerciseName.trim() }));
@@ -205,7 +213,11 @@ function Log() {
       body: JSON.stringify({ name, muscleGroup }),
     })
       .then((data) => {
-        setExerciseTemplates((prev) => [...prev, data].sort((templateA, templateB) => templateA.name.localeCompare(templateB.name)));
+        setExerciseTemplates((prev) =>
+          [...prev, data].sort((templateA, templateB) =>
+            templateA.name.localeCompare(templateB.name),
+          ),
+        );
         setSavePromptName(null);
         setSavePromptMuscleGroup("");
       })
@@ -234,7 +246,9 @@ function Log() {
     })
       .then((data) => {
         setWorkoutTemplates((prev) =>
-          [...prev, data].sort((templateA, templateB) => templateA.name.localeCompare(templateB.name)),
+          [...prev, data].sort((templateA, templateB) =>
+            templateA.name.localeCompare(templateB.name),
+          ),
         );
         setSaveTemplateName(null);
       })
@@ -284,10 +298,11 @@ function Log() {
   };
 
   const filteredTemplates = exerciseTemplates.filter((template) => {
-    const matchesSearch = !exerciseName.trim()
-      || template.name.toLowerCase().includes(exerciseName.trim().toLowerCase());
-    const matchesGroup = muscleGroupFilter === ALL_MUSCLE_GROUPS_FILTER
-      || template.muscleGroup === muscleGroupFilter;
+    const matchesSearch =
+      !exerciseName.trim() ||
+      template.name.toLowerCase().includes(exerciseName.trim().toLowerCase());
+    const matchesGroup =
+      muscleGroupFilter === ALL_MUSCLE_GROUPS_FILTER || template.muscleGroup === muscleGroupFilter;
     return matchesSearch && matchesGroup;
   });
 
@@ -295,11 +310,11 @@ function Log() {
     ? programs.find((program) => program.id === workout.programId)
     : null;
 
-  const supersetGroups = [...new Set(
-    (workout?.exercises || [])
-      .map((exercise) => exercise.supersetGroup)
-      .filter(Boolean),
-  )];
+  const supersetGroups = [
+    ...new Set(
+      (workout?.exercises || []).map((exercise) => exercise.supersetGroup).filter(Boolean),
+    ),
+  ];
   const supersetColorByGroup = Object.fromEntries(
     supersetGroups.map((group, index) => [group, SUPERSET_COLORS[index % SUPERSET_COLORS.length]]),
   );
@@ -315,17 +330,18 @@ function Log() {
             <span className={styles.meta}>{t("log.workoutId", { id: workout.id })}</span>
             {workoutProgram && (
               <span className={styles.meta}>
-                {t("log.programTag", { name: workoutProgram.name, week: workout.programWeek, day: workout.programDay })}
+                {t("log.programTag", {
+                  name: workoutProgram.name,
+                  week: workout.programWeek,
+                  day: workout.programDay,
+                })}
               </span>
             )}
             <button className={styles.cancelButton} onClick={cancelWorkout}>
               {t("common.cancel")}
             </button>
             {workout.exercises?.length > 0 && (
-              <button
-                className={styles.cancelButton}
-                onClick={() => setSaveTemplateName("")}
-              >
+              <button className={styles.cancelButton} onClick={() => setSaveTemplateName("")}>
                 {t("log.saveAsTemplate")}
               </button>
             )}
@@ -409,7 +425,10 @@ function Log() {
               {t("log.addExercise")}
             </button>
             {workoutTemplates.length > 0 && (
-              <div style={{ position: "relative", display: "inline-block" }} ref={templatePickerRef}>
+              <div
+                style={{ position: "relative", display: "inline-block" }}
+                ref={templatePickerRef}
+              >
                 <button
                   className={styles.addButton}
                   onClick={() => setShowTemplatePicker((prev) => !prev)}
@@ -442,7 +461,10 @@ function Log() {
               </div>
             )}
             {programs.length > 0 && (
-              <button className={styles.addButton} onClick={() => setShowProgramLoader((prev) => !prev)}>
+              <button
+                className={styles.addButton}
+                onClick={() => setShowProgramLoader((prev) => !prev)}
+              >
                 {t("log.loadProgram")}
               </button>
             )}
@@ -453,7 +475,11 @@ function Log() {
                     {[ALL_MUSCLE_GROUPS_FILTER, ...MUSCLE_GROUPS].map((group) => (
                       <button
                         key={group}
-                        className={muscleGroupFilter === group ? styles.muscleGroupChipActive : styles.muscleGroupChip}
+                        className={
+                          muscleGroupFilter === group
+                            ? styles.muscleGroupChipActive
+                            : styles.muscleGroupChip
+                        }
                         onClick={() => setMuscleGroupFilter(group)}
                       >
                         {group}
@@ -462,30 +488,36 @@ function Log() {
                   </div>
                 )}
 
-                {pickerMode === "twoStep" && !exerciseName.trim() && muscleGroupFilter === ALL_MUSCLE_GROUPS_FILTER && (
-                  <div className={styles.categoryList}>
-                    {MUSCLE_GROUPS.map((group) => (
-                      <button
-                        key={group}
-                        className={styles.categoryListItem}
-                        onClick={() => setMuscleGroupFilter(group)}
-                      >
-                        {group}
-                      </button>
-                    ))}
-                  </div>
-                )}
+                {pickerMode === "twoStep" &&
+                  !exerciseName.trim() &&
+                  muscleGroupFilter === ALL_MUSCLE_GROUPS_FILTER && (
+                    <div className={styles.categoryList}>
+                      {MUSCLE_GROUPS.map((group) => (
+                        <button
+                          key={group}
+                          className={styles.categoryListItem}
+                          onClick={() => setMuscleGroupFilter(group)}
+                        >
+                          {group}
+                        </button>
+                      ))}
+                    </div>
+                  )}
 
-                {pickerMode === "twoStep" && !exerciseName.trim() && muscleGroupFilter !== ALL_MUSCLE_GROUPS_FILTER && (
-                  <button
-                    className={styles.backButton}
-                    onClick={() => setMuscleGroupFilter(ALL_MUSCLE_GROUPS_FILTER)}
-                  >
-                    {t("log.back")}
-                  </button>
-                )}
+                {pickerMode === "twoStep" &&
+                  !exerciseName.trim() &&
+                  muscleGroupFilter !== ALL_MUSCLE_GROUPS_FILTER && (
+                    <button
+                      className={styles.backButton}
+                      onClick={() => setMuscleGroupFilter(ALL_MUSCLE_GROUPS_FILTER)}
+                    >
+                      {t("log.back")}
+                    </button>
+                  )}
 
-                {(pickerMode === "chips" || exerciseName.trim() || muscleGroupFilter !== ALL_MUSCLE_GROUPS_FILTER) && (
+                {(pickerMode === "chips" ||
+                  exerciseName.trim() ||
+                  muscleGroupFilter !== ALL_MUSCLE_GROUPS_FILTER) && (
                   <>
                     {filteredTemplates.map((template) => (
                       <div key={template.id} className={styles.exercisePickerItem}>
@@ -498,7 +530,9 @@ function Log() {
                         >
                           {template.name}
                           {template.muscleGroup && (
-                            <span className={styles.exercisePickerGroup}>{template.muscleGroup}</span>
+                            <span className={styles.exercisePickerGroup}>
+                              {template.muscleGroup}
+                            </span>
                           )}
                         </button>
                         <button
@@ -509,15 +543,19 @@ function Log() {
                         </button>
                       </div>
                     ))}
-                    {exerciseName.trim() && !exerciseTemplates.some((template) => template.name.toLowerCase() === exerciseName.trim().toLowerCase()) && (
-                      <button
-                        type="button"
-                        className={styles.exercisePickerCustom}
-                        onClick={addExercise}
-                      >
-                        {t("log.addAsExercise", { name: exerciseName.trim() })}
-                      </button>
-                    )}
+                    {exerciseName.trim() &&
+                      !exerciseTemplates.some(
+                        (template) =>
+                          template.name.toLowerCase() === exerciseName.trim().toLowerCase(),
+                      ) && (
+                        <button
+                          type="button"
+                          className={styles.exercisePickerCustom}
+                          onClick={addExercise}
+                        >
+                          {t("log.addAsExercise", { name: exerciseName.trim() })}
+                        </button>
+                      )}
                   </>
                 )}
               </div>
@@ -535,7 +573,9 @@ function Log() {
               >
                 <option value="">{t("log.muscleGroupPlaceholder")}</option>
                 {MUSCLE_GROUPS.map((group) => (
-                  <option key={group} value={group}>{group}</option>
+                  <option key={group} value={group}>
+                    {group}
+                  </option>
                 ))}
               </select>
               <button
@@ -577,9 +617,13 @@ function Log() {
                 exercise={exercise}
                 showE1rm={settings?.showE1rm ?? true}
                 e1rmFormula={settings?.e1rmFormula ?? "brzycki"}
-                supersetColor={exercise.supersetGroup ? supersetColorByGroup[exercise.supersetGroup] : null}
+                supersetColor={
+                  exercise.supersetGroup ? supersetColorByGroup[exercise.supersetGroup] : null
+                }
                 isDragging={draggedExerciseId === exercise.id}
-                isDropTarget={hoveredExerciseId === String(exercise.id) && draggedExerciseId !== exercise.id}
+                isDropTarget={
+                  hoveredExerciseId === String(exercise.id) && draggedExerciseId !== exercise.id
+                }
                 onDragHandlePointerDown={() => startExerciseDrag(exercise.id)}
                 onDeleteSet={(setId) =>
                   setWorkout((prev) => ({

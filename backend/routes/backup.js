@@ -38,7 +38,11 @@ const COLUMNS_BY_MODEL = Object.fromEntries(
 );
 
 function pickColumns(model, row) {
-  return Object.fromEntries(COLUMNS_BY_MODEL[model].filter((column) => column in row).map((column) => [column, row[column]]));
+  return Object.fromEntries(
+    COLUMNS_BY_MODEL[model]
+      .filter((column) => column in row)
+      .map((column) => [column, row[column]]),
+  );
 }
 
 function csvCell(value) {
@@ -54,7 +58,12 @@ router.get("/export", async (req, res) => {
     }
     const dateKey = new Date().toISOString().split("T")[0];
     res.setHeader("Content-Disposition", `attachment; filename="ironlog-backup-${dateKey}.json"`);
-    res.json({ app: "ironlog", version: BACKUP_FORMAT_VERSION, exportedAt: new Date().toISOString(), tables });
+    res.json({
+      app: "ironlog",
+      version: BACKUP_FORMAT_VERSION,
+      exportedAt: new Date().toISOString(),
+      tables,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal server error" });
@@ -66,9 +75,23 @@ router.get("/sets.csv", async (req, res) => {
   try {
     const sets = await prisma.set.findMany({
       include: { exercise: { include: { workout: true } } },
-      orderBy: [{ exercise: { workout: { date: "asc" } } }, { exercise: { order: "asc" } }, { order: "asc" }],
+      orderBy: [
+        { exercise: { workout: { date: "asc" } } },
+        { exercise: { order: "asc" } },
+        { order: "asc" },
+      ],
     });
-    const header = ["date", "workout", "exercise", "set", "weight_kg", "reps", "rpe", "warmup", "exercise_notes"];
+    const header = [
+      "date",
+      "workout",
+      "exercise",
+      "set",
+      "weight_kg",
+      "reps",
+      "rpe",
+      "warmup",
+      "exercise_notes",
+    ];
     const rows = sets.map((set) => [
       set.exercise.workout.date.toISOString().split("T")[0],
       set.exercise.workout.name,
@@ -101,33 +124,42 @@ router.post("/import", express.json({ limit: IMPORT_BODY_LIMIT }), async (req, r
   if (backup.version > BACKUP_FORMAT_VERSION) {
     return res.status(400).json({ error: "Backup is from a newer version of the app" });
   }
-  const invalidTable = MODELS.find((model) => backup.tables[model] !== undefined && !Array.isArray(backup.tables[model]));
+  const invalidTable = MODELS.find(
+    (model) => backup.tables[model] !== undefined && !Array.isArray(backup.tables[model]),
+  );
   if (invalidTable) {
     return res.status(400).json({ error: `Table "${invalidTable}" must be an array` });
   }
 
   try {
-    const counts = await prisma.$transaction(async (tx) => {
-      for (const model of [...MODELS].reverse()) {
-        await tx[model].deleteMany();
-      }
-      const imported = {};
-      for (const model of MODELS) {
-        const rows = (backup.tables[model] ?? []).map((row) => pickColumns(model, row));
-        if (rows.length > 0) {
-          await tx[model].createMany({ data: rows });
+    const counts = await prisma.$transaction(
+      async (tx) => {
+        for (const model of [...MODELS].reverse()) {
+          await tx[model].deleteMany();
         }
-        imported[model] = rows.length;
-      }
-      return imported;
-    }, { timeout: IMPORT_TIMEOUT_MS });
+        const imported = {};
+        for (const model of MODELS) {
+          const rows = (backup.tables[model] ?? []).map((row) => pickColumns(model, row));
+          if (rows.length > 0) {
+            await tx[model].createMany({ data: rows });
+          }
+          imported[model] = rows.length;
+        }
+        return imported;
+      },
+      { timeout: IMPORT_TIMEOUT_MS },
+    );
 
     res.json({ success: true, counts });
   } catch (err) {
     console.error(err);
     // Prisma validation errors mean the file's rows don't fit the schema.
-    const isBadData = err instanceof Prisma.PrismaClientValidationError || err instanceof Prisma.PrismaClientKnownRequestError;
-    res.status(isBadData ? 400 : 500).json({ error: isBadData ? "Backup data doesn't match the database" : "Internal server error" });
+    const isBadData =
+      err instanceof Prisma.PrismaClientValidationError ||
+      err instanceof Prisma.PrismaClientKnownRequestError;
+    res.status(isBadData ? 400 : 500).json({
+      error: isBadData ? "Backup data doesn't match the database" : "Internal server error",
+    });
   }
 });
 

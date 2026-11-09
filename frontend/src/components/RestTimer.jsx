@@ -58,14 +58,11 @@ function RestTimer() {
 
   return (
     <div className={styles.container}>
-      <button
-        className={styles.toggleBar}
-        onClick={() => setIsMinimized((prev) => !prev)}
-      >
+      <button className={styles.toggleBar} onClick={() => setIsMinimized((prev) => !prev)}>
         {isMinimized ? "▲" : "▼"}
       </button>
-      {!isMinimized && (
-        secondsRemaining === null ? (
+      {!isMinimized &&
+        (secondsRemaining === null ? (
           <div className={styles.presetRow}>
             {REST_PRESETS_SECONDS.map((duration) => (
               <button
@@ -104,8 +101,7 @@ function RestTimer() {
               </button>
             </div>
           </div>
-        )
-      )}
+        ))}
     </div>
   );
 }

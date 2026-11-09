@@ -29,7 +29,11 @@ function toDraft(program) {
     days: program.days.map((day) => ({
       key: makeKey(),
       name: day.name || "",
-      exercises: day.exercises.map((exercise) => ({ key: makeKey(), name: exercise.name, weekSchemes: exercise.weekSchemes })),
+      exercises: day.exercises.map((exercise) => ({
+        key: makeKey(),
+        name: exercise.name,
+        weekSchemes: exercise.weekSchemes,
+      })),
     })),
   };
 }
@@ -70,11 +74,15 @@ function ProgramEditor({ program, exerciseNames, onSave, onCancel }) {
     }));
   };
 
-  const hasErrors = !draft.name.trim() || draft.days.some((day) =>
-    day.exercises.some((exercise) =>
-      !exercise.name.trim() || weekNumbers.some((week) => !isValidScheme(exercise.weekSchemes[week - 1])),
-    ),
-  );
+  const hasErrors =
+    !draft.name.trim() ||
+    draft.days.some((day) =>
+      day.exercises.some(
+        (exercise) =>
+          !exercise.name.trim() ||
+          weekNumbers.some((week) => !isValidScheme(exercise.weekSchemes[week - 1])),
+      ),
+    );
 
   const save = () => {
     if (hasErrors) {
@@ -102,7 +110,11 @@ function ProgramEditor({ program, exerciseNames, onSave, onCancel }) {
           <span className={styles.fieldLabel}>{t("programs.name")}</span>
           <input
             type="text"
-            className={showErrors && !draft.name.trim() ? `${styles.nameInput} ${styles.invalid}` : styles.nameInput}
+            className={
+              showErrors && !draft.name.trim()
+                ? `${styles.nameInput} ${styles.invalid}`
+                : styles.nameInput
+            }
             value={draft.name}
             onChange={(event) => setDraft((prev) => ({ ...prev, name: event.target.value }))}
           />
@@ -126,7 +138,9 @@ function ProgramEditor({ program, exerciseNames, onSave, onCancel }) {
             max="100"
             className={styles.numberInput}
             value={draft.trainingMaxPercent}
-            onChange={(event) => setDraft((prev) => ({ ...prev, trainingMaxPercent: event.target.value }))}
+            onChange={(event) =>
+              setDraft((prev) => ({ ...prev, trainingMaxPercent: event.target.value }))
+            }
           />
         </label>
       </div>
@@ -140,7 +154,9 @@ function ProgramEditor({ program, exerciseNames, onSave, onCancel }) {
       {draft.days.map((day, dayIndex) => (
         <div key={day.key} className={styles.day}>
           <div className={styles.dayHeader}>
-            <span className={styles.dayNumber}>{t("programs.dayNumber", { number: dayIndex + 1 })}</span>
+            <span className={styles.dayNumber}>
+              {t("programs.dayNumber", { number: dayIndex + 1 })}
+            </span>
             <input
               type="text"
               className={styles.dayNameInput}
@@ -152,7 +168,12 @@ function ProgramEditor({ program, exerciseNames, onSave, onCancel }) {
               <button
                 type="button"
                 className={styles.removeButton}
-                onClick={() => setDraft((prev) => ({ ...prev, days: prev.days.filter((other) => other.key !== day.key) }))}
+                onClick={() =>
+                  setDraft((prev) => ({
+                    ...prev,
+                    days: prev.days.filter((other) => other.key !== day.key),
+                  }))
+                }
               >
                 {t("programs.removeDay")}
               </button>
@@ -177,9 +198,17 @@ function ProgramEditor({ program, exerciseNames, onSave, onCancel }) {
                       <input
                         type="text"
                         list="program-exercise-names"
-                        className={showErrors && !exercise.name.trim() ? `${styles.exerciseInput} ${styles.invalid}` : styles.exerciseInput}
+                        className={
+                          showErrors && !exercise.name.trim()
+                            ? `${styles.exerciseInput} ${styles.invalid}`
+                            : styles.exerciseInput
+                        }
                         value={exercise.name}
-                        onChange={(event) => updateExercise(day.key, exercise.key, () => ({ name: event.target.value }))}
+                        onChange={(event) =>
+                          updateExercise(day.key, exercise.key, () => ({
+                            name: event.target.value,
+                          }))
+                        }
                       />
                     </td>
                     {weekNumbers.map((week) => {
@@ -188,10 +217,16 @@ function ProgramEditor({ program, exerciseNames, onSave, onCancel }) {
                         <td key={week}>
                           <input
                             type="text"
-                            className={isValidScheme(scheme) ? styles.schemeInput : `${styles.schemeInput} ${styles.invalid}`}
+                            className={
+                              isValidScheme(scheme)
+                                ? styles.schemeInput
+                                : `${styles.schemeInput} ${styles.invalid}`
+                            }
                             placeholder="5x5@75"
                             value={scheme}
-                            onChange={(event) => setScheme(day.key, exercise.key, week - 1, event.target.value)}
+                            onChange={(event) =>
+                              setScheme(day.key, exercise.key, week - 1, event.target.value)
+                            }
                           />
                         </td>
                       );
@@ -213,7 +248,9 @@ function ProgramEditor({ program, exerciseNames, onSave, onCancel }) {
                         title={t("programs.removeExercise")}
                         onClick={() =>
                           updateDay(day.key, (current) => ({
-                            exercises: current.exercises.filter((other) => other.key !== exercise.key),
+                            exercises: current.exercises.filter(
+                              (other) => other.key !== exercise.key,
+                            ),
                           }))
                         }
                       >
@@ -229,7 +266,11 @@ function ProgramEditor({ program, exerciseNames, onSave, onCancel }) {
           <button
             type="button"
             className={styles.textButton}
-            onClick={() => updateDay(day.key, (current) => ({ exercises: [...current.exercises, emptyExercise()] }))}
+            onClick={() =>
+              updateDay(day.key, (current) => ({
+                exercises: [...current.exercises, emptyExercise()],
+              }))
+            }
           >
             {t("programs.addExercise")}
           </button>

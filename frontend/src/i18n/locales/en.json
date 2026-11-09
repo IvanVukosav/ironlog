@@ -64,8 +64,18 @@
     "month": "Month",
     "year": "Year",
     "months": [
-      "January", "February", "March", "April", "May", "June",
-      "July", "August", "September", "October", "November", "December"
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December"
     ]
   },
   "log": {
@@ -225,7 +235,15 @@
     "trainingsThisMonth": "{{count}} trainings this month",
     "trainingsThisYear": "{{count}} trainings this year",
     "todaySuffix": " (today)",
-    "weekdaysMonFirst": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+    "weekdaysMonFirst": [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+      "Sunday"
+    ],
     "bodyweight": "Bodyweight",
     "noData": "No data",
     "muscleGroupVolume": "Volume by muscle group",

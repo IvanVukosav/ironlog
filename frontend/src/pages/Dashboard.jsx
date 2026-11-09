@@ -2,7 +2,17 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { fetchJson } from "../api";
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
 import { useToast } from "../context/useToast";
 import { getCssVar } from "../utils/theme";
 import { findBestSetByE1rm } from "../utils/oneRepMax";
@@ -95,7 +105,11 @@ function Dashboard() {
   const [nutritionDay, setNutritionDay] = useState(null);
   const [settings, setSettings] = useState(null);
   const [kcalGoalInput, setKcalGoalInput] = useState(null);
-  const [bodyweightChart, setBodyweightChart] = useState({ entries: [], latestTrend: null, weeklyChange: null });
+  const [bodyweightChart, setBodyweightChart] = useState({
+    entries: [],
+    latestTrend: null,
+    weeklyChange: null,
+  });
   const [recentWorkouts, setRecentWorkouts] = useState([]);
   const [bwRange, setBwRange] = useState(7);
   const [workoutRangeView, setWorkoutRangeView] = useState("week");
@@ -191,16 +205,16 @@ function Dashboard() {
       fetchJson(`/api/workouts/week?date=${today}`)
         .then((data) => setWeeklyWorkouts(data))
         .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+          console.error(err);
+          showError(err.message);
+        });
     } else {
       fetchJson(`/api/workouts/count?range=${range}&date=${today}`)
         .then((data) => setRangeWorkoutCount(data.count))
         .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+          console.error(err);
+          showError(err.message);
+        });
     }
   };
 
@@ -248,7 +262,9 @@ function Dashboard() {
   const todayDate = new Date(today);
   const weekdayNames = t("dashboard.weekdaysMonFirst", { returnObjects: true });
   const weekDayInfo = weekDates.map((date, dayIndex) => {
-    const matchingWorkout = weeklyWorkouts.find((entry) => isSameCalendarDay(new Date(entry.date), date));
+    const matchingWorkout = weeklyWorkouts.find((entry) =>
+      isSameCalendarDay(new Date(entry.date), date),
+    );
     return {
       label: weekdayNames[dayIndex],
       dateString: formatDateString(date),
@@ -271,7 +287,8 @@ function Dashboard() {
             {workout ? (
               <>
                 <p className={styles.value}>
-                  {workout.name || t("dashboard.workoutFallbackName")} — {workout.exercises?.length} {t("dashboard.exercisesSuffix")}
+                  {workout.name || t("dashboard.workoutFallbackName")} — {workout.exercises?.length}{" "}
+                  {t("dashboard.exercisesSuffix")}
                 </p>
                 {workout.exercises?.length > 0 && (
                   <div className={styles.chips}>
@@ -282,11 +299,17 @@ function Dashboard() {
                           {exercise.sets?.length > 0 ? (
                             exercise.sets.map((set, index) => (
                               <div key={index} className={styles.chipTooltipRow}>
-                                {t("log.setSummary", { weight: set.weight, reps: set.reps, rpe: set.rpe ?? "—" })}
+                                {t("log.setSummary", {
+                                  weight: set.weight,
+                                  reps: set.reps,
+                                  rpe: set.rpe ?? "—",
+                                })}
                               </div>
                             ))
                           ) : (
-                            <div className={styles.chipTooltipRow}>{t("dashboard.noSetsLogged")}</div>
+                            <div className={styles.chipTooltipRow}>
+                              {t("dashboard.noSetsLogged")}
+                            </div>
                           )}
                         </div>
                       </div>
@@ -357,7 +380,12 @@ function Dashboard() {
                     ))}
                   </Pie>
                   <Tooltip
-                    contentStyle={{ background: chartBgCardColor, border: `1px solid ${chartBorderColor}`, fontFamily: chartFontFamily, fontSize: 12 }}
+                    contentStyle={{
+                      background: chartBgCardColor,
+                      border: `1px solid ${chartBorderColor}`,
+                      fontFamily: chartFontFamily,
+                      fontSize: 12,
+                    }}
                     labelStyle={{ color: chartTextDimColor }}
                     itemStyle={{ color: chartTextColor }}
                     formatter={(value, name) => [`${Math.round(value)} kcal`, name]}
@@ -365,15 +393,24 @@ function Dashboard() {
                 </PieChart>
                 <div className={styles.macroLegend}>
                   <div className={styles.macroLegendRow}>
-                    <span className={styles.macroLegendDot} style={{ backgroundColor: chartProteinColor }} />
+                    <span
+                      className={styles.macroLegendDot}
+                      style={{ backgroundColor: chartProteinColor }}
+                    />
                     {t("nutrition.macroProtein")} {macroPercent(macroKcal.protein)}%
                   </div>
                   <div className={styles.macroLegendRow}>
-                    <span className={styles.macroLegendDot} style={{ backgroundColor: chartCarbsColor }} />
+                    <span
+                      className={styles.macroLegendDot}
+                      style={{ backgroundColor: chartCarbsColor }}
+                    />
                     {t("nutrition.macroCarbs")} {macroPercent(macroKcal.carbs)}%
                   </div>
                   <div className={styles.macroLegendRow}>
-                    <span className={styles.macroLegendDot} style={{ backgroundColor: chartFatColor }} />
+                    <span
+                      className={styles.macroLegendDot}
+                      style={{ backgroundColor: chartFatColor }}
+                    />
                     {t("nutrition.macroFat")} {macroPercent(macroKcal.fat)}%
                   </div>
                 </div>
@@ -383,7 +420,9 @@ function Dashboard() {
         )}
         <div className={styles.card}>
           <h2 className={styles.label}>{t("dashboard.streak")}</h2>
-          <p className={styles.value}>🔥 {t("dashboard.streakDays", { count: streak.currentStreak })}</p>
+          <p className={styles.value}>
+            🔥 {t("dashboard.streakDays", { count: streak.currentStreak })}
+          </p>
           <p className={styles.streakLongest}>
             {t("dashboard.longestStreakSuffix", { count: streak.longestStreak })}
           </p>
@@ -395,7 +434,9 @@ function Dashboard() {
           >
             <div className={styles.prHeader}>
               <h2 className={styles.label}>{t("dashboard.latestPr")}</h2>
-              <span className={styles.prDate}>{new Date(latestPr.date).toISOString().split("T")[0]}</span>
+              <span className={styles.prDate}>
+                {new Date(latestPr.date).toISOString().split("T")[0]}
+              </span>
             </div>
             <p className={styles.prName}>{latestPr.name}</p>
             <p className={styles.streakLongest}>
@@ -431,7 +472,10 @@ function Dashboard() {
             <>
               <div className={styles.weeklyProgressHeader}>
                 <p className={styles.value}>
-                  {t("dashboard.trainingsThisWeek", { count: weeklyWorkouts.length, goal: weeklyGoal })}
+                  {t("dashboard.trainingsThisWeek", {
+                    count: weeklyWorkouts.length,
+                    goal: weeklyGoal,
+                  })}
                 </p>
                 <div className={styles.progressTrack}>
                   <div
@@ -441,26 +485,28 @@ function Dashboard() {
                 </div>
               </div>
               <div className={styles.weekDayList}>
-                {weekDayInfo.map(({ label, dateString, trained, workoutName, isToday }, dayIndex) => (
-                  <div
-                    key={dayIndex}
-                    className={styles.weekDayRow}
-                    onClick={() => navigate(`/log?date=${dateString}`)}
-                  >
-                    <span className={isToday ? styles.weekDayNameToday : styles.weekDayName}>
-                      {label}
-                      {isToday && t("dashboard.todaySuffix")}
-                    </span>
-                    <span className={styles.weekDayStatus}>
-                      {trained && workoutName && (
-                        <span className={styles.weekDayWorkoutName}>{workoutName}</span>
-                      )}
-                      <span className={trained ? styles.weekDayDotTrained : styles.weekDayDot}>
-                        {trained ? "●" : "○"}
+                {weekDayInfo.map(
+                  ({ label, dateString, trained, workoutName, isToday }, dayIndex) => (
+                    <div
+                      key={dayIndex}
+                      className={styles.weekDayRow}
+                      onClick={() => navigate(`/log?date=${dateString}`)}
+                    >
+                      <span className={isToday ? styles.weekDayNameToday : styles.weekDayName}>
+                        {label}
+                        {isToday && t("dashboard.todaySuffix")}
                       </span>
-                    </span>
-                  </div>
-                ))}
+                      <span className={styles.weekDayStatus}>
+                        {trained && workoutName && (
+                          <span className={styles.weekDayWorkoutName}>{workoutName}</span>
+                        )}
+                        <span className={trained ? styles.weekDayDotTrained : styles.weekDayDot}>
+                          {trained ? "●" : "○"}
+                        </span>
+                      </span>
+                    </div>
+                  ),
+                )}
               </div>
             </>
           ) : (
@@ -506,14 +552,37 @@ function Dashboard() {
           {bodyweightChart.entries.length > 0 ? (
             <>
               <ResponsiveContainer width="100%" height={180}>
-                <LineChart data={bodyweightChart.entries.map((entry) => ({ ...entry, label: formatBwDate(entry.date) }))}>
-                  <XAxis dataKey="label" tick={{ fill: chartTextDimColor, fontFamily: chartFontFamily, fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: chartTextDimColor, fontFamily: chartFontFamily, fontSize: 11 }} axisLine={false} tickLine={false} domain={["auto", "auto"]} />
+                <LineChart
+                  data={bodyweightChart.entries.map((entry) => ({
+                    ...entry,
+                    label: formatBwDate(entry.date),
+                  }))}
+                >
+                  <XAxis
+                    dataKey="label"
+                    tick={{ fill: chartTextDimColor, fontFamily: chartFontFamily, fontSize: 11 }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tick={{ fill: chartTextDimColor, fontFamily: chartFontFamily, fontSize: 11 }}
+                    axisLine={false}
+                    tickLine={false}
+                    domain={["auto", "auto"]}
+                  />
                   <Tooltip
-                    contentStyle={{ background: chartBgCardColor, border: `1px solid ${chartBorderColor}`, fontFamily: chartFontFamily, fontSize: 12 }}
+                    contentStyle={{
+                      background: chartBgCardColor,
+                      border: `1px solid ${chartBorderColor}`,
+                      fontFamily: chartFontFamily,
+                      fontSize: 12,
+                    }}
                     labelStyle={{ color: chartTextDimColor }}
                     itemStyle={{ color: chartTextColor }}
-                    formatter={(value, name) => [`${value} kg`, name === "trend" ? t("dashboard.trendLegend") : t("dashboard.weighInLegend")]}
+                    formatter={(value, name) => [
+                      `${value} kg`,
+                      name === "trend" ? t("dashboard.trendLegend") : t("dashboard.weighInLegend"),
+                    ]}
                   />
                   <Line
                     type="monotone"
@@ -562,7 +631,11 @@ function Dashboard() {
                 <div
                   key={recentWorkout.id}
                   className={styles.recentWorkoutRow}
-                  onClick={() => navigate(`/log?date=${new Date(recentWorkout.date).toISOString().split("T")[0]}`)}
+                  onClick={() =>
+                    navigate(
+                      `/log?date=${new Date(recentWorkout.date).toISOString().split("T")[0]}`,
+                    )
+                  }
                 >
                   <span className={styles.recentWorkoutDate}>
                     {new Date(recentWorkout.date).toISOString().split("T")[0]}

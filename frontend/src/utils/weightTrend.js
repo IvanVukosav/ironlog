@@ -15,7 +15,9 @@ function round(value) {
  * after a week away moves the trend more than one after a single day.
  */
 export function addWeightTrend(entries) {
-  const sorted = [...entries].sort((entryA, entryB) => new Date(entryA.date) - new Date(entryB.date));
+  const sorted = [...entries].sort(
+    (entryA, entryB) => new Date(entryA.date) - new Date(entryB.date),
+  );
   let trend = null;
   let previousTime = null;
   return sorted.map((entry) => {
@@ -40,6 +42,8 @@ export function weeklyTrendChange(entriesWithTrend) {
   const latest = entriesWithTrend.at(-1);
   if (!latest) return null;
   const weekBefore = new Date(latest.date).getTime() - DAYS_PER_WEEK * MS_PER_DAY;
-  const reference = entriesWithTrend.findLast((entry) => new Date(entry.date).getTime() <= weekBefore);
+  const reference = entriesWithTrend.findLast(
+    (entry) => new Date(entry.date).getTime() <= weekBefore,
+  );
   return reference ? round(latest.trend - reference.trend) : null;
 }

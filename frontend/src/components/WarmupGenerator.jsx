@@ -32,8 +32,12 @@ function WarmupGenerator({ setup, onSelectWeight }) {
                   title={t("calculator.loadIntoPlates")}
                   onClick={() => onSelectWeight(warmupSet.weight)}
                 >
-                  <td>{warmupSet.percent ? `${warmupSet.percent}%` : t("calculator.emptyBarShort")}</td>
-                  <td>{t("calculator.warmupSet", { weight: warmupSet.weight, reps: warmupSet.reps })}</td>
+                  <td>
+                    {warmupSet.percent ? `${warmupSet.percent}%` : t("calculator.emptyBarShort")}
+                  </td>
+                  <td>
+                    {t("calculator.warmupSet", { weight: warmupSet.weight, reps: warmupSet.reps })}
+                  </td>
                   <td className={styles.platesCell}>{plates?.platesPerSide.join(" + ") || "—"}</td>
                 </tr>
               );

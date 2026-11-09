@@ -37,7 +37,10 @@ function GoalBar({ value, goal, colorClass }) {
   const { normalPercent, overPercent } = getBarSegments(value, goal);
   return (
     <div className={styles.totalsBarTrack}>
-      <div className={`${styles.totalsBarFill} ${colorClass}`} style={{ width: `${normalPercent}%` }} />
+      <div
+        className={`${styles.totalsBarFill} ${colorClass}`}
+        style={{ width: `${normalPercent}%` }}
+      />
       {overPercent > 0 && (
         <div
           className={`${styles.totalsBarFill} ${colorClass} ${styles.totalsBarFillOverGoal}`}
@@ -135,7 +138,11 @@ function Nutrition() {
       .then((data) => setDay(data))
       .catch((err) => {
         console.error(err);
-        showError(err.message === "Nothing to copy from that day" ? t("nutrition.nothingToCopy") : err.message);
+        showError(
+          err.message === "Nothing to copy from that day"
+            ? t("nutrition.nothingToCopy")
+            : err.message,
+        );
       });
   };
 
@@ -189,7 +196,10 @@ function Nutrition() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name: DEFAULT_MEAL_NAME, nutritionDayId: day.id }),
         }).then((newMeal) => {
-          setDay((prev) => ({ ...prev, meals: [...(prev.meals || []), { ...newMeal, items: [] }] }));
+          setDay((prev) => ({
+            ...prev,
+            meals: [...(prev.meals || []), { ...newMeal, items: [] }],
+          }));
           return addItemToMeal(newMeal.id).then((item) => applyItemToState(newMeal.id, item));
         });
 
@@ -212,7 +222,9 @@ function Nutrition() {
     })
       .then((data) => {
         setFoodItemTemplates((prev) =>
-          [...prev, data].sort((templateA, templateB) => templateA.name.localeCompare(templateB.name)),
+          [...prev, data].sort((templateA, templateB) =>
+            templateA.name.localeCompare(templateB.name),
+          ),
         );
       })
       .catch((err) => {
@@ -225,7 +237,9 @@ function Nutrition() {
   const filteredQuickTemplates = quickAddQuery
     ? foodItemTemplates.filter((template) => template.name.toLowerCase().includes(quickAddQuery))
     : foodItemTemplates;
-  const filteredRecentItems = recentItems.filter((item) => item.name.toLowerCase().includes(quickAddQuery));
+  const filteredRecentItems = recentItems.filter((item) =>
+    item.name.toLowerCase().includes(quickAddQuery),
+  );
 
   const allItems = day?.meals?.flatMap((meal) => meal.items || []) || [];
   const totals = allItems.reduce(
@@ -302,7 +316,12 @@ function Nutrition() {
                       ))}
                     </Pie>
                     <Tooltip
-                      contentStyle={{ background: chartBgCardColor, border: `1px solid ${chartBorderColor}`, fontFamily: chartFontFamily, fontSize: 12 }}
+                      contentStyle={{
+                        background: chartBgCardColor,
+                        border: `1px solid ${chartBorderColor}`,
+                        fontFamily: chartFontFamily,
+                        fontSize: 12,
+                      }}
                       labelStyle={{ color: chartTextDimColor }}
                       itemStyle={{ color: chartTextColor }}
                       formatter={(value, name) => [`${Math.round(value)} kcal`, name]}
@@ -310,15 +329,24 @@ function Nutrition() {
                   </PieChart>
                   <div className={styles.macroLegend}>
                     <div className={styles.macroLegendRow}>
-                      <span className={styles.macroLegendDot} style={{ backgroundColor: chartProteinColor }} />
+                      <span
+                        className={styles.macroLegendDot}
+                        style={{ backgroundColor: chartProteinColor }}
+                      />
                       {t("nutrition.macroProtein")} {macroPercent(macroKcal.protein)}%
                     </div>
                     <div className={styles.macroLegendRow}>
-                      <span className={styles.macroLegendDot} style={{ backgroundColor: chartCarbsColor }} />
+                      <span
+                        className={styles.macroLegendDot}
+                        style={{ backgroundColor: chartCarbsColor }}
+                      />
                       {t("nutrition.macroCarbs")} {macroPercent(macroKcal.carbs)}%
                     </div>
                     <div className={styles.macroLegendRow}>
-                      <span className={styles.macroLegendDot} style={{ backgroundColor: chartFatColor }} />
+                      <span
+                        className={styles.macroLegendDot}
+                        style={{ backgroundColor: chartFatColor }}
+                      />
                       {t("nutrition.macroFat")} {macroPercent(macroKcal.fat)}%
                     </div>
                   </div>
@@ -328,23 +356,47 @@ function Nutrition() {
               <div className={styles.totalsGrid}>
                 <div className={styles.totalsStat}>
                   <span className={styles.totalsLabel}>Kcal</span>
-                  <span className={`${styles.totalsValue} ${styles.totalsValueKcal}`}>{totals.kcal} / {settings?.kcalGoal ?? "—"}</span>
-                  <GoalBar value={totals.kcal} goal={settings?.kcalGoal} colorClass={styles.totalsBarFillKcal} />
+                  <span className={`${styles.totalsValue} ${styles.totalsValueKcal}`}>
+                    {totals.kcal} / {settings?.kcalGoal ?? "—"}
+                  </span>
+                  <GoalBar
+                    value={totals.kcal}
+                    goal={settings?.kcalGoal}
+                    colorClass={styles.totalsBarFillKcal}
+                  />
                 </div>
                 <div className={styles.totalsStat}>
                   <span className={styles.totalsLabel}>{t("nutrition.macroProtein")}</span>
-                  <span className={`${styles.totalsValue} ${styles.totalsValueProtein}`}>{totals.protein}g / {settings?.proteinGoal ?? "—"}g</span>
-                  <GoalBar value={totals.protein} goal={settings?.proteinGoal} colorClass={styles.totalsBarFillProtein} />
+                  <span className={`${styles.totalsValue} ${styles.totalsValueProtein}`}>
+                    {totals.protein}g / {settings?.proteinGoal ?? "—"}g
+                  </span>
+                  <GoalBar
+                    value={totals.protein}
+                    goal={settings?.proteinGoal}
+                    colorClass={styles.totalsBarFillProtein}
+                  />
                 </div>
                 <div className={styles.totalsStat}>
                   <span className={styles.totalsLabel}>{t("nutrition.macroCarbs")}</span>
-                  <span className={`${styles.totalsValue} ${styles.totalsValueCarbs}`}>{totals.carbs}g / {settings?.carbsGoal ?? "—"}g</span>
-                  <GoalBar value={totals.carbs} goal={settings?.carbsGoal} colorClass={styles.totalsBarFillCarbs} />
+                  <span className={`${styles.totalsValue} ${styles.totalsValueCarbs}`}>
+                    {totals.carbs}g / {settings?.carbsGoal ?? "—"}g
+                  </span>
+                  <GoalBar
+                    value={totals.carbs}
+                    goal={settings?.carbsGoal}
+                    colorClass={styles.totalsBarFillCarbs}
+                  />
                 </div>
                 <div className={styles.totalsStat}>
                   <span className={styles.totalsLabel}>{t("nutrition.macroFat")}</span>
-                  <span className={`${styles.totalsValue} ${styles.totalsValueFat}`}>{totals.fat}g / {settings?.fatGoal ?? "—"}g</span>
-                  <GoalBar value={totals.fat} goal={settings?.fatGoal} colorClass={styles.totalsBarFillFat} />
+                  <span className={`${styles.totalsValue} ${styles.totalsValueFat}`}>
+                    {totals.fat}g / {settings?.fatGoal ?? "—"}g
+                  </span>
+                  <GoalBar
+                    value={totals.fat}
+                    goal={settings?.fatGoal}
+                    colorClass={styles.totalsBarFillFat}
+                  />
                 </div>
               </div>
             </div>
@@ -362,38 +414,39 @@ function Nutrition() {
               }}
               onFocus={() => setShowQuickPicker(true)}
             />
-            {showQuickPicker && (filteredQuickTemplates.length > 0 || filteredRecentItems.length > 0) && (
-              <div className={styles.quickAddPicker}>
-                {filteredRecentItems.length > 0 && (
-                  <>
-                    <div className={styles.quickAddSection}>{t("nutrition.recentItems")}</div>
-                    {filteredRecentItems.map((item) => (
-                      <button
-                        key={`recent-${item.name}`}
-                        className={styles.quickAddOption}
-                        onClick={() => quickAddItem(item)}
-                      >
-                        {item.name}
-                        <span className={styles.quickAddMacros}>{item.kcal} kcal</span>
-                      </button>
-                    ))}
-                  </>
-                )}
-                {filteredQuickTemplates.length > 0 && filteredRecentItems.length > 0 && (
-                  <div className={styles.quickAddSection}>{t("nutrition.savedItems")}</div>
-                )}
-                {filteredQuickTemplates.map((template) => (
-                  <button
-                    key={template.id}
-                    className={styles.quickAddOption}
-                    onClick={() => quickAddItem(template)}
-                  >
-                    {template.name}
-                    <span className={styles.quickAddMacros}>{template.kcal} kcal</span>
-                  </button>
-                ))}
-              </div>
-            )}
+            {showQuickPicker &&
+              (filteredQuickTemplates.length > 0 || filteredRecentItems.length > 0) && (
+                <div className={styles.quickAddPicker}>
+                  {filteredRecentItems.length > 0 && (
+                    <>
+                      <div className={styles.quickAddSection}>{t("nutrition.recentItems")}</div>
+                      {filteredRecentItems.map((item) => (
+                        <button
+                          key={`recent-${item.name}`}
+                          className={styles.quickAddOption}
+                          onClick={() => quickAddItem(item)}
+                        >
+                          {item.name}
+                          <span className={styles.quickAddMacros}>{item.kcal} kcal</span>
+                        </button>
+                      ))}
+                    </>
+                  )}
+                  {filteredQuickTemplates.length > 0 && filteredRecentItems.length > 0 && (
+                    <div className={styles.quickAddSection}>{t("nutrition.savedItems")}</div>
+                  )}
+                  {filteredQuickTemplates.map((template) => (
+                    <button
+                      key={template.id}
+                      className={styles.quickAddOption}
+                      onClick={() => quickAddItem(template)}
+                    >
+                      {template.name}
+                      <span className={styles.quickAddMacros}>{template.kcal} kcal</span>
+                    </button>
+                  ))}
+                </div>
+              )}
           </div>
 
           <div className={styles.addMealRow}>
@@ -451,7 +504,9 @@ function Nutrition() {
                       currentMeal.id === meal.id
                         ? {
                             ...currentMeal,
-                            items: currentMeal.items.filter((currentItem) => currentItem.id !== itemId),
+                            items: currentMeal.items.filter(
+                              (currentItem) => currentItem.id !== itemId,
+                            ),
                           }
                         : currentMeal,
                     ),

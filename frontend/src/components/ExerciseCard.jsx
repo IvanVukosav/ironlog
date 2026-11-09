@@ -81,7 +81,9 @@ function Exercise({
   }, [exercise.supersetGroup]);
 
   useEffect(() => {
-    fetchJson(`/api/stats/exercise/${encodeURIComponent(exercise.name)}/last?workoutId=${exercise.workoutId}`)
+    fetchJson(
+      `/api/stats/exercise/${encodeURIComponent(exercise.name)}/last?workoutId=${exercise.workoutId}`,
+    )
       .then((data) => setLastSession(data))
       .catch((err) => console.error(err));
   }, [exercise.name, exercise.workoutId]);
@@ -119,20 +121,21 @@ function Exercise({
     }
   };
 
-  const { draggedId: draggedSetId, hoveredId: hoveredSetId, startDrag: startSetDrag } = useDragReorder(
-    exercise.sets || [],
-    (newSets) => {
-      onReorderSets(newSets);
-      fetchJson(`/api/workouts/exercises/${exercise.id}/sets/reorder`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ setIds: newSets.map((workoutSet) => workoutSet.id) }),
-      }).catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
-    },
-  );
+  const {
+    draggedId: draggedSetId,
+    hoveredId: hoveredSetId,
+    startDrag: startSetDrag,
+  } = useDragReorder(exercise.sets || [], (newSets) => {
+    onReorderSets(newSets);
+    fetchJson(`/api/workouts/exercises/${exercise.id}/sets/reorder`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ setIds: newSets.map((workoutSet) => workoutSet.id) }),
+    }).catch((err) => {
+      console.error(err);
+      showError(err.message);
+    });
+  });
 
   useEffect(() => {
     if (!showMenu) return undefined;
@@ -149,9 +152,8 @@ function Exercise({
     fetchJson(`/api/stats/exercise/${encodeURIComponent(exercise.name)}/history`)
       .then((historyEntries) => {
         const previousSets = historyEntries.flatMap((entry) => entry.sets);
-        const previousBest = previousSets.length > 0
-          ? findBestSetByE1rm(previousSets, e1rmFormula)
-          : null;
+        const previousBest =
+          previousSets.length > 0 ? findBestSetByE1rm(previousSets, e1rmFormula) : null;
 
         return fetchJson(`/api/workouts/exercises/${exerciseId}/sets`, {
           method: "POST",
@@ -161,9 +163,19 @@ function Exercise({
           onAddSet(data);
           setSet({ weight: "", reps: "", rpe: "", isWarmup: false });
 
-          const newSetE1rm = calculateEstimatedOneRepMax(data.weight, data.reps, data.rpe, e1rmFormula);
+          const newSetE1rm = calculateEstimatedOneRepMax(
+            data.weight,
+            data.reps,
+            data.rpe,
+            e1rmFormula,
+          );
           if (!set.isWarmup && (!previousBest || newSetE1rm > previousBest.e1rm)) {
-            showSuccess(t("log.newPrToast", { name: exercise.name, value: newSetE1rm.toFixed(E1RM_DECIMAL_PLACES) }));
+            showSuccess(
+              t("log.newPrToast", {
+                name: exercise.name,
+                value: newSetE1rm.toFixed(E1RM_DECIMAL_PLACES),
+              }),
+            );
           }
         });
       })
@@ -275,7 +287,9 @@ function Exercise({
         supersetColor && styles.cardGrouped,
         isDragging && styles.cardDragging,
         isDropTarget && styles.cardDropTarget,
-      ].filter(Boolean).join(" ")}
+      ]
+        .filter(Boolean)
+        .join(" ")}
       style={supersetColor ? { "--group-color": supersetColor } : undefined}
       data-drag-id={exercise.id}
     >
@@ -293,7 +307,11 @@ function Exercise({
           <h3 className={styles.heading}>{exercise.name}</h3>
           <input
             type="text"
-            className={supersetColor ? `${styles.supersetInput} ${styles.supersetInputActive}` : styles.supersetInput}
+            className={
+              supersetColor
+                ? `${styles.supersetInput} ${styles.supersetInputActive}`
+                : styles.supersetInput
+            }
             placeholder={t("log.supersetPlaceholder")}
             value={supersetValue}
             maxLength={8}
@@ -347,7 +365,9 @@ function Exercise({
           <button type="button" className={styles.copyAllButton} onClick={copyLastSession}>
             {t("log.copyAllSets")}
           </button>
-          {lastSession.notes && <span className={styles.lastSessionNotes}>“{lastSession.notes}”</span>}
+          {lastSession.notes && (
+            <span className={styles.lastSessionNotes}>“{lastSession.notes}”</span>
+          )}
         </div>
       )}
       {showNotes && (
@@ -370,23 +390,16 @@ function Exercise({
           className={styles.repsInput}
           placeholder={t("log.repsPlaceholder")}
           value={set.reps}
-          onChange={(event) =>
-            setSet((prev) => ({ ...prev, reps: event.target.value }))
-          }
+          onChange={(event) => setSet((prev) => ({ ...prev, reps: event.target.value }))}
         />
         <input
           type="text"
           className={styles.setInput}
           placeholder={t("log.rpePlaceholder")}
           value={set.rpe}
-          onChange={(event) =>
-            setSet((prev) => ({ ...prev, rpe: event.target.value }))
-          }
+          onChange={(event) => setSet((prev) => ({ ...prev, rpe: event.target.value }))}
         />
-        <button
-          className={styles.addSetButton}
-          onClick={() => addSet(exercise.id)}
-        >
+        <button className={styles.addSetButton} onClick={() => addSet(exercise.id)}>
           {t("log.addSet")}
         </button>
       </div>
@@ -403,18 +416,14 @@ function Exercise({
                 className={styles.repsInput}
                 placeholder={t("log.repsPlaceholder")}
                 value={editSet.reps}
-                onChange={(event) =>
-                  setEditSet((prev) => ({ ...prev, reps: event.target.value }))
-                }
+                onChange={(event) => setEditSet((prev) => ({ ...prev, reps: event.target.value }))}
               />
               <input
                 type="text"
                 className={styles.setInput}
                 placeholder={t("log.rpePlaceholder")}
                 value={editSet.rpe}
-                onChange={(event) =>
-                  setEditSet((prev) => ({ ...prev, rpe: event.target.value }))
-                }
+                onChange={(event) => setEditSet((prev) => ({ ...prev, rpe: event.target.value }))}
               />
               <button
                 className={styles.saveSetButton}
@@ -422,10 +431,7 @@ function Exercise({
               >
                 {t("common.save")}
               </button>
-              <button
-                className={styles.cancelSetButton}
-                onClick={() => setEditingSetId(null)}
-              >
+              <button className={styles.cancelSetButton} onClick={() => setEditingSetId(null)}>
                 {t("common.cancel")}
               </button>
             </div>
@@ -436,8 +442,12 @@ function Exercise({
                 styles.setRow,
                 workoutSet.isWarmup && styles.setRowWarmup,
                 draggedSetId === workoutSet.id && styles.setRowDragging,
-                hoveredSetId === String(workoutSet.id) && draggedSetId !== workoutSet.id && styles.setRowDropTarget,
-              ].filter(Boolean).join(" ")}
+                hoveredSetId === String(workoutSet.id) &&
+                  draggedSetId !== workoutSet.id &&
+                  styles.setRowDropTarget,
+              ]
+                .filter(Boolean)
+                .join(" ")}
               data-drag-id={workoutSet.id}
             >
               <span
@@ -449,16 +459,24 @@ function Exercise({
               >
                 ⠿
               </span>
-              <span
-                className={styles.setText}
-                onClick={() => startEditingSet(workoutSet)}
-              >
+              <span className={styles.setText} onClick={() => startEditingSet(workoutSet)}>
                 {Number.isFinite(workoutSet.rpe)
-                  ? t("log.setSummary", { weight: workoutSet.weight, reps: workoutSet.reps, rpe: workoutSet.rpe })
+                  ? t("log.setSummary", {
+                      weight: workoutSet.weight,
+                      reps: workoutSet.reps,
+                      rpe: workoutSet.rpe,
+                    })
                   : t("log.setSummaryNoRpe", { weight: workoutSet.weight, reps: workoutSet.reps })}
                 {showE1rm && Number.isFinite(workoutSet.rpe) && (
                   <span className={styles.e1rmText}>
-                    {t("log.e1rmSuffix", { value: calculateEstimatedOneRepMax(workoutSet.weight, workoutSet.reps, workoutSet.rpe, e1rmFormula).toFixed(E1RM_DECIMAL_PLACES) })}
+                    {t("log.e1rmSuffix", {
+                      value: calculateEstimatedOneRepMax(
+                        workoutSet.weight,
+                        workoutSet.reps,
+                        workoutSet.rpe,
+                        e1rmFormula,
+                      ).toFixed(E1RM_DECIMAL_PLACES),
+                    })}
                   </span>
                 )}
               </span>
@@ -469,20 +487,26 @@ function Exercise({
                   aria-label={t("log.duplicateSet")}
                   title={t("log.duplicateSet")}
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
                     <rect x="9" y="9" width="13" height="13" rx="2" />
                     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                   </svg>
                 </button>
-                <button
-                  className={styles.deleteSet}
-                  onClick={() => deleteSet(workoutSet.id)}
-                >
+                <button className={styles.deleteSet} onClick={() => deleteSet(workoutSet.id)}>
                   X
                 </button>
               </div>
             </div>
-          )
+          ),
         )}
       </div>
     </div>

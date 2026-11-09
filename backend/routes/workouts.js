@@ -130,7 +130,10 @@ router.delete("/:id", async (req, res) => {
 router.post("/:id/exercises/bulk", async (req, res) => {
   try {
     const { exercises, program } = req.body ?? {};
-    if (!Array.isArray(exercises) || exercises.some((exercise) => !exercise.name?.trim() || !Array.isArray(exercise.sets))) {
+    if (
+      !Array.isArray(exercises) ||
+      exercises.some((exercise) => !exercise.name?.trim() || !Array.isArray(exercise.sets))
+    ) {
       return res.status(400).json({ error: "exercises must be an array of { name, sets }" });
     }
 
@@ -140,16 +143,19 @@ router.post("/:id/exercises/bulk", async (req, res) => {
         where: { workoutId },
         include: { _count: { select: { sets: true } } },
       });
-      const existingByName = new Map(existing.map((exercise) => [exercise.name.toLowerCase(), exercise]));
+      const existingByName = new Map(
+        existing.map((exercise) => [exercise.name.toLowerCase(), exercise]),
+      );
       let nextOrder = existing.length;
 
       for (const { name, sets } of exercises) {
-        const setData = (startOrder) => sets.map((set, index) => ({
-          weight: parseFloat(set.weight) || 0,
-          reps: parseInt(set.reps) || 0,
-          rpe: Number.isFinite(parseFloat(set.rpe)) ? parseFloat(set.rpe) : null,
-          order: startOrder + index,
-        }));
+        const setData = (startOrder) =>
+          sets.map((set, index) => ({
+            weight: parseFloat(set.weight) || 0,
+            reps: parseInt(set.reps) || 0,
+            rpe: Number.isFinite(parseFloat(set.rpe)) ? parseFloat(set.rpe) : null,
+            order: startOrder + index,
+          }));
         const match = existingByName.get(name.trim().toLowerCase());
         if (match) {
           await tx.set.createMany({
@@ -157,7 +163,12 @@ router.post("/:id/exercises/bulk", async (req, res) => {
           });
         } else {
           await tx.exercise.create({
-            data: { name: name.trim(), order: nextOrder++, workoutId, sets: { create: setData(0) } },
+            data: {
+              name: name.trim(),
+              order: nextOrder++,
+              workoutId,
+              sets: { create: setData(0) },
+            },
           });
         }
       }

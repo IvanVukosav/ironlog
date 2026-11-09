@@ -16,7 +16,15 @@ function foodItemToFormValues(item) {
   };
 }
 
-function MealCard({ meal, foodItemTemplates, onAddItem, onUpdateItem, onDeleteItem, onDeleteMeal, onSaveTemplate }) {
+function MealCard({
+  meal,
+  foodItemTemplates,
+  onAddItem,
+  onUpdateItem,
+  onDeleteItem,
+  onDeleteMeal,
+  onSaveTemplate,
+}) {
   const { t } = useTranslation();
   const { showError } = useToast();
   const [foodItem, setFoodItem] = useState(EMPTY_FOOD_ITEM);
@@ -248,13 +256,17 @@ function MealCard({ meal, foodItemTemplates, onAddItem, onUpdateItem, onDeleteIt
                 type="number"
                 className={styles.itemInput}
                 value={editItem.protein}
-                onChange={(event) => setEditItem((prev) => ({ ...prev, protein: event.target.value }))}
+                onChange={(event) =>
+                  setEditItem((prev) => ({ ...prev, protein: event.target.value }))
+                }
               />
               <input
                 type="number"
                 className={styles.itemInput}
                 value={editItem.carbs}
-                onChange={(event) => setEditItem((prev) => ({ ...prev, carbs: event.target.value }))}
+                onChange={(event) =>
+                  setEditItem((prev) => ({ ...prev, carbs: event.target.value }))
+                }
               />
               <input
                 type="number"

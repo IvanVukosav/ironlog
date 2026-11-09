@@ -6,7 +6,8 @@ const APP_SHELL = ["/index.html", "/manifest.webmanifest", "/favicon.svg", "/ico
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
+    caches
+      .open(CACHE_NAME)
       .then((cache) => cache.addAll(APP_SHELL))
       .then(() => self.skipWaiting()),
   );
@@ -14,8 +15,11 @@ self.addEventListener("install", (event) => {
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys()
-      .then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))))
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))),
+      )
       .then(() => self.clients.claim()),
   );
 });
@@ -47,7 +51,11 @@ self.addEventListener("fetch", (event) => {
   // Vite's hashed build files never change under the same name: cache first.
   if (url.pathname.startsWith("/assets/")) {
     event.respondWith(
-      caches.match(request).then((cached) => cached || fetch(request).then((response) => cacheCopy(request, response))),
+      caches
+        .match(request)
+        .then(
+          (cached) => cached || fetch(request).then((response) => cacheCopy(request, response)),
+        ),
     );
   }
 });

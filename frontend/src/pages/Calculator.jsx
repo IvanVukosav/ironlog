@@ -20,7 +20,9 @@ function loadPlateSetup() {
     const stored = JSON.parse(localStorage.getItem(PLATE_SETUP_STORAGE_KEY));
     if (!stored) return DEFAULT_PLATE_SETUP;
     return {
-      barWeight: BAR_WEIGHTS_KG.includes(stored.barWeight) ? stored.barWeight : DEFAULT_PLATE_SETUP.barWeight,
+      barWeight: BAR_WEIGHTS_KG.includes(stored.barWeight)
+        ? stored.barWeight
+        : DEFAULT_PLATE_SETUP.barWeight,
       useCollars: Boolean(stored.useCollars),
       availablePlates: Array.isArray(stored.availablePlates)
         ? stored.availablePlates.filter((plate) => STANDARD_PLATES_KG.includes(plate))
@@ -120,11 +122,7 @@ function Calculator() {
           value={reps}
           onChange={(event) => setReps(event.target.value)}
         />
-        <button
-          className={styles.calculateButton}
-          onClick={calculate}
-          disabled={!weight || !reps}
-        >
+        <button className={styles.calculateButton} onClick={calculate} disabled={!weight || !reps}>
           {t("calculator.calculate")}
         </button>
       </div>

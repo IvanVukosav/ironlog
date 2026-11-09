@@ -14,42 +14,48 @@ export function useDragReorder(items, onReorder) {
   itemsRef.current = items;
   const activeListenersRef = useRef(null);
 
-  const finishDrag = useCallback((targetId) => {
-    const sourceId = draggedIdRef.current;
-    if (sourceId !== null && targetId !== null && String(sourceId) !== String(targetId)) {
-      const list = [...itemsRef.current];
-      const sourceIndex = list.findIndex((item) => String(item.id) === String(sourceId));
-      const targetIndex = list.findIndex((item) => String(item.id) === String(targetId));
-      if (sourceIndex !== -1 && targetIndex !== -1) {
-        const [moved] = list.splice(sourceIndex, 1);
-        list.splice(targetIndex, 0, moved);
-        onReorder(list);
+  const finishDrag = useCallback(
+    (targetId) => {
+      const sourceId = draggedIdRef.current;
+      if (sourceId !== null && targetId !== null && String(sourceId) !== String(targetId)) {
+        const list = [...itemsRef.current];
+        const sourceIndex = list.findIndex((item) => String(item.id) === String(sourceId));
+        const targetIndex = list.findIndex((item) => String(item.id) === String(targetId));
+        if (sourceIndex !== -1 && targetIndex !== -1) {
+          const [moved] = list.splice(sourceIndex, 1);
+          list.splice(targetIndex, 0, moved);
+          onReorder(list);
+        }
       }
-    }
-    draggedIdRef.current = null;
-    setDraggedId(null);
-    setHoveredId(null);
-  }, [onReorder]);
+      draggedIdRef.current = null;
+      setDraggedId(null);
+      setHoveredId(null);
+    },
+    [onReorder],
+  );
 
-  const startDrag = useCallback((id) => {
-    draggedIdRef.current = id;
-    setDraggedId(id);
+  const startDrag = useCallback(
+    (id) => {
+      draggedIdRef.current = id;
+      setDraggedId(id);
 
-    const handlePointerMove = (event) => {
-      setHoveredId(findRowId(event.clientX, event.clientY));
-    };
+      const handlePointerMove = (event) => {
+        setHoveredId(findRowId(event.clientX, event.clientY));
+      };
 
-    const handlePointerUp = (event) => {
-      document.removeEventListener("pointermove", handlePointerMove);
-      document.removeEventListener("pointerup", handlePointerUp);
-      activeListenersRef.current = null;
-      finishDrag(findRowId(event.clientX, event.clientY));
-    };
+      const handlePointerUp = (event) => {
+        document.removeEventListener("pointermove", handlePointerMove);
+        document.removeEventListener("pointerup", handlePointerUp);
+        activeListenersRef.current = null;
+        finishDrag(findRowId(event.clientX, event.clientY));
+      };
 
-    document.addEventListener("pointermove", handlePointerMove);
-    document.addEventListener("pointerup", handlePointerUp);
-    activeListenersRef.current = { handlePointerMove, handlePointerUp };
-  }, [finishDrag]);
+      document.addEventListener("pointermove", handlePointerMove);
+      document.addEventListener("pointerup", handlePointerUp);
+      activeListenersRef.current = { handlePointerMove, handlePointerUp };
+    },
+    [finishDrag],
+  );
 
   useEffect(() => {
     return () => {

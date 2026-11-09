@@ -1,0 +1,6 @@
+# Prose, lockfiles and generated files keep their own formatting.
+docs/
+*.md
+package-lock.json
+backend/prisma/migrations/
+.claude/

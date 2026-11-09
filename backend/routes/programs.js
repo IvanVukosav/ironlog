@@ -28,13 +28,17 @@ function serializeProgram(program) {
 function parseProgramBody(body) {
   const name = body?.name?.trim();
   const weeks = parseInt(body?.weeks);
-  const trainingMaxPercent = body?.trainingMaxPercent === undefined ? 100 : parseFloat(body.trainingMaxPercent);
+  const trainingMaxPercent =
+    body?.trainingMaxPercent === undefined ? 100 : parseFloat(body.trainingMaxPercent);
   const days = body?.days;
 
   if (!name) return { error: "Name is required" };
-  if (!Number.isInteger(weeks) || weeks < 1 || weeks > MAX_WEEKS) return { error: `Weeks must be between 1 and ${MAX_WEEKS}` };
-  if (!(trainingMaxPercent > 0 && trainingMaxPercent <= 100)) return { error: "Training max must be between 1 and 100%" };
-  if (!Array.isArray(days) || days.length === 0 || days.length > MAX_DAYS) return { error: `Between 1 and ${MAX_DAYS} days are required` };
+  if (!Number.isInteger(weeks) || weeks < 1 || weeks > MAX_WEEKS)
+    return { error: `Weeks must be between 1 and ${MAX_WEEKS}` };
+  if (!(trainingMaxPercent > 0 && trainingMaxPercent <= 100))
+    return { error: "Training max must be between 1 and 100%" };
+  if (!Array.isArray(days) || days.length === 0 || days.length > MAX_DAYS)
+    return { error: `Between 1 and ${MAX_DAYS} days are required` };
 
   const dayData = [];
   for (const [dayIndex, day] of days.entries()) {
@@ -43,10 +47,20 @@ function parseProgramBody(body) {
     for (const [exerciseIndex, exercise] of day.exercises.entries()) {
       const exerciseName = exercise.name?.trim();
       if (!exerciseName) return { error: "Every exercise needs a name" };
-      const weekSchemes = Array.from({ length: weeks }, (_, week) => String(exercise.weekSchemes?.[week] ?? "").trim());
-      exerciseData.push({ name: exerciseName, order: exerciseIndex, weekSchemes: JSON.stringify(weekSchemes) });
+      const weekSchemes = Array.from({ length: weeks }, (_, week) =>
+        String(exercise.weekSchemes?.[week] ?? "").trim(),
+      );
+      exerciseData.push({
+        name: exerciseName,
+        order: exerciseIndex,
+        weekSchemes: JSON.stringify(weekSchemes),
+      });
     }
-    dayData.push({ dayNumber: dayIndex + 1, name: day.name?.trim() || null, exercises: { create: exerciseData } });
+    dayData.push({
+      dayNumber: dayIndex + 1,
+      name: day.name?.trim() || null,
+      exercises: { create: exerciseData },
+    });
   }
 
   return { data: { name, weeks, trainingMaxPercent, days: { create: dayData } } };
@@ -65,7 +79,10 @@ function handleWriteError(err, res) {
 
 router.get("/", async (req, res) => {
   try {
-    const programs = await prisma.program.findMany({ include: PROGRAM_INCLUDE, orderBy: { name: "asc" } });
+    const programs = await prisma.program.findMany({
+      include: PROGRAM_INCLUDE,
+      orderBy: { name: "asc" },
+    });
     res.json(programs.map(serializeProgram));
   } catch (err) {
     console.error(err);

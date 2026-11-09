@@ -26,7 +26,14 @@ const BARBELL = [
 
 function shapesFor({ rounded }) {
   return [
-    { x: 0, y: 0, width: DESIGN_SIZE, height: DESIGN_SIZE, radius: rounded ? 96 : 0, color: BACKGROUND },
+    {
+      x: 0,
+      y: 0,
+      width: DESIGN_SIZE,
+      height: DESIGN_SIZE,
+      radius: rounded ? 96 : 0,
+      color: BACKGROUND,
+    },
     ...BARBELL,
   ];
 }
@@ -107,8 +114,10 @@ function encodePng(size, pixels) {
 
 function toSvg(shapes) {
   const rects = shapes
-    .map(({ x, y, width, height, radius, color }) =>
-      `<rect x="${x}" y="${y}" width="${width}" height="${height}" rx="${radius}" fill="${color}"/>`)
+    .map(
+      ({ x, y, width, height, radius, color }) =>
+        `<rect x="${x}" y="${y}" width="${width}" height="${height}" rx="${radius}" fill="${color}"/>`,
+    )
     .join("");
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${DESIGN_SIZE} ${DESIGN_SIZE}">${rects}</svg>\n`;
 }

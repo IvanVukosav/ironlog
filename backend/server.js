@@ -13,17 +13,21 @@ const allowedOrigins = (process.env.CORS_ORIGIN || "")
   .split(",")
   .map((origin) => origin.trim())
   .filter(Boolean);
-app.use(cors({
-  origin: allowedOrigins.length ? allowedOrigins : "*",
-  // Lets the frontend read the file name of backup downloads.
-  exposedHeaders: ["Content-Disposition"],
-}));
+app.use(
+  cors({
+    origin: allowedOrigins.length ? allowedOrigins : "*",
+    // Lets the frontend read the file name of backup downloads.
+    exposedHeaders: ["Content-Disposition"],
+  }),
+);
 
 // Backup import parses its own (much larger) body after the auth check,
 // so the default 100 kb limit stays in front of everything else.
 const BACKUP_IMPORT_PATH = "/api/backup/import";
 const jsonParser = express.json();
-app.use((req, res, next) => (req.path === BACKUP_IMPORT_PATH ? next() : jsonParser(req, res, next)));
+app.use((req, res, next) =>
+  req.path === BACKUP_IMPORT_PATH ? next() : jsonParser(req, res, next),
+);
 
 app.get("/", (req, res) => {
   res.json({ message: "IronLog API running" });

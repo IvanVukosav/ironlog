@@ -7,7 +7,8 @@ const MAX_REPS = 100;
 const MAX_PERCENT = 120;
 
 // "5x5", "5x5@75", "5x5@75%", "4x8@60kg", "3x3@85 rpe8", "5x5 @rpe 7.5", "3x5@72,5"
-const GROUP_PATTERN = /^(\d+)\s*[x×*]\s*(\d+)(?:\s*@\s*(\d+(?:[.,]\d+)?)\s*(%|kg)?)?(?:\s*@?\s*rpe\s*(\d+(?:[.,]\d+)?))?$/i;
+const GROUP_PATTERN =
+  /^(\d+)\s*[x×*]\s*(\d+)(?:\s*@\s*(\d+(?:[.,]\d+)?)\s*(%|kg)?)?(?:\s*@?\s*rpe\s*(\d+(?:[.,]\d+)?))?$/i;
 // Groups are separated by , ; or + — but only where a new "NxM" group starts,
 // so a decimal comma ("72,5") stays part of its number.
 const GROUP_SEPARATOR = /\s*[,;+]\s*(?=\d+\s*[x×*])/;
@@ -28,7 +29,10 @@ export function parseScheme(text) {
   if (!trimmed) return [];
 
   const groups = [];
-  for (const part of trimmed.split(GROUP_SEPARATOR).map((piece) => piece.trim()).filter(Boolean)) {
+  for (const part of trimmed
+    .split(GROUP_SEPARATOR)
+    .map((piece) => piece.trim())
+    .filter(Boolean)) {
     const match = part.match(GROUP_PATTERN);
     if (!match) return null;
 
@@ -43,7 +47,8 @@ export function parseScheme(text) {
       rpe: toNumber(rpe),
     };
 
-    if (group.sets < 1 || group.sets > MAX_SETS || group.reps < 1 || group.reps > MAX_REPS) return null;
+    if (group.sets < 1 || group.sets > MAX_SETS || group.reps < 1 || group.reps > MAX_REPS)
+      return null;
     if (group.percent !== null && (group.percent <= 0 || group.percent > MAX_PERCENT)) return null;
     if (group.rpe !== null && (group.rpe < 1 || group.rpe > 10)) return null;
     groups.push(group);

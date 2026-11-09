@@ -39,8 +39,9 @@ function Programs() {
     })
       .then((saved) => {
         setPrograms((prev) =>
-          [...prev.filter((program) => program.id !== saved.id), saved]
-            .sort((programA, programB) => programA.name.localeCompare(programB.name)),
+          [...prev.filter((program) => program.id !== saved.id), saved].sort((programA, programB) =>
+            programA.name.localeCompare(programB.name),
+          ),
         );
         setEditingId(null);
         showSuccess(t("programs.saved"));
@@ -92,17 +93,31 @@ function Programs() {
             <div>
               <h2 className={styles.programName}>{program.name}</h2>
               <p className={styles.programMeta}>
-                {t("programs.summary", { weeks: program.weeks, days: program.days.length, trainingMax: program.trainingMaxPercent })}
+                {t("programs.summary", {
+                  weeks: program.weeks,
+                  days: program.days.length,
+                  trainingMax: program.trainingMaxPercent,
+                })}
               </p>
               <p className={styles.programDays}>
-                {program.days.map((day) => day.name || t("programs.dayNumber", { number: day.dayNumber })).join(" · ")}
+                {program.days
+                  .map((day) => day.name || t("programs.dayNumber", { number: day.dayNumber }))
+                  .join(" · ")}
               </p>
             </div>
             <div className={styles.programActions}>
-              <button type="button" className={styles.textButton} onClick={() => setEditingId(program.id)}>
+              <button
+                type="button"
+                className={styles.textButton}
+                onClick={() => setEditingId(program.id)}
+              >
                 {t("programs.edit")}
               </button>
-              <button type="button" className={styles.dimButton} onClick={() => deleteProgram(program)}>
+              <button
+                type="button"
+                className={styles.dimButton}
+                onClick={() => deleteProgram(program)}
+              >
                 {t("common.delete")}
               </button>
             </div>

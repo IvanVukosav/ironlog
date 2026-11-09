@@ -40,7 +40,12 @@ function ProgramLoader({ workout, programs, formula, onLoaded, onClose }) {
     fetchJson("/api/stats/prs")
       .then((data) =>
         setBestE1rmByName(
-          Object.fromEntries(data.map((exercise) => [exercise.name, findBestSetByE1rm(exercise.sets, formula)?.e1rm ?? null])),
+          Object.fromEntries(
+            data.map((exercise) => [
+              exercise.name,
+              findBestSetByE1rm(exercise.sets, formula)?.e1rm ?? null,
+            ]),
+          ),
         ),
       )
       .catch((err) => {
@@ -104,14 +109,22 @@ function ProgramLoader({ workout, programs, formula, onLoaded, onClose }) {
             </option>
           ))}
         </select>
-        <select className={styles.select} value={week} onChange={(event) => setWeek(parseInt(event.target.value))}>
+        <select
+          className={styles.select}
+          value={week}
+          onChange={(event) => setWeek(parseInt(event.target.value))}
+        >
           {Array.from({ length: program.weeks }, (_, index) => (
             <option key={index + 1} value={index + 1}>
               {t("programs.weekLong", { number: index + 1 })}
             </option>
           ))}
         </select>
-        <select className={styles.select} value={day} onChange={(event) => setDay(parseInt(event.target.value))}>
+        <select
+          className={styles.select}
+          value={day}
+          onChange={(event) => setDay(parseInt(event.target.value))}
+        >
           {program.days.map((candidate) => (
             <option key={candidate.dayNumber} value={candidate.dayNumber}>
               {candidate.name || t("programs.dayNumber", { number: candidate.dayNumber })}
@@ -128,7 +141,9 @@ function ProgramLoader({ workout, programs, formula, onLoaded, onClose }) {
             <li key={exercise.name}>
               <span className={styles.previewName}>{exercise.name}</span>
               <span className={styles.previewSets}>{summarizeSets(exercise.sets)}</span>
-              {exercise.missingE1rm && <span className={styles.warning}>{t("programs.missingE1rm")}</span>}
+              {exercise.missingE1rm && (
+                <span className={styles.warning}>{t("programs.missingE1rm")}</span>
+              )}
             </li>
           ))}
         </ul>
@@ -137,7 +152,12 @@ function ProgramLoader({ workout, programs, formula, onLoaded, onClose }) {
       )}
 
       <div className={styles.actions}>
-        <button type="button" className={styles.loadButton} disabled={plannedExercises.length === 0} onClick={load}>
+        <button
+          type="button"
+          className={styles.loadButton}
+          disabled={plannedExercises.length === 0}
+          onClick={load}
+        >
           {t("programs.load")}
         </button>
         <button type="button" className={styles.cancelButton} onClick={onClose}>

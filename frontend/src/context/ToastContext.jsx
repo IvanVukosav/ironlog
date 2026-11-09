@@ -16,16 +16,16 @@ export function ToastProvider({ children }) {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
   }, []);
 
-  const showToast = useCallback((message, type) => {
-    const id = nextIdRef.current++;
-    setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => dismissToast(id), TOAST_DURATION_MS);
-  }, [dismissToast]);
-
-  const showError = useCallback(
-    (message) => showToast(message, TOAST_TYPES.error),
-    [showToast],
+  const showToast = useCallback(
+    (message, type) => {
+      const id = nextIdRef.current++;
+      setToasts((prev) => [...prev, { id, message, type }]);
+      setTimeout(() => dismissToast(id), TOAST_DURATION_MS);
+    },
+    [dismissToast],
   );
+
+  const showError = useCallback((message) => showToast(message, TOAST_TYPES.error), [showToast]);
   const showSuccess = useCallback(
     (message) => showToast(message, TOAST_TYPES.success),
     [showToast],

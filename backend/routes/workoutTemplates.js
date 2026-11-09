@@ -69,7 +69,9 @@ router.post("/:id/apply", async (req, res) => {
     }
 
     const workoutIdInt = parseInt(workoutId);
-    const existingExerciseCount = await prisma.exercise.count({ where: { workoutId: workoutIdInt } });
+    const existingExerciseCount = await prisma.exercise.count({
+      where: { workoutId: workoutIdInt },
+    });
 
     const createdExercises = [];
     for (const [index, templateExercise] of template.exercises.entries()) {

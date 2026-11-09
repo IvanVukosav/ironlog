@@ -103,7 +103,9 @@ function TdeeCard({ today, kcalGoal, onGoalChange }) {
             <button
               type="button"
               key={kgPerWeek}
-              className={kcal === kcalGoal ? `${styles.preset} ${styles.presetActive}` : styles.preset}
+              className={
+                kcal === kcalGoal ? `${styles.preset} ${styles.presetActive}` : styles.preset
+              }
               onClick={() => setGoal(kcal)}
             >
               {kgPerWeek === 0

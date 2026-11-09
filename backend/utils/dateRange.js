@@ -24,9 +24,7 @@ function getWeekRange(date) {
 
 function getMonthRange(date) {
   const referenceDate = new Date(date);
-  const start = new Date(
-    Date.UTC(referenceDate.getUTCFullYear(), referenceDate.getUTCMonth(), 1),
-  );
+  const start = new Date(Date.UTC(referenceDate.getUTCFullYear(), referenceDate.getUTCMonth(), 1));
   const end = new Date(
     Date.UTC(referenceDate.getUTCFullYear(), referenceDate.getUTCMonth() + 1, 1),
   );

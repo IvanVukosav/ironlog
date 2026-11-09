@@ -80,8 +80,7 @@ function DatePicker({ value, onChange }) {
     <div className={styles.container} ref={containerRef}>
       <button type="button" className={styles.trigger} onClick={openPicker}>
         {String(selectedDate.getUTCDate()).padStart(2, "0")}/
-        {String(selectedDate.getUTCMonth() + 1).padStart(2, "0")}/
-        {selectedDate.getUTCFullYear()}
+        {String(selectedDate.getUTCMonth() + 1).padStart(2, "0")}/{selectedDate.getUTCFullYear()}
       </button>
       {isOpen && (
         <div className={styles.dropdown}>

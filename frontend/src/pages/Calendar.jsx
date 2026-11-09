@@ -86,7 +86,9 @@ function Calendar() {
     .map((entry) => new Date(entry.date).getUTCDate());
 
   const getWorkoutName = (day) => {
-    const entry = workoutDates.find((workoutEntry) => matchesCurrentMonthDay(workoutEntry.date, day));
+    const entry = workoutDates.find((workoutEntry) =>
+      matchesCurrentMonthDay(workoutEntry.date, day),
+    );
     return entry ? entry.name : null;
   };
 
@@ -104,10 +106,7 @@ function Calendar() {
   };
 
   const isToday = (day) =>
-    day !== null &&
-    currentYear === todayYear &&
-    currentMonth === todayMonth &&
-    day === todayDay;
+    day !== null && currentYear === todayYear && currentMonth === todayMonth && day === todayDay;
 
   const prevMonth = () => {
     if (currentMonth === 1) {
@@ -266,11 +265,15 @@ function Calendar() {
   return (
     <div className={styles.page}>
       <div className={styles.monthNav}>
-        <button className={styles.navButton} onClick={prevMonth}>&lt;</button>
+        <button className={styles.navButton} onClick={prevMonth}>
+          &lt;
+        </button>
         <h1 className={styles.monthHeading}>
           {t("common.months", { returnObjects: true })[currentMonth - 1]} {currentYear}
         </h1>
-        <button className={styles.navButton} onClick={nextMonth}>&gt;</button>
+        <button className={styles.navButton} onClick={nextMonth}>
+          &gt;
+        </button>
       </div>
 
       <div className={styles.calendarGrid}>
@@ -287,7 +290,9 @@ function Calendar() {
               styles.dayCell,
               cell.overflow ? styles.dayCellOverflow : "",
               !cell.overflow && isToday(cell.day) ? styles.dayCellToday : "",
-            ].filter(Boolean).join(" ")}
+            ]
+              .filter(Boolean)
+              .join(" ")}
             onClick={() => !cell.overflow && handleDayClick(cell.day)}
           >
             <span className={cell.overflow ? styles.dayNumberOverflow : styles.dayNumber}>
@@ -344,18 +349,12 @@ function Calendar() {
 
       {bwModalDate && (
         <div className={styles.bwOverlay} onClick={() => setBwModalDate(null)}>
-          <div
-            className={styles.bwModal}
-            onClick={(event) => event.stopPropagation()}
-          >
+          <div className={styles.bwModal} onClick={(event) => event.stopPropagation()}>
             <div className={styles.bwModalHeader}>
               <span className={styles.bwModalTitle}>
                 {t("calendar.bodyweightModalTitle", { date: bwModalDate })}
               </span>
-              <button
-                className={styles.bwModalClose}
-                onClick={() => setBwModalDate(null)}
-              >
+              <button className={styles.bwModalClose} onClick={() => setBwModalDate(null)}>
                 X
               </button>
             </div>
@@ -387,10 +386,7 @@ function Calendar() {
 
       {measurementsModalDate && (
         <div className={styles.bwOverlay} onClick={() => setMeasurementsModalDate(null)}>
-          <div
-            className={styles.bwModal}
-            onClick={(event) => event.stopPropagation()}
-          >
+          <div className={styles.bwModal} onClick={(event) => event.stopPropagation()}>
             <div className={styles.bwModalHeader}>
               <span className={styles.bwModalTitle}>
                 {t("calendar.measurementsModalTitle", { date: measurementsModalDate })}
