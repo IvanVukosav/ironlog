@@ -63,7 +63,8 @@ function Exercise({
   supersetColor,
   isDragging,
   isDropTarget,
-  onDragHandlePointerDown,
+  dragItemProps,
+  dragHandleProps,
 }) {
   const { t } = useTranslation();
   const { showError, showSuccess } = useToast();
@@ -121,11 +122,7 @@ function Exercise({
     }
   };
 
-  const {
-    draggedId: draggedSetId,
-    hoveredId: hoveredSetId,
-    startDrag: startSetDrag,
-  } = useDragReorder(exercise.sets || [], (newSets) => {
+  const setDrag = useDragReorder(exercise.sets || [], (newSets) => {
     onReorderSets(newSets);
     fetchJson(`/api/workouts/exercises/${exercise.id}/sets/reorder`, {
       method: "PATCH",
@@ -291,17 +288,11 @@ function Exercise({
         .filter(Boolean)
         .join(" ")}
       style={supersetColor ? { "--group-color": supersetColor } : undefined}
-      data-drag-id={exercise.id}
+      {...dragItemProps}
     >
       <div className={styles.cardHeader}>
         <div className={styles.cardHeaderLeft}>
-          <span
-            className={styles.dragHandle}
-            onPointerDown={(event) => {
-              event.preventDefault();
-              onDragHandlePointerDown();
-            }}
-          >
+          <span className={styles.dragHandle} {...dragHandleProps}>
             ⠿
           </span>
           <h3 className={styles.heading}>{exercise.name}</h3>
@@ -441,22 +432,14 @@ function Exercise({
               className={[
                 styles.setRow,
                 workoutSet.isWarmup && styles.setRowWarmup,
-                draggedSetId === workoutSet.id && styles.setRowDragging,
-                hoveredSetId === String(workoutSet.id) &&
-                  draggedSetId !== workoutSet.id &&
-                  styles.setRowDropTarget,
+                setDrag.isDragging(workoutSet.id) && styles.setRowDragging,
+                setDrag.isDropTarget(workoutSet.id) && styles.setRowDropTarget,
               ]
                 .filter(Boolean)
                 .join(" ")}
-              data-drag-id={workoutSet.id}
+              {...setDrag.getItemProps(workoutSet.id)}
             >
-              <span
-                className={styles.dragHandle}
-                onPointerDown={(event) => {
-                  event.preventDefault();
-                  startSetDrag(workoutSet.id);
-                }}
-              >
+              <span className={styles.dragHandle} {...setDrag.getHandleProps(workoutSet.id)}>
                 ⠿
               </span>
               <span className={styles.setText} onClick={() => startEditingSet(workoutSet)}>

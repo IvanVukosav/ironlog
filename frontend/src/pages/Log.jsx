@@ -46,11 +46,7 @@ function Log() {
   const templatePickerRef = useRef(null);
   const pickerMode = settings?.exercisePickerMode ?? "chips";
 
-  const {
-    draggedId: draggedExerciseId,
-    hoveredId: hoveredExerciseId,
-    startDrag: startExerciseDrag,
-  } = useDragReorder(workout?.exercises || [], (newExercises) => {
+  const exerciseDrag = useDragReorder(workout?.exercises || [], (newExercises) => {
     setWorkout((prev) => ({ ...prev, exercises: newExercises }));
     fetchJson(`/api/workouts/${workout.id}/exercises/reorder`, {
       method: "PATCH",
@@ -620,11 +616,10 @@ function Log() {
                 supersetColor={
                   exercise.supersetGroup ? supersetColorByGroup[exercise.supersetGroup] : null
                 }
-                isDragging={draggedExerciseId === exercise.id}
-                isDropTarget={
-                  hoveredExerciseId === String(exercise.id) && draggedExerciseId !== exercise.id
-                }
-                onDragHandlePointerDown={() => startExerciseDrag(exercise.id)}
+                isDragging={exerciseDrag.isDragging(exercise.id)}
+                isDropTarget={exerciseDrag.isDropTarget(exercise.id)}
+                dragItemProps={exerciseDrag.getItemProps(exercise.id)}
+                dragHandleProps={exerciseDrag.getHandleProps(exercise.id)}
                 onDeleteSet={(setId) =>
                   setWorkout((prev) => ({
                     ...prev,
