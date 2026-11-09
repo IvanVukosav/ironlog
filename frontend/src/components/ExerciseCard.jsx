@@ -62,7 +62,7 @@ function Exercise({
   e1rmFormula,
   supersetColor,
   isDragging,
-  isDropTarget,
+  dropPosition,
   dragItemProps,
   dragHandleProps,
 }) {
@@ -283,7 +283,8 @@ function Exercise({
         styles.card,
         supersetColor && styles.cardGrouped,
         isDragging && styles.cardDragging,
-        isDropTarget && styles.cardDropTarget,
+        dropPosition === "before" && styles.cardDropBefore,
+        dropPosition === "after" && styles.cardDropAfter,
       ]
         .filter(Boolean)
         .join(" ")}
@@ -433,7 +434,8 @@ function Exercise({
                 styles.setRow,
                 workoutSet.isWarmup && styles.setRowWarmup,
                 setDrag.isDragging(workoutSet.id) && styles.setRowDragging,
-                setDrag.isDropTarget(workoutSet.id) && styles.setRowDropTarget,
+                setDrag.dropPosition(workoutSet.id) === "before" && styles.setRowDropBefore,
+                setDrag.dropPosition(workoutSet.id) === "after" && styles.setRowDropAfter,
               ]
                 .filter(Boolean)
                 .join(" ")}

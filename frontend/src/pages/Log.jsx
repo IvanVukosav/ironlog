@@ -617,7 +617,7 @@ function Log() {
                   exercise.supersetGroup ? supersetColorByGroup[exercise.supersetGroup] : null
                 }
                 isDragging={exerciseDrag.isDragging(exercise.id)}
-                isDropTarget={exerciseDrag.isDropTarget(exercise.id)}
+                dropPosition={exerciseDrag.dropPosition(exercise.id)}
                 dragItemProps={exerciseDrag.getItemProps(exercise.id)}
                 dragHandleProps={exerciseDrag.getHandleProps(exercise.id)}
                 onDeleteSet={(setId) =>

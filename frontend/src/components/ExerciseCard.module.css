@@ -1,5 +1,6 @@
 .card {
   composes: card from "../styles/shared.module.css";
+  position: relative;
   max-width: 640px;
 }
 
@@ -7,9 +8,35 @@
   opacity: 0.4;
 }
 
-.cardDropTarget {
-  outline: 2px dashed var(--color-accent);
-  outline-offset: -2px;
+/* Insertion line while reordering. It sits on the row's edge (in the gap between cards), so
+   nothing shifts under the pointer. */
+.cardDropBefore::before,
+.cardDropAfter::after,
+.setRowDropBefore::before,
+.setRowDropAfter::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: var(--color-accent);
+  pointer-events: none;
+}
+
+.cardDropBefore::before {
+  top: calc(-0.5rem - 1px);
+}
+
+.cardDropAfter::after {
+  bottom: calc(-0.5rem - 1px);
+}
+
+.setRowDropBefore::before {
+  top: -1px;
+}
+
+.setRowDropAfter::after {
+  bottom: -1px;
 }
 
 /* Superset color wins over every template's card shadow: grouping matters more than style. */
@@ -269,6 +296,7 @@
 }
 
 .setRow {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -297,11 +325,6 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-right: 6px;
-}
-
-.setRowDropTarget {
-  outline: 2px dashed var(--color-accent);
-  outline-offset: -2px;
 }
 
 .dragHandle {
