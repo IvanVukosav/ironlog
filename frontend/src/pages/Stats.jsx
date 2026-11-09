@@ -29,7 +29,8 @@ function getRecentPr(sets, formula) {
     (latest, set) => (!latest || set.date > latest ? set.date : latest),
     null,
   );
-  return bestOverall.date === latestDate ? bestOverall : null;
+  // No best set at all when every set is a warm-up or has no e1RM.
+  return bestOverall?.date === latestDate ? bestOverall : null;
 }
 
 function formatChartDate(dateString) {

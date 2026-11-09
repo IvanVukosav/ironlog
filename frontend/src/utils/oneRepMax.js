@@ -3,6 +3,9 @@ const BRZYCKI_CONSTANT_A = 36;
 const BRZYCKI_CONSTANT_B = 37;
 const LOMBARDI_EXPONENT = 0.1;
 const RPE_SCALE_MAX = 10;
+// The formulas stop meaning anything past this many reps to failure (Brzycki even turns
+// negative at 37), so such sets get no e1RM instead of a made-up one.
+export const MAX_E1RM_REPS_TO_FAILURE = 15;
 
 export const ONE_REP_MAX_FORMULAS = {
   epley: "epley",
@@ -20,10 +23,13 @@ export function calculateOneRepMax(weight, reps, formula) {
   return (weight * BRZYCKI_CONSTANT_A) / (BRZYCKI_CONSTANT_B - reps);
 }
 
+// Null when the reps to failure (reps + reps in reserve from RPE) are outside 1 to
+// MAX_E1RM_REPS_TO_FAILURE.
 export function calculateEstimatedOneRepMax(weight, reps, rpe, formula) {
   const effectiveRpe = Number.isFinite(rpe) ? rpe : RPE_SCALE_MAX;
   const repsInReserve = RPE_SCALE_MAX - effectiveRpe;
   const repsToFailure = reps + repsInReserve;
+  if (repsToFailure < 1 || repsToFailure > MAX_E1RM_REPS_TO_FAILURE) return null;
   return calculateOneRepMax(weight, repsToFailure, formula);
 }
 
@@ -32,7 +38,7 @@ export function findBestSetByE1rm(sets, formula) {
     .filter((set) => !set.isWarmup)
     .reduce((best, set) => {
       const e1rm = calculateEstimatedOneRepMax(set.weight, set.reps, set.rpe, formula);
-      if (!best || e1rm > best.e1rm) {
+      if (e1rm !== null && (!best || e1rm > best.e1rm)) {
         return { ...set, e1rm };
       }
       return best;

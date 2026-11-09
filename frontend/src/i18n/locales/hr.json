@@ -104,6 +104,8 @@
     "setSummary": "{{weight}}kg — {{reps}} reps @ RPE {{rpe}}",
     "setSummaryNoRpe": "{{weight}}kg — {{reps}} reps",
     "e1rmSuffix": " — e1RM: {{value}}kg",
+    "e1rmUnavailable": " — e1RM: —",
+    "e1rmUnavailableHint": "e1RM se ne računa za više od {{max}} ponavljanja do otkaza (ponavljanja + rezerva prema RPE-u)",
     "duplicateSet": "Kopiraj set",
     "newPrToast": "🎉 Novi PR! {{name}} {{value}}kg e1RM",
     "warmupLabel": "Zagrijavanje",

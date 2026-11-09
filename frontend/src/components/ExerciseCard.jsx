@@ -1,7 +1,11 @@
 import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { fetchJson } from "../api";
-import { calculateEstimatedOneRepMax, findBestSetByE1rm } from "../utils/oneRepMax";
+import {
+  calculateEstimatedOneRepMax,
+  findBestSetByE1rm,
+  MAX_E1RM_REPS_TO_FAILURE,
+} from "../utils/oneRepMax";
 import { useToast } from "../context/useToast";
 import { useDragReorder } from "../hooks/useDragReorder";
 import styles from "./ExerciseCard.module.css";
@@ -47,6 +51,33 @@ function WeightInput({ value, onChange }) {
         +
       </button>
     </div>
+  );
+}
+
+// e1RM after a logged set, or "—" when it has too many reps to failure to estimate one.
+function SetE1rm({ workoutSet, formula }) {
+  const { t } = useTranslation();
+  const e1rm = calculateEstimatedOneRepMax(
+    workoutSet.weight,
+    workoutSet.reps,
+    workoutSet.rpe,
+    formula,
+  );
+
+  if (e1rm === null) {
+    return (
+      <span
+        className={styles.e1rmText}
+        title={t("log.e1rmUnavailableHint", { max: MAX_E1RM_REPS_TO_FAILURE })}
+      >
+        {t("log.e1rmUnavailable")}
+      </span>
+    );
+  }
+  return (
+    <span className={styles.e1rmText}>
+      {t("log.e1rmSuffix", { value: e1rm.toFixed(E1RM_DECIMAL_PLACES) })}
+    </span>
   );
 }
 
@@ -166,7 +197,11 @@ function Exercise({
             data.rpe,
             e1rmFormula,
           );
-          if (!set.isWarmup && (!previousBest || newSetE1rm > previousBest.e1rm)) {
+          if (
+            !set.isWarmup &&
+            newSetE1rm !== null &&
+            (!previousBest || newSetE1rm > previousBest.e1rm)
+          ) {
             showSuccess(
               t("log.newPrToast", {
                 name: exercise.name,
@@ -453,16 +488,7 @@ function Exercise({
                     })
                   : t("log.setSummaryNoRpe", { weight: workoutSet.weight, reps: workoutSet.reps })}
                 {showE1rm && Number.isFinite(workoutSet.rpe) && (
-                  <span className={styles.e1rmText}>
-                    {t("log.e1rmSuffix", {
-                      value: calculateEstimatedOneRepMax(
-                        workoutSet.weight,
-                        workoutSet.reps,
-                        workoutSet.rpe,
-                        e1rmFormula,
-                      ).toFixed(E1RM_DECIMAL_PLACES),
-                    })}
-                  </span>
+                  <SetE1rm workoutSet={workoutSet} formula={e1rmFormula} />
                 )}
               </span>
               <div className={styles.setRowActions}>

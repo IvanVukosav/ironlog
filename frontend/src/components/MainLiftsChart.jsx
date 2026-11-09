@@ -27,8 +27,9 @@ function buildTimeline(sets, formula) {
   const bestByTime = new Map();
   for (const set of sets) {
     if (set.isWarmup) continue;
-    const time = new Date(set.date).getTime();
     const e1rm = calculateEstimatedOneRepMax(set.weight, set.reps, set.rpe, formula);
+    if (e1rm === null) continue;
+    const time = new Date(set.date).getTime();
     if (!bestByTime.has(time) || e1rm > bestByTime.get(time)) bestByTime.set(time, e1rm);
   }
 

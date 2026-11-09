@@ -104,6 +104,8 @@
     "setSummary": "{{weight}}kg — {{reps}} reps @ RPE {{rpe}}",
     "setSummaryNoRpe": "{{weight}}kg — {{reps}} reps",
     "e1rmSuffix": " — e1RM: {{value}}kg",
+    "e1rmUnavailable": " — e1RM: —",
+    "e1rmUnavailableHint": "No e1RM above {{max}} reps to failure (reps plus reps in reserve from RPE)",
     "duplicateSet": "Duplicate set",
     "newPrToast": "🎉 New PR! {{name}} {{value}}kg e1RM",
     "warmupLabel": "Warm-up",
