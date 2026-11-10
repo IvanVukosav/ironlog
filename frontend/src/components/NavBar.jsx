@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import NavIcon from "./NavIcon";
 import styles from "./NavBar.module.css";
@@ -50,10 +50,11 @@ function NavBar() {
   return (
     <>
       <nav className={styles.topNav} aria-label={t("nav.main")}>
-        <span className={styles.brand}>
+        {/* Name and icon together are one link home, as in most apps. */}
+        <Link to="/" className={styles.brand}>
           <NavIcon name="workout" size={22} />
           Iron Log
-        </span>
+        </Link>
         {LINKS.map((link) => (
           <NavLink
             key={link.to}

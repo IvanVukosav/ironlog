@@ -30,6 +30,10 @@
   color: var(--color-accent);
 }
 
+.brand:hover {
+  color: var(--color-accent);
+}
+
 .link {
   flex-shrink: 0;
   white-space: nowrap;
