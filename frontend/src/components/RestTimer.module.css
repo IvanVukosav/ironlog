@@ -8,6 +8,13 @@
   width: 15rem;
 }
 
+/* Above the phone tab bar instead of on top of it. */
+@media (max-width: 640px) {
+  .container {
+    bottom: calc(80px + env(safe-area-inset-bottom));
+  }
+}
+
 .toggleBar {
   width: 100%;
   box-sizing: border-box;

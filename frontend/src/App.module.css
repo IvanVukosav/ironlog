@@ -1,3 +1,10 @@
 .routes {
   padding-bottom: 1rem;
 }
+
+/* Room for the fixed phone tab bar (NavBar) so it never covers the end of a page. */
+@media (max-width: 640px) {
+  .routes {
+    padding-bottom: calc(84px + env(safe-area-inset-bottom));
+  }
+}

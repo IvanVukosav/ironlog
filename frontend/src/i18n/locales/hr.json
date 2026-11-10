@@ -1,7 +1,9 @@
 {
   "nav": {
-    "dashboard": "Dashboard",
-    "log": "Log",
+    "main": "Glavni izbornik",
+    "more": "Više",
+    "dashboard": "Početna",
+    "log": "Trening",
     "programs": "Programi",
     "nutrition": "Prehrana",
     "calendar": "Kalendar",
@@ -23,7 +25,7 @@
     "trainingsPerWeek": "Treninga tjedno",
     "carbsGoal": "Cilj ugljikohidrata (g)",
     "fatGoal": "Cilj masti (g)",
-    "dashboardWidgets": "Dashboard widgeti",
+    "dashboardWidgets": "Widgeti na početnoj",
     "showWorkoutWidget": "Prikaži trening widget",
     "showNutritionWidget": "Prikaži prehrana widget",
     "showPrWidget": "Prikaži zadnji PR widget",

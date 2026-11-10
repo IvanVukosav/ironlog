@@ -1,0 +1,141 @@
+.topNav {
+  display: flex;
+  align-items: center;
+  gap: var(--nav-gap);
+  padding: 1rem 1.5rem;
+  background-color: var(--color-nav-bg);
+  border-bottom: 1px solid var(--color-border-subtle);
+  /* Narrow windows: the links scroll sideways instead of overflowing the page. */
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.topNav::-webkit-scrollbar {
+  display: none;
+}
+
+.brand {
+  display: var(--nav-brand-display);
+  align-items: center;
+  gap: 0.5rem;
+  margin-right: 1rem;
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.brand svg {
+  color: var(--color-accent);
+}
+
+.link {
+  flex-shrink: 0;
+  white-space: nowrap;
+  padding: var(--nav-link-padding);
+  border-radius: var(--nav-link-radius);
+  color: var(--nav-link-color);
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-transform: var(--nav-transform);
+  letter-spacing: var(--nav-tracking);
+}
+
+.link:hover {
+  color: var(--color-accent);
+}
+
+.linkActive {
+  color: var(--nav-active-color);
+  background: var(--nav-active-bg);
+}
+
+/* The phone tab bar replaces the top bar under 640px. */
+.tabBar {
+  display: none;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  /* Over the floating rest timer (90) so the More menu is never covered; under toasts (100). */
+  z-index: 95;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  padding: 6px 4px calc(8px + env(safe-area-inset-bottom));
+  background-color: var(--color-nav-bg);
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  width: 100%;
+  min-height: 52px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-dim);
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.tabActive {
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+.tabActive svg {
+  color: var(--color-accent);
+}
+
+.moreWrapper {
+  position: relative;
+  display: flex;
+}
+
+.moreMenu {
+  composes: dropdown from "../styles/shared.module.css";
+  position: absolute;
+  right: 4px;
+  bottom: calc(100% + 10px);
+  min-width: 200px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+}
+
+.moreItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 0 12px;
+  border-radius: 10px;
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.moreItem:hover {
+  background-color: var(--color-bg-hover);
+}
+
+.moreItemActive {
+  color: var(--color-accent);
+}
+
+@media (max-width: 640px) {
+  .topNav {
+    display: none;
+  }
+
+  .tabBar {
+    display: grid;
+  }
+}

@@ -1,7 +1,9 @@
 {
   "nav": {
-    "dashboard": "Dashboard",
-    "log": "Log",
+    "main": "Main menu",
+    "more": "More",
+    "dashboard": "Home",
+    "log": "Workout",
     "programs": "Programs",
     "nutrition": "Nutrition",
     "calendar": "Calendar",
@@ -23,7 +25,7 @@
     "trainingsPerWeek": "Trainings per week",
     "carbsGoal": "Carb goal (g)",
     "fatGoal": "Fat goal (g)",
-    "dashboardWidgets": "Dashboard widgets",
+    "dashboardWidgets": "Home widgets",
     "showWorkoutWidget": "Show workout widget",
     "showNutritionWidget": "Show nutrition widget",
     "showPrWidget": "Show latest PR widget",

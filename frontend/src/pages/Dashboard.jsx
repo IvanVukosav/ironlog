@@ -276,7 +276,7 @@ function Dashboard() {
 
   return (
     <div className={styles.page}>
-      <h1 className={styles.heading}>Dashboard</h1>
+      <h1 className={styles.heading}>{t("nav.dashboard")}</h1>
       <div className={styles.grid}>
         {(settings?.showWorkoutWidget ?? true) && (
           <div

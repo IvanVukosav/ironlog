@@ -60,6 +60,15 @@
   --dropdown-border: 1px solid var(--color-border-subtle);
   --dropdown-radius: 14px;
   --dropdown-shadow: var(--elevation-dropdown);
+  --nav-brand-display: flex;
+  --nav-gap: 0.25rem;
+  --nav-link-color: var(--color-text-dim);
+  --nav-link-padding: 6px 12px;
+  --nav-link-radius: 10px;
+  --nav-active-color: var(--color-accent);
+  --nav-active-bg: rgba(var(--color-accent-rgb), 0.1);
+  --nav-transform: none;
+  --nav-tracking: 0;
 }
 
 [data-theme="daylight"] {
@@ -219,6 +228,15 @@
   --label-transform: uppercase;
   --label-tracking: 0.05em;
   --input-focus-ring: none;
+  --nav-brand-display: none;
+  --nav-gap: 1.5rem;
+  --nav-link-color: var(--color-text);
+  --nav-link-padding: 0;
+  --nav-link-radius: 0;
+  --nav-active-color: var(--color-text);
+  --nav-active-bg: transparent;
+  --nav-transform: uppercase;
+  --nav-tracking: 0.0625rem;
 }
 
 [data-template="terminal"] {
