@@ -103,14 +103,11 @@ function Exercise({
   const [showMenu, setShowMenu] = useState(false);
   const [editingSetId, setEditingSetId] = useState(null);
   const [editSet, setEditSet] = useState({ weight: "", reps: "", rpe: "", isWarmup: false });
-  const [supersetValue, setSupersetValue] = useState(exercise.supersetGroup || "");
+  // What is being typed into the superset box; null when not editing, so the saved group shows.
+  const [supersetDraft, setSupersetDraft] = useState(null);
   const [lastSession, setLastSession] = useState(null);
   const [showNotes, setShowNotes] = useState(Boolean(exercise.notes));
   const menuRef = useRef(null);
-
-  useEffect(() => {
-    setSupersetValue(exercise.supersetGroup || "");
-  }, [exercise.supersetGroup]);
 
   useEffect(() => {
     fetchJson(
@@ -279,7 +276,10 @@ function Exercise({
       .catch((err) => {
         console.error(err);
         showError(err.message);
-      });
+      })
+      // Show the saved group again (or the old one if saving failed), unless the box was
+      // already edited further while the request was in flight.
+      .finally(() => setSupersetDraft((draft) => (draft === value ? null : draft)));
   };
 
   const updateNotes = (notes) => {
@@ -340,9 +340,9 @@ function Exercise({
                 : styles.supersetInput
             }
             placeholder={t("log.supersetPlaceholder")}
-            value={supersetValue}
+            value={supersetDraft ?? exercise.supersetGroup ?? ""}
             maxLength={8}
-            onChange={(event) => setSupersetValue(event.target.value)}
+            onChange={(event) => setSupersetDraft(event.target.value)}
             onBlur={(event) => updateSupersetGroup(event.target.value)}
             onKeyDown={(event) => {
               if (event.key === "Enter") event.target.blur();
