@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { downloadFile, fetchJson, getToken, setToken, UNAUTHORIZED_EVENT } from "../api";
-import { ONE_REP_MAX_FORMULAS } from "../utils/oneRepMax";
+import { DEFAULT_E1RM_FORMULA, E1RM_FORMULAS } from "../utils/oneRepMax";
 import { useToast } from "../context/useToast";
 import PowerliftingSetup from "../components/PowerliftingSetup";
 import styles from "./Settings.module.css";
@@ -9,12 +9,6 @@ import styles from "./Settings.module.css";
 const BODYWEIGHT_LOOKBACK_DAYS = 3650;
 
 const GOAL_FIELDS = ["kcalGoal", "proteinGoal", "trainingsPerWeek", "carbsGoal", "fatGoal"];
-
-const E1RM_FORMULA_LABELS = {
-  [ONE_REP_MAX_FORMULAS.brzycki]: "Brzycki",
-  [ONE_REP_MAX_FORMULAS.epley]: "Epley",
-  [ONE_REP_MAX_FORMULAS.lombardi]: "Lombardi",
-};
 
 const DEFAULT_THEME = "auto";
 const DEFAULT_TEMPLATE = "moderna";
@@ -376,15 +370,15 @@ function Settings() {
         {t("settings.showE1rm")}
       </label>
 
-      {Object.values(ONE_REP_MAX_FORMULAS).map((formula) => (
+      {Object.entries(E1RM_FORMULAS).map(([formula, { label }]) => (
         <label key={formula} className={styles.checkboxRow}>
           <input
             type="radio"
             name="e1rmFormula"
-            checked={(settings?.e1rmFormula ?? "brzycki") === formula}
+            checked={(settings?.e1rmFormula ?? DEFAULT_E1RM_FORMULA) === formula}
             onChange={() => updateSettings({ e1rmFormula: formula })}
           />
-          {E1RM_FORMULA_LABELS[formula]}
+          {label}
         </label>
       ))}
 

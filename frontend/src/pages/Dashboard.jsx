@@ -15,7 +15,7 @@ import {
 } from "recharts";
 import { useToast } from "../context/useToast";
 import { getCssVar } from "../utils/theme";
-import { findBestSetByE1rm } from "../utils/oneRepMax";
+import { DEFAULT_E1RM_FORMULA, findBestSetByE1rm } from "../utils/oneRepMax";
 import { addWeightTrend, weeklyTrendChange } from "../utils/weightTrend";
 import MuscleGroupVolumeChart from "../components/MuscleGroupVolumeChart";
 import styles from "./Dashboard.module.css";
@@ -252,7 +252,7 @@ function Dashboard() {
   const macroPercent = (kcal) =>
     macroKcalTotal > 0 ? Math.round((kcal / macroKcalTotal) * PERCENT_MULTIPLIER) : 0;
 
-  const latestPr = getLatestPr(prs, settings?.e1rmFormula ?? "brzycki");
+  const latestPr = getLatestPr(prs, settings?.e1rmFormula ?? DEFAULT_E1RM_FORMULA);
 
   const weeklyGoal = settings?.trainingsPerWeek;
   const weeklyProgressPercent = weeklyGoal

@@ -1,7 +1,28 @@
 import { describe, expect, it } from "vitest";
-import { buildE1rmTimeline, calculateEstimatedOneRepMax, findBestSetByE1rm } from "./oneRepMax";
+import {
+  buildE1rmTimeline,
+  calculateEstimatedOneRepMax,
+  calculateOneRepMax,
+  E1RM_FORMULAS,
+  findBestSetByE1rm,
+} from "./oneRepMax";
 
 const day = (date) => `${date}T00:00:00.000Z`;
+
+describe("E1RM_FORMULAS", () => {
+  it("gives every formula a label and an estimate", () => {
+    for (const formula of Object.values(E1RM_FORMULAS)) {
+      expect(formula.label).toEqual(expect.any(String));
+      expect(formula.estimate(100, 5)).toBeGreaterThan(100);
+    }
+  });
+
+  it("falls back to Brzycki for an unknown formula", () => {
+    expect(calculateOneRepMax(100, 5, "made-up")).toBeCloseTo(
+      calculateOneRepMax(100, 5, "brzycki"),
+    );
+  });
+});
 
 describe("calculateEstimatedOneRepMax", () => {
   it("counts the reps left in reserve from RPE", () => {

@@ -228,7 +228,7 @@
     "errorWeightRepsPositive": "Weight and reps must be greater than 0",
     "errorStepMin": "Step must be at least {{min}}",
     "errorPercentageRange": "Percentage must be between {{min}} and {{max}}",
-    "errorBrzyckiMaxReps": "Brzycki formula does not work for 37+ reps",
+    "errorFormulaMaxReps": "The {{formula}} formula works for at most {{max}} reps",
     "stepPlaceholder": "Enter percentage step",
     "minPercentagePlaceholder": "Enter percentage (default down to 70%)",
     "loadIntoPlates": "Show in plate calculator",

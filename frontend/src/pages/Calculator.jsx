@@ -1,14 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { fetchJson } from "../api";
-import { calculateOneRepMax, ONE_REP_MAX_FORMULAS } from "../utils/oneRepMax";
+import { calculateOneRepMax, DEFAULT_E1RM_FORMULA, E1RM_FORMULAS } from "../utils/oneRepMax";
 import { BAR_WEIGHTS_KG, DEFAULT_PLATE_SETUP, STANDARD_PLATES_KG } from "../utils/plates";
 import { useToast } from "../context/useToast";
 import PlateCalculator from "../components/PlateCalculator";
 import WarmupGenerator from "../components/WarmupGenerator";
 import styles from "./Calculator.module.css";
 
-const BRZYCKI_MAX_REPS = 37;
 const MIN_PERCENTAGE = 0;
 const MAX_PERCENTAGE = 100;
 const MIN_STEP = 1;
@@ -46,7 +45,7 @@ function Calculator() {
   const [plateTarget, setPlateTarget] = useState("");
   const [plateSetup, setPlateSetup] = useState(loadPlateSetup);
   const plateSectionRef = useRef(null);
-  const formula = settings?.e1rmFormula ?? ONE_REP_MAX_FORMULAS.brzycki;
+  const formula = settings?.e1rmFormula ?? DEFAULT_E1RM_FORMULA;
 
   const changePlateSetup = (nextSetup) => {
     setPlateSetup(nextSetup);
@@ -86,8 +85,9 @@ function Calculator() {
       setError(t("calculator.errorPercentageRange", { min: MIN_PERCENTAGE, max: MAX_PERCENTAGE }));
       return;
     }
-    if (formula === ONE_REP_MAX_FORMULAS.brzycki && reps >= BRZYCKI_MAX_REPS) {
-      setError(t("calculator.errorBrzyckiMaxReps"));
+    const { label, maxReps } = E1RM_FORMULAS[formula] ?? E1RM_FORMULAS[DEFAULT_E1RM_FORMULA];
+    if (maxReps && reps > maxReps) {
+      setError(t("calculator.errorFormulaMaxReps", { formula: label, max: maxReps }));
       return;
     }
     setError(null);

@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { useTranslation } from "react-i18next";
 import { fetchJson } from "../api";
-import { findBestSetByE1rm, ONE_REP_MAX_FORMULAS } from "../utils/oneRepMax";
+import { DEFAULT_E1RM_FORMULA, findBestSetByE1rm } from "../utils/oneRepMax";
 import {
   MAIN_LIFTS,
   calculateDots,
@@ -82,7 +82,7 @@ function Stats() {
   const [expandedHistoryEntries, setExpandedHistoryEntries] = useState([]);
   const [latestBodyweight, setLatestBodyweight] = useState(null);
   const chartSectionRef = useRef(null);
-  const formula = settings?.e1rmFormula ?? ONE_REP_MAX_FORMULAS.brzycki;
+  const formula = settings?.e1rmFormula ?? DEFAULT_E1RM_FORMULA;
 
   const fetchPrs = useCallback(() => {
     fetchJson("/api/stats/prs")

@@ -228,7 +228,7 @@
     "errorWeightRepsPositive": "Kilaža i ponavljanja moraju biti veći od 0",
     "errorStepMin": "Korak mora biti barem {{min}}",
     "errorPercentageRange": "Postotak mora biti između {{min}} i {{max}}",
-    "errorBrzyckiMaxReps": "Brzycki formula ne radi za 37+ ponavljanja",
+    "errorFormulaMaxReps": "Formula {{formula}} radi do najviše {{max}} ponavljanja",
     "stepPlaceholder": "Unesi korak postotka",
     "minPercentagePlaceholder": "Unesi postotak (zadano do 70%)",
     "loadIntoPlates": "Prikaži u kalkulatoru pločica",

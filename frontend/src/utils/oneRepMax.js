@@ -1,27 +1,25 @@
-const EPLEY_REP_DIVISOR = 30;
-const BRZYCKI_CONSTANT_A = 36;
-const BRZYCKI_CONSTANT_B = 37;
-const LOMBARDI_EXPONENT = 0.1;
 const RPE_SCALE_MAX = 10;
 const TIMELINE_DECIMAL_PLACES = 1;
 // The formulas stop meaning anything past this many reps to failure (Brzycki even turns
 // negative at 37), so such sets get no e1RM instead of a made-up one.
 export const MAX_E1RM_REPS_TO_FAILURE = 15;
 
-export const ONE_REP_MAX_FORMULAS = {
-  epley: "epley",
-  brzycki: "brzycki",
-  lombardi: "lombardi",
+// Every e1RM formula the app offers. Adding one here is all it takes: Settings lists it and
+// every e1RM uses it when picked. `maxReps` is the most reps the formula accepts at all.
+export const E1RM_FORMULAS = {
+  epley: { label: "Epley", estimate: (weight, reps) => weight * (1 + reps / 30) },
+  brzycki: {
+    label: "Brzycki",
+    estimate: (weight, reps) => (weight * 36) / (37 - reps),
+    maxReps: 36,
+  },
+  lombardi: { label: "Lombardi", estimate: (weight, reps) => weight * reps ** 0.1 },
 };
+export const DEFAULT_E1RM_FORMULA = "brzycki";
 
 export function calculateOneRepMax(weight, reps, formula) {
-  if (formula === ONE_REP_MAX_FORMULAS.epley) {
-    return weight * (1 + reps / EPLEY_REP_DIVISOR);
-  }
-  if (formula === ONE_REP_MAX_FORMULAS.lombardi) {
-    return weight * Math.pow(reps, LOMBARDI_EXPONENT);
-  }
-  return (weight * BRZYCKI_CONSTANT_A) / (BRZYCKI_CONSTANT_B - reps);
+  const { estimate } = E1RM_FORMULAS[formula] ?? E1RM_FORMULAS[DEFAULT_E1RM_FORMULA];
+  return estimate(weight, reps);
 }
 
 // Null when the reps to failure (reps + reps in reserve from RPE) are outside 1 to

@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { isSameExerciseName } from "../utils/exerciseNames";
-import { ONE_REP_MAX_FORMULAS } from "../utils/oneRepMax";
+import { DEFAULT_E1RM_FORMULA } from "../utils/oneRepMax";
 import {
   MAIN_LIFTS,
   SEXES,
@@ -23,7 +23,7 @@ const DECIMAL_PLACES = 1;
  */
 function PowerliftingSetup({ settings, exerciseSets, bodyweight, onChange }) {
   const { t } = useTranslation();
-  const formula = settings.e1rmFormula ?? ONE_REP_MAX_FORMULAS.brzycki;
+  const formula = settings.e1rmFormula ?? DEFAULT_E1RM_FORMULA;
   const sex = settings.sex ?? SEXES.male;
   const bests = findMainLiftBests(exerciseSets, settings, formula);
   // What "Automatic" would pick, so the option can name it.

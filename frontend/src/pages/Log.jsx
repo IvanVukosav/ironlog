@@ -7,6 +7,7 @@ import ProgramLoader from "../components/ProgramLoader";
 import { fetchJson } from "../api";
 import { useToast } from "../context/useToast";
 import { useDragReorder } from "../hooks/useDragReorder";
+import { DEFAULT_E1RM_FORMULA } from "../utils/oneRepMax";
 import styles from "./Log.module.css";
 
 const MUSCLE_GROUPS = [
@@ -597,7 +598,7 @@ function Log() {
             <ProgramLoader
               workout={workout}
               programs={programs}
-              formula={settings?.e1rmFormula ?? "brzycki"}
+              formula={settings?.e1rmFormula ?? DEFAULT_E1RM_FORMULA}
               onLoaded={(updatedWorkout) => {
                 setWorkout(updatedWorkout);
                 setShowProgramLoader(false);
@@ -612,7 +613,7 @@ function Log() {
                 key={exercise.id}
                 exercise={exercise}
                 showE1rm={settings?.showE1rm ?? true}
-                e1rmFormula={settings?.e1rmFormula ?? "brzycki"}
+                e1rmFormula={settings?.e1rmFormula ?? DEFAULT_E1RM_FORMULA}
                 supersetColor={
                   exercise.supersetGroup ? supersetColorByGroup[exercise.supersetGroup] : null
                 }
