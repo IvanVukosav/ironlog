@@ -209,7 +209,8 @@ router.post("/:id/exercises", async (req, res) => {
     const workoutId = parseInt(req.params.id);
     const existingExerciseCount = await prisma.exercise.count({ where: { workoutId } });
     const exercise = await prisma.exercise.create({
-      data: { name, order: existingExerciseCount, workoutId },
+      // Trimmed so "Bench " typed by hand is the same exercise as "Bench" from the picker.
+      data: { name: name.trim(), order: existingExerciseCount, workoutId },
     });
 
     res.json(exercise);

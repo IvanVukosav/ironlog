@@ -1,4 +1,5 @@
 import { findBestSetByE1rm } from "./oneRepMax";
+import { isSameExerciseName } from "./exerciseNames";
 
 export const SEXES = {
   male: "male",
@@ -75,9 +76,9 @@ export function findMainLiftBests(exerciseSets, settings, formula) {
   return Object.fromEntries(
     MAIN_LIFTS.map((lift) => {
       const chosenName = settings?.[SETTINGS_KEY_BY_LIFT[lift]];
-      const candidates = chosenName
-        ? [chosenName]
-        : Object.keys(bestByName).filter((name) => LIFT_NAME_PATTERNS[lift].test(name));
+      const candidates = Object.keys(bestByName).filter((name) =>
+        chosenName ? isSameExerciseName(name, chosenName) : LIFT_NAME_PATTERNS[lift].test(name),
+      );
       const bestName = candidates
         .filter((name) => bestByName[name])
         .sort((nameA, nameB) => bestByName[nameB].e1rm - bestByName[nameA].e1rm)[0];

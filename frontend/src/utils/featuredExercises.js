@@ -1,4 +1,5 @@
 import { buildE1rmTimeline } from "./oneRepMax";
+import { isSameExerciseName } from "./exerciseNames";
 
 export const MAX_FEATURED_EXERCISES = 3;
 const CHANGE_WINDOW_DAYS = 30;
@@ -33,13 +34,16 @@ export function summarizeExercise(sets, formula, now = Date.now()) {
   };
 }
 
-// The saved featured exercises that still exist; with none, the most trained exercises
-// (most session days) that have an e1RM, flagged as picked automatically.
+// The saved featured exercises that still exist (as their logged names); with none, the most
+// trained exercises (most session days) that have an e1RM, flagged as picked automatically.
 export function resolveFeaturedExercises(exerciseSets, savedNames, formula) {
-  const saved = savedNames.filter((name) =>
-    exerciseSets.some((exercise) => exercise.name === name),
-  );
-  if (saved.length > 0) return { names: saved, isAuto: false };
+  const saved = savedNames
+    .map(
+      (savedName) =>
+        exerciseSets.find((exercise) => isSameExerciseName(exercise.name, savedName))?.name,
+    )
+    .filter(Boolean);
+  if (saved.length > 0) return { names: [...new Set(saved)], isAuto: false };
 
   const names = exerciseSets
     .filter((exercise) => summarizeExercise(exercise.sets, formula) !== null)
