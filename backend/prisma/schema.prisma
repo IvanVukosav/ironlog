@@ -81,8 +81,8 @@ model Settings {
   showE1rm   Boolean @default(true)
   e1rmFormula String @default("brzycki")
   language   String @default("hr")
-  theme      String @default("dark-red")
-  template   String @default("terminal")
+  theme      String @default("auto")
+  template   String @default("moderna")
   sex              String  @default("male")
   squatExercise    String?
   benchExercise    String?

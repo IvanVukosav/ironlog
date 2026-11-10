@@ -10,9 +10,9 @@
 
 :where(.label) {
   color: var(--color-text-dim);
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-size: var(--label-size);
+  text-transform: var(--label-transform);
+  letter-spacing: var(--label-tracking);
 }
 
 :where(.value) {
@@ -58,6 +58,7 @@
 
 :where(.input):focus {
   border-bottom-color: var(--color-accent);
+  box-shadow: var(--input-focus-ring);
 }
 
 :where(.dropdown) {

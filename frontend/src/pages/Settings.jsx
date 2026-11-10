@@ -16,7 +16,18 @@ const E1RM_FORMULA_LABELS = {
   [ONE_REP_MAX_FORMULAS.lombardi]: "Lombardi",
 };
 
+const DEFAULT_THEME = "auto";
+const DEFAULT_TEMPLATE = "moderna";
+
 const THEMES = [
+  // Follows the device: Graphite in dark mode, Daylight in light mode.
+  {
+    value: "auto",
+    labelKey: "settings.themeAuto",
+    swatch: "linear-gradient(90deg, #0f1115 50%, #f4f5f7 50%)",
+  },
+  { value: "graphite", label: "Graphite", swatch: "#5b9bff" },
+  { value: "daylight", label: "Daylight", swatch: "#c2361c" },
   { value: "dark-red", label: "Dark Red", swatch: "#ff3b3b" },
   { value: "light", label: "Light", swatch: "#c62828" },
   { value: "dark-blue", label: "Dark Blue", swatch: "#3ba7ff" },
@@ -26,6 +37,7 @@ const THEMES = [
 ];
 
 const TEMPLATES = [
+  { value: "moderna", label: "Moderna" },
   { value: "terminal", label: "Terminal" },
   { value: "soft", label: "Soft" },
   { value: "neon", label: "Neon" },
@@ -96,11 +108,7 @@ function Settings() {
   };
 
   const changeTheme = (theme) => {
-    if (theme === "dark-red") {
-      document.documentElement.removeAttribute("data-theme");
-    } else {
-      document.documentElement.setAttribute("data-theme", theme);
-    }
+    document.documentElement.setAttribute("data-theme", theme);
     setSettings((prev) => ({ ...prev, theme }));
     setThemeMenuOpen(false);
     fetchJson("/api/settings", {
@@ -114,11 +122,7 @@ function Settings() {
   };
 
   const changeTemplate = (template) => {
-    if (template === "terminal") {
-      document.documentElement.removeAttribute("data-template");
-    } else {
-      document.documentElement.setAttribute("data-template", template);
-    }
+    document.documentElement.setAttribute("data-template", template);
     setSettings((prev) => ({ ...prev, template }));
     setTemplateMenuOpen(false);
     fetchJson("/api/settings", {
@@ -199,6 +203,9 @@ function Settings() {
     window.dispatchEvent(new Event(UNAUTHORIZED_EVENT));
   };
 
+  const currentTheme = THEMES.find((theme) => theme.value === (settings?.theme || DEFAULT_THEME));
+  const themeLabel = (theme) => (theme.labelKey ? t(theme.labelKey) : theme.label);
+
   return (
     <div className={styles.page}>
       <h1 className={styles.heading}>{t("settings.title")}</h1>
@@ -224,17 +231,8 @@ function Settings() {
             className={styles.themeTrigger}
             onClick={() => setThemeMenuOpen((prev) => !prev)}
           >
-            <span
-              className={styles.themeDot}
-              style={{
-                backgroundColor: THEMES.find(
-                  (theme) => theme.value === (settings?.theme || "dark-red"),
-                )?.swatch,
-              }}
-            />
-            <span>
-              {THEMES.find((theme) => theme.value === (settings?.theme || "dark-red"))?.label}
-            </span>
+            <span className={styles.themeDot} style={{ background: currentTheme?.swatch }} />
+            <span>{currentTheme && themeLabel(currentTheme)}</span>
             <span className={styles.themeCaret}>{themeMenuOpen ? "▴" : "▾"}</span>
           </button>
           {themeMenuOpen && (
@@ -244,14 +242,14 @@ function Settings() {
                   type="button"
                   key={theme.value}
                   className={
-                    theme.value === (settings?.theme || "dark-red")
+                    theme.value === currentTheme?.value
                       ? `${styles.themeOption} ${styles.themeOptionActive}`
                       : styles.themeOption
                   }
                   onClick={() => changeTheme(theme.value)}
                 >
-                  <span className={styles.themeDot} style={{ backgroundColor: theme.swatch }} />
-                  <span>{theme.label}</span>
+                  <span className={styles.themeDot} style={{ background: theme.swatch }} />
+                  <span>{themeLabel(theme)}</span>
                 </button>
               ))}
             </div>
@@ -269,8 +267,9 @@ function Settings() {
           >
             <span>
               {
-                TEMPLATES.find((template) => template.value === (settings?.template || "terminal"))
-                  ?.label
+                TEMPLATES.find(
+                  (template) => template.value === (settings?.template || DEFAULT_TEMPLATE),
+                )?.label
               }
             </span>
             <span className={styles.themeCaret}>{templateMenuOpen ? "▴" : "▾"}</span>
@@ -282,7 +281,7 @@ function Settings() {
                   type="button"
                   key={template.value}
                   className={
-                    template.value === (settings?.template || "terminal")
+                    template.value === (settings?.template || DEFAULT_TEMPLATE)
                       ? `${styles.themeOption} ${styles.themeOptionActive}`
                       : styles.themeOption
                   }

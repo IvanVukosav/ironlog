@@ -35,6 +35,7 @@
     "language": "Jezik",
     "theme": "Tema",
     "template": "Predložak",
+    "themeAuto": "Automatski (Graphite / Daylight)",
     "autoSaveHint": "Promjene se spremaju odmah.",
     "saveError": "Greška kod spremanja postavki",
     "powerliftingSection": "Powerlifting",

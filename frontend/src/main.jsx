@@ -1,5 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+// Bundled rather than loaded from Google Fonts, so the installed app keeps its font offline.
+import "@fontsource-variable/inter";
 import "./index.css";
 import "./i18n";
 import App from "./App.jsx";

@@ -50,12 +50,8 @@ function App() {
         if (data?.language && data.language !== i18n.language) {
           i18n.changeLanguage(data.language);
         }
-        if (data?.theme && data.theme !== "dark-red") {
-          document.documentElement.setAttribute("data-theme", data.theme);
-        }
-        if (data?.template && data.template !== "terminal") {
-          document.documentElement.setAttribute("data-template", data.template);
-        }
+        if (data?.theme) document.documentElement.setAttribute("data-theme", data.theme);
+        if (data?.template) document.documentElement.setAttribute("data-template", data.template);
       })
       .catch((err) => console.error(err));
   }, [authState]);

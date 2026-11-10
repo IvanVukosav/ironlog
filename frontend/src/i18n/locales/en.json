@@ -35,6 +35,7 @@
     "language": "Language",
     "theme": "Theme",
     "template": "Template",
+    "themeAuto": "Automatic (Graphite / Daylight)",
     "autoSaveHint": "Changes are saved right away.",
     "saveError": "Error saving settings",
     "powerliftingSection": "Powerlifting",

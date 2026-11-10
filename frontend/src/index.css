@@ -1,4 +1,121 @@
+/* The default look: the Moderna template in Graphite (dark) colours. With no theme chosen yet, or
+   "auto", the colours follow the device and switch to Daylight when it is in light mode. */
 :root {
+  --color-bg: #0f1115;
+  --color-bg-card: #181b21;
+  --color-bg-elevated: #22262e;
+  --color-bg-hover: #1e2128;
+  --color-nav-bg: #0f1115;
+  --color-accent: #5b9bff;
+  --color-accent-rgb: 91, 155, 255;
+  --color-text: #f3f4f6;
+  --color-text-dim: #a1a7b3;
+  --font-mono: ui-monospace, "Cascadia Code", "Consolas", monospace;
+  --color-border: #2e333c;
+  --color-border-subtle: #22262e;
+  --color-text-placeholder: #7c8391;
+  --color-protein: #7fa8d9;
+  --color-carbs: #d99a5c;
+  --color-fat: #d9c25c;
+  --color-success: #4ade80;
+  /* Main-lift chart series, validated as a categorical set on the dark surfaces. */
+  --color-lift-squat: #3987e5;
+  --color-lift-bench: #d95926;
+  --color-lift-deadlift: #199e70;
+  /* Text on an accent-filled button; every theme's background passes 4.5:1 on its accent. */
+  --color-on-accent: var(--color-bg);
+  --color-input-bg: var(--color-bg-elevated);
+  --elevation-card: none;
+  --elevation-dropdown: 0 12px 32px rgba(0, 0, 0, 0.45);
+
+  --page-font: var(--font-body);
+  --font-body: "Inter Variable", Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --heading-weight: 700;
+  --label-size: 0.8rem;
+  --label-transform: none;
+  --label-tracking: 0;
+  --card-bg: var(--color-bg-card);
+  --card-border: none;
+  --card-radius: 16px;
+  --card-shadow: var(--elevation-card);
+  --card-blur: none;
+  --card-padding: 1rem;
+  --button-bg: var(--color-accent);
+  --button-color: var(--color-on-accent);
+  --button-radius: 12px;
+  --button-padding: 10px 18px;
+  --button-border: none;
+  --button-shadow: none;
+  --button-weight: 600;
+  --button-transform: none;
+  --button-before: "";
+  --button-after: "";
+  --input-bg: var(--color-input-bg);
+  --input-border: 1px solid var(--color-border);
+  --input-border-bottom: 1px solid var(--color-border);
+  --input-radius: 10px;
+  --input-padding: 10px 12px;
+  --input-focus-ring: 0 0 0 3px rgba(var(--color-accent-rgb), 0.3);
+  --dropdown-bg: var(--color-bg-elevated);
+  --dropdown-border: 1px solid var(--color-border-subtle);
+  --dropdown-radius: 14px;
+  --dropdown-shadow: var(--elevation-dropdown);
+}
+
+[data-theme="daylight"] {
+  --color-bg: #f4f5f7;
+  --color-bg-card: #ffffff;
+  --color-bg-elevated: #ffffff;
+  --color-bg-hover: #eef0f3;
+  --color-nav-bg: #ffffff;
+  --color-accent: #c2361c;
+  --color-accent-rgb: 194, 54, 28;
+  --color-text: #14161a;
+  --color-text-dim: #5b6270;
+  --color-text-placeholder: #8a909c;
+  --color-border: #e4e6eb;
+  --color-border-subtle: #eef0f3;
+  --color-success: #067647;
+  --color-lift-squat: #2a78d6;
+  --color-lift-bench: #eb6834;
+  --color-lift-deadlift: #1baf7a;
+  --color-input-bg: #f4f5f7;
+  --elevation-card: 0 8px 24px rgba(17, 24, 39, 0.06);
+  --elevation-dropdown: 0 12px 32px rgba(17, 24, 39, 0.12);
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]),
+  [data-theme="auto"] {
+    --color-bg: #f4f5f7;
+    --color-bg-card: #ffffff;
+    --color-bg-elevated: #ffffff;
+    --color-bg-hover: #eef0f3;
+    --color-nav-bg: #ffffff;
+    --color-accent: #c2361c;
+    --color-accent-rgb: 194, 54, 28;
+    --color-text: #14161a;
+    --color-text-dim: #5b6270;
+    --color-text-placeholder: #8a909c;
+    --color-border: #e4e6eb;
+    --color-border-subtle: #eef0f3;
+    --color-success: #067647;
+    --color-lift-squat: #2a78d6;
+    --color-lift-bench: #eb6834;
+    --color-lift-deadlift: #1baf7a;
+    --color-input-bg: #f4f5f7;
+    --elevation-card: 0 8px 24px rgba(17, 24, 39, 0.06);
+    --elevation-dropdown: 0 12px 32px rgba(17, 24, 39, 0.12);
+  }
+}
+
+/* The original themes all started from the Dark Red colours; they still do. */
+[data-theme="dark-red"],
+[data-theme="light"],
+[data-theme="dark-blue"],
+[data-theme="dark-green"],
+[data-theme="amber"],
+[data-theme="pure-black"] {
   --color-bg: #0d0d0d;
   --color-bg-card: #141414;
   --color-bg-elevated: #1e1e1e;
@@ -8,45 +125,10 @@
   --color-accent-rgb: 255, 59, 59;
   --color-text: #f0f0f0;
   --color-text-dim: #666;
-  --font-mono: ui-monospace, "Cascadia Code", "Consolas", monospace;
   --color-border: #444;
   --color-border-subtle: #222;
   --color-text-placeholder: #888;
-  --color-protein: #7fa8d9;
-  --color-carbs: #d99a5c;
-  --color-fat: #d9c25c;
   --color-success: #5cb87a;
-  /* Main-lift chart series, validated as a categorical set on the dark surfaces. */
-  --color-lift-squat: #3987e5;
-  --color-lift-bench: #d95926;
-  --color-lift-deadlift: #199e70;
-  --font-body: var(--font-mono);
-  --heading-weight: 700;
-  --card-bg: var(--color-bg-card);
-  --card-border: none;
-  --card-radius: 0;
-  --card-shadow: inset 3px 0 0 var(--color-accent);
-  --card-blur: none;
-  --card-padding: 1rem;
-  --button-bg: transparent;
-  --button-color: var(--color-accent);
-  --button-radius: 0;
-  --button-padding: 4px 0;
-  --button-border: none;
-  --button-shadow: none;
-  --button-weight: 400;
-  --button-transform: none;
-  --button-before: "[ ";
-  --button-after: " ]";
-  --input-bg: transparent;
-  --input-border: none;
-  --input-border-bottom: 1px solid var(--color-border);
-  --input-radius: 0;
-  --input-padding: 4px 2px;
-  --dropdown-bg: var(--color-bg-elevated);
-  --dropdown-border: 1px solid var(--color-border);
-  --dropdown-radius: 0;
-  --dropdown-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
 [data-theme="light"] {
@@ -125,6 +207,48 @@
   --color-text-placeholder: #999999;
   --color-border: #333333;
   --color-border-subtle: #1a1a1a;
+}
+
+/* What the original templates shared before Moderna existed. */
+[data-template="terminal"],
+[data-template="soft"],
+[data-template="neon"],
+[data-template="glass"] {
+  --page-font: system-ui, sans-serif;
+  --label-size: 0.7rem;
+  --label-transform: uppercase;
+  --label-tracking: 0.05em;
+  --input-focus-ring: none;
+}
+
+[data-template="terminal"] {
+  --font-body: var(--font-mono);
+  --heading-weight: 700;
+  --card-bg: var(--color-bg-card);
+  --card-border: none;
+  --card-radius: 0;
+  --card-shadow: inset 3px 0 0 var(--color-accent);
+  --card-blur: none;
+  --card-padding: 1rem;
+  --button-bg: transparent;
+  --button-color: var(--color-accent);
+  --button-radius: 0;
+  --button-padding: 4px 0;
+  --button-border: none;
+  --button-shadow: none;
+  --button-weight: 400;
+  --button-transform: none;
+  --button-before: "[ ";
+  --button-after: " ]";
+  --input-bg: transparent;
+  --input-border: none;
+  --input-border-bottom: 1px solid var(--color-border);
+  --input-radius: 0;
+  --input-padding: 4px 2px;
+  --dropdown-bg: var(--color-bg-elevated);
+  --dropdown-border: 1px solid var(--color-border);
+  --dropdown-radius: 0;
+  --dropdown-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
 [data-template="soft"] {
@@ -232,7 +356,7 @@
 body {
   background-color: var(--color-bg);
   color: var(--color-text);
-  font-family: system-ui, sans-serif;
+  font-family: var(--page-font);
   min-height: 100vh;
 }
 
