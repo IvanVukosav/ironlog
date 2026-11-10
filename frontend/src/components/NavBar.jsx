@@ -60,7 +60,11 @@ function NavBar() {
             key={link.to}
             to={link.to}
             end={link.to === "/"}
-            className={withActive(styles.link, styles.linkActive)}
+            // Where the brand shows (Moderna), it is the way home and the Home link hides.
+            className={withActive(
+              link.to === "/" ? `${styles.link} ${styles.homeLink}` : styles.link,
+              styles.linkActive,
+            )}
           >
             {t(`nav.${link.key}`)}
           </NavLink>

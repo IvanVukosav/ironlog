@@ -51,6 +51,10 @@
   color: var(--color-accent);
 }
 
+.homeLink {
+  display: var(--nav-home-display);
+}
+
 .linkActive {
   color: var(--nav-active-color);
   background: var(--nav-active-bg);
