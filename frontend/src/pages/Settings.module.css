@@ -44,15 +44,11 @@
   cursor: pointer;
 }
 
-.firstLiftField {
-  margin-top: 1rem;
-}
-
-.liftSelect {
-  composes: input from "../styles/shared.module.css";
-  background: var(--color-bg-card);
-  width: 220px;
-  cursor: pointer;
+.optionHint {
+  color: var(--color-text-dim);
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  margin: -0.25rem 0 0.5rem 1.4rem;
 }
 
 .themePicker {

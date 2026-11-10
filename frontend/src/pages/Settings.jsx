@@ -2,15 +2,11 @@ import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { downloadFile, fetchJson, getToken, setToken, UNAUTHORIZED_EVENT } from "../api";
 import { ONE_REP_MAX_FORMULAS } from "../utils/oneRepMax";
-import { SEXES } from "../utils/strengthScores";
 import { useToast } from "../context/useToast";
+import PowerliftingSetup from "../components/PowerliftingSetup";
 import styles from "./Settings.module.css";
 
-const LIFT_SETTING_FIELDS = [
-  { lift: "squat", field: "squatExercise" },
-  { lift: "bench", field: "benchExercise" },
-  { lift: "deadlift", field: "deadliftExercise" },
-];
+const BODYWEIGHT_LOOKBACK_DAYS = 3650;
 
 const GOAL_FIELDS = ["kcalGoal", "proteinGoal", "trainingsPerWeek", "carbsGoal", "fatGoal"];
 
@@ -42,24 +38,26 @@ function Settings() {
   const [settings, setSettings] = useState(null);
   // Goal fields being typed in, by field name; saved when the field is left.
   const [goalDrafts, setGoalDrafts] = useState({});
-  const [exerciseTemplates, setExerciseTemplates] = useState([]);
+  // Logged exercises with their sets and the latest bodyweight, for the powerlifting setup.
+  const [exerciseSets, setExerciseSets] = useState([]);
+  const [latestBodyweight, setLatestBodyweight] = useState(null);
   const [themeMenuOpen, setThemeMenuOpen] = useState(false);
   const [templateMenuOpen, setTemplateMenuOpen] = useState(false);
 
   useEffect(() => {
-    fetchJson("/api/settings")
-      .then((data) => setSettings(data))
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+    const load = (path, onData) =>
+      fetchJson(path)
+        .then(onData)
+        .catch((err) => {
+          console.error(err);
+          showError(err.message);
+        });
 
-    fetchJson("/api/exercise-templates")
-      .then((data) => setExerciseTemplates(data))
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+    load("/api/settings", setSettings);
+    load("/api/stats/prs", setExerciseSets);
+    load(`/api/bodyweight?days=${BODYWEIGHT_LOOKBACK_DAYS}`, (entries) =>
+      setLatestBodyweight(entries.at(-1) ?? null),
+    );
   }, [showError]);
 
   useEffect(() => {
@@ -401,46 +399,17 @@ function Settings() {
         />
         {t("settings.showPowerliftingTotal")}
       </label>
+      <p className={styles.optionHint}>{t("settings.powerliftingHint")}</p>
 
       {/* Sex and the three lifts only feed the powerlifting numbers, so they hide with them. */}
-      {settings?.showPowerliftingTotal &&
-        Object.values(SEXES).map((sex) => (
-          <label key={sex} className={styles.checkboxRow}>
-            <input
-              type="radio"
-              name="sex"
-              checked={(settings?.sex ?? SEXES.male) === sex}
-              onChange={() => updateSettings({ sex })}
-            />
-            {t(`settings.sexes.${sex}`)}
-          </label>
-        ))}
-
-      {settings?.showPowerliftingTotal &&
-        LIFT_SETTING_FIELDS.map(({ lift, field }, index) => (
-          <div
-            key={field}
-            className={index === 0 ? `${styles.field} ${styles.firstLiftField}` : styles.field}
-          >
-            <span className={styles.fieldLabel}>{t(`stats.lifts.${lift}`)}</span>
-            <select
-              className={styles.liftSelect}
-              value={settings?.[field] || ""}
-              onChange={(event) => updateSettings({ [field]: event.target.value || null })}
-            >
-              <option value="">{t("settings.liftAuto")}</option>
-              {settings?.[field] &&
-                !exerciseTemplates.some((template) => template.name === settings[field]) && (
-                  <option value={settings[field]}>{settings[field]}</option>
-                )}
-              {exerciseTemplates.map((template) => (
-                <option key={template.id} value={template.name}>
-                  {template.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        ))}
+      {settings?.showPowerliftingTotal && (
+        <PowerliftingSetup
+          settings={settings}
+          exerciseSets={exerciseSets}
+          bodyweight={latestBodyweight}
+          onChange={updateSettings}
+        />
+      )}
 
       <p className={styles.sectionLabel}>{t("settings.backupSection")}</p>
       <p className={styles.backupHint}>{t("settings.backupHint")}</p>

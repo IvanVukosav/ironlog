@@ -1,0 +1,117 @@
+.panel {
+  composes: card from "../styles/shared.module.css";
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-width: 560px;
+  margin: 0.5rem 0 0.75rem;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.groupLabel {
+  composes: label from "../styles/shared.module.css";
+}
+
+.hint {
+  color: var(--color-text-dim);
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.segmented {
+  display: inline-flex;
+  align-self: flex-start;
+  border: 1px solid var(--color-border);
+  border-radius: var(--input-radius);
+  overflow: hidden;
+}
+
+.segment {
+  background: transparent;
+  border: none;
+  color: var(--color-text-dim);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  padding: 6px 16px;
+  cursor: pointer;
+}
+
+.segment + .segment {
+  border-left: 1px solid var(--color-border);
+}
+
+.segment:hover {
+  color: var(--color-text);
+}
+
+.segmentActive,
+.segmentActive:hover {
+  background: var(--color-accent);
+  color: var(--color-bg);
+}
+
+.liftRow {
+  display: grid;
+  grid-template-columns: 7.5rem minmax(0, 1fr) 5.5rem;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.liftName {
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+}
+
+.liftSelect {
+  composes: input from "../styles/shared.module.css";
+  background: var(--color-bg-card);
+  min-width: 0;
+  cursor: pointer;
+}
+
+.liftValue {
+  color: var(--color-text-dim);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.summary {
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  border-top: 1px solid var(--color-border-subtle);
+  padding-top: 0.75rem;
+}
+
+/* On a phone the select gets its own line under the lift name and value. */
+@media (max-width: 640px) {
+  .liftRow {
+    grid-template-columns: minmax(0, 1fr) auto;
+    row-gap: 0.35rem;
+  }
+
+  .liftName {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .liftValue {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .liftSelect {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}
