@@ -271,3 +271,18 @@
   font-size: 0.8rem;
   margin-top: 0.75rem;
 }
+
+.starButton {
+  background: transparent;
+  border: none;
+  color: var(--color-text-dim);
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0 0.5rem 0 0;
+}
+
+.starButton:hover,
+.starButtonActive {
+  color: var(--color-accent);
+}

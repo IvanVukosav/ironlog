@@ -87,6 +87,9 @@ model Settings {
   squatExercise    String?
   benchExercise    String?
   deadliftExercise String?
+  // JSON array of exercise names shown at the top of Stats; empty means "most trained".
+  featuredExercises     String  @default("[]")
+  showPowerliftingTotal Boolean @default(false)
 
 }
 

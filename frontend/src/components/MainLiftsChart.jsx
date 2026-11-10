@@ -8,7 +8,7 @@ import {
   CartesianGrid,
 } from "recharts";
 import { useTranslation } from "react-i18next";
-import { calculateEstimatedOneRepMax } from "../utils/oneRepMax";
+import { buildE1rmTimeline } from "../utils/oneRepMax";
 import { MAIN_LIFTS } from "../utils/strengthScores";
 import { getCssVar } from "../utils/theme";
 import styles from "./MainLiftsChart.module.css";
@@ -21,28 +21,6 @@ const SINGLE_POINT_DOT_RADIUS = 4;
 function formatChartDate(time) {
   const date = new Date(time);
   return `${date.getUTCDate()}/${date.getUTCMonth() + 1}`;
-}
-
-// Best e1RM per session date, oldest first, flagging sessions that beat every
-// earlier one (the first session is the baseline, not a PR).
-function buildTimeline(sets, formula) {
-  const bestByTime = new Map();
-  for (const set of sets) {
-    if (set.isWarmup) continue;
-    const e1rm = calculateEstimatedOneRepMax(set.weight, set.reps, set.rpe, formula);
-    if (e1rm === null) continue;
-    const time = new Date(set.date).getTime();
-    if (!bestByTime.has(time) || e1rm > bestByTime.get(time)) bestByTime.set(time, e1rm);
-  }
-
-  let runningBest = null;
-  return [...bestByTime.entries()]
-    .sort(([timeA], [timeB]) => timeA - timeB)
-    .map(([time, e1rm]) => {
-      const isPr = runningBest !== null && e1rm > runningBest;
-      runningBest = runningBest === null ? e1rm : Math.max(runningBest, e1rm);
-      return { time, e1rm: parseFloat(e1rm.toFixed(E1RM_DECIMAL_PLACES)), isPr };
-    });
 }
 
 function ChartTooltip({ active, payload, label, liftNames }) {
@@ -89,7 +67,7 @@ function MainLiftsChart({ exerciseSets, mainLiftBests, formula }) {
   const pointCounts = {};
   for (const lift of lifts) {
     const sets = exerciseSets.find((exercise) => exercise.name === liftNames[lift])?.sets ?? [];
-    const timeline = buildTimeline(sets, formula);
+    const timeline = buildE1rmTimeline(sets, formula);
     pointCounts[lift] = timeline.length;
     for (const point of timeline) {
       const row = rowsByTime.get(point.time) ?? { time: point.time };

@@ -3,6 +3,7 @@ const BRZYCKI_CONSTANT_A = 36;
 const BRZYCKI_CONSTANT_B = 37;
 const LOMBARDI_EXPONENT = 0.1;
 const RPE_SCALE_MAX = 10;
+const TIMELINE_DECIMAL_PLACES = 1;
 // The formulas stop meaning anything past this many reps to failure (Brzycki even turns
 // negative at 37), so such sets get no e1RM instead of a made-up one.
 export const MAX_E1RM_REPS_TO_FAILURE = 15;
@@ -43,4 +44,26 @@ export function findBestSetByE1rm(sets, formula) {
       }
       return best;
     }, null);
+}
+
+// Best e1RM per session date, oldest first, flagging sessions that beat every
+// earlier one (the first session is the baseline, not a PR).
+export function buildE1rmTimeline(sets, formula) {
+  const bestByTime = new Map();
+  for (const set of sets) {
+    if (set.isWarmup) continue;
+    const e1rm = calculateEstimatedOneRepMax(set.weight, set.reps, set.rpe, formula);
+    if (e1rm === null) continue;
+    const time = new Date(set.date).getTime();
+    if (!bestByTime.has(time) || e1rm > bestByTime.get(time)) bestByTime.set(time, e1rm);
+  }
+
+  let runningBest = null;
+  return [...bestByTime.entries()]
+    .sort(([timeA], [timeB]) => timeA - timeB)
+    .map(([time, e1rm]) => {
+      const isPr = runningBest !== null && e1rm > runningBest;
+      runningBest = runningBest === null ? e1rm : Math.max(runningBest, e1rm);
+      return { time, e1rm: parseFloat(e1rm.toFixed(TIMELINE_DECIMAL_PLACES)), isPr };
+    });
 }

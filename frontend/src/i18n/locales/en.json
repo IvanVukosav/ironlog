@@ -40,6 +40,7 @@
     "saved": "Settings saved!",
     "saveError": "Error saving settings",
     "powerliftingSection": "Powerlifting (total, DOTS, Wilks)",
+    "showPowerliftingTotal": "Show powerlifting total, DOTS and Wilks on Stats",
     "sexes": {
       "male": "Male",
       "female": "Female"
@@ -198,7 +199,16 @@
     "totalMissingLifts": "Total, DOTS and Wilks need all three lifts. Pick them in Settings if they aren't detected by name.",
     "totalMissingBodyweight": "Log your bodyweight in Calendar to get DOTS and Wilks.",
     "mainLiftsChart": "Main lifts e1RM",
-    "prMarkerLegend": "new PR"
+    "prMarkerLegend": "new PR",
+    "featuredTitle": "Featured exercises",
+    "featuredCaption": "Best e1RM and its change over the last 30 days",
+    "featuredAutoHint": "Picked from what you train most. Star ☆ exercises in the table below to choose your own (up to 3).",
+    "featuredGain": "▲ +{{value}} kg",
+    "featuredNoChange": "no change",
+    "featuredNew": "new",
+    "featuredStar": "Feature at the top",
+    "featuredUnstar": "Remove from the top",
+    "featuredLimit": "Up to {{max}} featured exercises. Unstar one to add another."
   },
   "calculator": {
     "weightPlaceholder": "Enter weight",

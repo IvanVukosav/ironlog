@@ -10,10 +10,16 @@ import {
   calculateWilks,
   findMainLiftBests,
 } from "../utils/strengthScores";
+import {
+  MAX_FEATURED_EXERCISES,
+  parseFeaturedExercises,
+  resolveFeaturedExercises,
+} from "../utils/featuredExercises";
 import { useToast } from "../context/useToast";
 import { getCssVar } from "../utils/theme";
 import MuscleGroupVolumeChart from "../components/MuscleGroupVolumeChart";
 import MainLiftsChart from "../components/MainLiftsChart";
+import FeaturedExercises from "../components/FeaturedExercises";
 import styles from "./Stats.module.css";
 
 const E1RM_DECIMAL_PLACES = 1;
@@ -139,6 +145,39 @@ function Stats() {
       });
   }, [selectedExercise, showError]);
 
+  const showProgressFor = (name) => {
+    setSelectedExercise(name);
+    chartSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const featured = resolveFeaturedExercises(prs, parseFeaturedExercises(settings), formula);
+  const isFeatured = (name) => !featured.isAuto && featured.names.includes(name);
+
+  // Saved straight away (Stats has no Save button) and rolled back if the request fails.
+  const toggleFeatured = (name) => {
+    const current = featured.isAuto ? [] : featured.names;
+    const next = current.includes(name)
+      ? current.filter((featuredName) => featuredName !== name)
+      : [...current, name];
+    if (next.length > MAX_FEATURED_EXERCISES) {
+      showError(t("stats.featuredLimit", { max: MAX_FEATURED_EXERCISES }));
+      return;
+    }
+
+    const previousSettings = settings;
+    const featuredExercises = JSON.stringify(next);
+    setSettings((prev) => ({ ...prev, featuredExercises }));
+    fetchJson("/api/settings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ featuredExercises }),
+    }).catch((err) => {
+      console.error(err);
+      showError(err.message);
+      setSettings(previousSettings);
+    });
+  };
+
   const deleteAllRecordsForExercise = (name) => {
     setManageMenuFor(null);
     const confirmed = window.confirm(t("stats.confirmDeleteAllRecords", { name }));
@@ -233,7 +272,14 @@ function Stats() {
   return (
     <div className={styles.page}>
       <h1 className={styles.heading}>{t("nav.stats")}</h1>
-      {hasAnyMainLift && (
+      <FeaturedExercises
+        exerciseSets={prs}
+        names={featured.names}
+        isAuto={featured.isAuto}
+        formula={formula}
+        onSelect={showProgressFor}
+      />
+      {settings?.showPowerliftingTotal && hasAnyMainLift && (
         <div className={styles.totalSection}>
           <h2 className={styles.recentPrHeading}>{t("stats.powerliftingTotal")}</h2>
           <div className={styles.totalGrid}>
@@ -281,7 +327,7 @@ function Stats() {
           )}
         </div>
       )}
-      {hasAnyMainLift && (
+      {settings?.showPowerliftingTotal && hasAnyMainLift && (
         <MainLiftsChart exerciseSets={prs} mainLiftBests={mainLiftBests} formula={formula} />
       )}
       {recentPrRows.length > 0 && (
@@ -296,10 +342,7 @@ function Stats() {
                     ? `${styles.recentPrRow} ${styles.recentPrRowActive}`
                     : styles.recentPrRow
                 }
-                onClick={() => {
-                  setSelectedExercise(row.name);
-                  chartSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-                }}
+                onClick={() => showProgressFor(row.name)}
               >
                 <span className={styles.recentPrName}>{row.name}</span>
                 <span className={styles.recentPrDetail}>
@@ -325,7 +368,22 @@ function Stats() {
           {prRows.map((row) => (
             <Fragment key={row.name}>
               <tr>
-                <td>{row.name}</td>
+                <td>
+                  <button
+                    type="button"
+                    className={
+                      isFeatured(row.name)
+                        ? `${styles.starButton} ${styles.starButtonActive}`
+                        : styles.starButton
+                    }
+                    onClick={() => toggleFeatured(row.name)}
+                    aria-pressed={isFeatured(row.name)}
+                    title={t(isFeatured(row.name) ? "stats.featuredUnstar" : "stats.featuredStar")}
+                  >
+                    {isFeatured(row.name) ? "★" : "☆"}
+                  </button>
+                  {row.name}
+                </td>
                 <td>{row.e1rm.toFixed(E1RM_DECIMAL_PLACES)}kg</td>
                 <td>
                   {row.weight}kg × {row.reps} @ RPE {row.rpe ?? "—"}

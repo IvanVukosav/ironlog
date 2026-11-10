@@ -40,6 +40,7 @@
     "saved": "Postavke spremljene!",
     "saveError": "Greška kod spremanja postavki",
     "powerliftingSection": "Powerlifting (total, DOTS, Wilks)",
+    "showPowerliftingTotal": "Prikaži powerlifting total, DOTS i Wilks na Statistici",
     "sexes": {
       "male": "Muško",
       "female": "Žensko"
@@ -198,7 +199,16 @@
     "totalMissingLifts": "Za total, DOTS i Wilks trebaju sva tri dizanja. Odaberi ih u Postavkama ako se ne prepoznaju po imenu.",
     "totalMissingBodyweight": "Upiši tjelesnu težinu u Kalendaru za DOTS i Wilks.",
     "mainLiftsChart": "e1RM glavnih dizanja",
-    "prMarkerLegend": "novi PR"
+    "prMarkerLegend": "novi PR",
+    "featuredTitle": "Istaknute vježbe",
+    "featuredCaption": "Najbolji e1RM i promjena u zadnjih 30 dana",
+    "featuredAutoHint": "Odabrano prema tome što najčešće treniraš. Zvjezdicom ☆ u tablici ispod biraš svoje (do 3).",
+    "featuredGain": "▲ +{{value}} kg",
+    "featuredNoChange": "bez promjene",
+    "featuredNew": "novo",
+    "featuredStar": "Istakni na vrhu",
+    "featuredUnstar": "Makni s vrha",
+    "featuredLimit": "Najviše {{max}} istaknute vježbe. Makni jednu zvjezdicu pa dodaj novu."
   },
   "calculator": {
     "weightPlaceholder": "Unesi kilažu",

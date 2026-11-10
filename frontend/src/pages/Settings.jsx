@@ -449,42 +449,58 @@ function Settings() {
 
       <p className={styles.sectionLabel}>{t("settings.powerliftingSection")}</p>
 
-      {Object.values(SEXES).map((sex) => (
-        <label key={sex} className={styles.checkboxRow}>
-          <input
-            type="radio"
-            name="sex"
-            checked={(settings?.sex ?? SEXES.male) === sex}
-            onChange={() => setSettings((prev) => ({ ...prev, sex }))}
-          />
-          {t(`settings.sexes.${sex}`)}
-        </label>
-      ))}
+      <label className={styles.checkboxRow}>
+        <input
+          type="checkbox"
+          checked={settings?.showPowerliftingTotal ?? false}
+          onChange={(event) =>
+            setSettings((prev) => ({ ...prev, showPowerliftingTotal: event.target.checked }))
+          }
+        />
+        {t("settings.showPowerliftingTotal")}
+      </label>
 
-      {LIFT_SETTING_FIELDS.map(({ lift, field }, index) => (
-        <div
-          key={field}
-          className={index === 0 ? `${styles.field} ${styles.firstLiftField}` : styles.field}
-        >
-          <span className={styles.fieldLabel}>{t(`stats.lifts.${lift}`)}</span>
-          <select
-            className={styles.liftSelect}
-            value={settings?.[field] || ""}
-            onChange={(event) => setSettings((prev) => ({ ...prev, [field]: event.target.value }))}
+      {/* Sex and the three lifts only feed the powerlifting numbers, so they hide with them. */}
+      {settings?.showPowerliftingTotal &&
+        Object.values(SEXES).map((sex) => (
+          <label key={sex} className={styles.checkboxRow}>
+            <input
+              type="radio"
+              name="sex"
+              checked={(settings?.sex ?? SEXES.male) === sex}
+              onChange={() => setSettings((prev) => ({ ...prev, sex }))}
+            />
+            {t(`settings.sexes.${sex}`)}
+          </label>
+        ))}
+
+      {settings?.showPowerliftingTotal &&
+        LIFT_SETTING_FIELDS.map(({ lift, field }, index) => (
+          <div
+            key={field}
+            className={index === 0 ? `${styles.field} ${styles.firstLiftField}` : styles.field}
           >
-            <option value="">{t("settings.liftAuto")}</option>
-            {settings?.[field] &&
-              !exerciseTemplates.some((template) => template.name === settings[field]) && (
-                <option value={settings[field]}>{settings[field]}</option>
-              )}
-            {exerciseTemplates.map((template) => (
-              <option key={template.id} value={template.name}>
-                {template.name}
-              </option>
-            ))}
-          </select>
-        </div>
-      ))}
+            <span className={styles.fieldLabel}>{t(`stats.lifts.${lift}`)}</span>
+            <select
+              className={styles.liftSelect}
+              value={settings?.[field] || ""}
+              onChange={(event) =>
+                setSettings((prev) => ({ ...prev, [field]: event.target.value }))
+              }
+            >
+              <option value="">{t("settings.liftAuto")}</option>
+              {settings?.[field] &&
+                !exerciseTemplates.some((template) => template.name === settings[field]) && (
+                  <option value={settings[field]}>{settings[field]}</option>
+                )}
+              {exerciseTemplates.map((template) => (
+                <option key={template.id} value={template.name}>
+                  {template.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        ))}
 
       <button className={styles.saveButton} onClick={save}>
         {t("settings.save")}
