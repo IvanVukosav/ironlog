@@ -12,6 +12,8 @@ const LIFT_SETTING_FIELDS = [
   { lift: "deadlift", field: "deadliftExercise" },
 ];
 
+const GOAL_FIELDS = ["kcalGoal", "proteinGoal", "trainingsPerWeek", "carbsGoal", "fatGoal"];
+
 const E1RM_FORMULA_LABELS = {
   [ONE_REP_MAX_FORMULAS.brzycki]: "Brzycki",
   [ONE_REP_MAX_FORMULAS.epley]: "Epley",
@@ -38,6 +40,8 @@ function Settings() {
   const { t, i18n } = useTranslation();
   const { showError, showSuccess } = useToast();
   const [settings, setSettings] = useState(null);
+  // Goal fields being typed in, by field name; saved when the field is left.
+  const [goalDrafts, setGoalDrafts] = useState({});
   const [exerciseTemplates, setExerciseTemplates] = useState([]);
   const [themeMenuOpen, setThemeMenuOpen] = useState(false);
   const [templateMenuOpen, setTemplateMenuOpen] = useState(false);
@@ -129,6 +133,35 @@ function Settings() {
     });
   };
 
+  // Every change saves right away; the screen updates first and goes back if saving fails.
+  const updateSettings = (patch) => {
+    const previousSettings = settings;
+    setSettings((prev) => ({ ...prev, ...patch }));
+    fetchJson("/api/settings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(patch),
+    }).catch((err) => {
+      console.error(err);
+      showError(err.message || t("settings.saveError"));
+      setSettings(previousSettings);
+    });
+  };
+
+  // Anything but a whole number of zero or more puts the saved goal back.
+  const commitGoal = (field) => {
+    const draft = goalDrafts[field];
+    if (draft === undefined) return;
+    setGoalDrafts((drafts) => {
+      const next = { ...drafts };
+      delete next[field];
+      return next;
+    });
+    const value = Number(draft);
+    if (draft.trim() === "" || !Number.isInteger(value) || value < 0) return;
+    if (value !== settings?.[field]) updateSettings({ [field]: value });
+  };
+
   const download = (path, fallbackName) => {
     downloadFile(path, fallbackName).catch((err) => {
       console.error(err);
@@ -168,44 +201,10 @@ function Settings() {
     window.dispatchEvent(new Event(UNAUTHORIZED_EVENT));
   };
 
-  const save = () => {
-    const fields = [
-      settings.kcalGoal,
-      settings.proteinGoal,
-      settings.trainingsPerWeek,
-      settings.carbsGoal,
-      settings.fatGoal,
-    ];
-    if (fields.some((field) => !field && field !== 0)) {
-      showError(t("settings.allFieldsRequired"));
-      return;
-    }
-
-    fetchJson("/api/settings", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...settings,
-        kcalGoal: parseInt(settings.kcalGoal),
-        proteinGoal: parseInt(settings.proteinGoal),
-        trainingsPerWeek: parseInt(settings.trainingsPerWeek),
-        carbsGoal: parseInt(settings.carbsGoal),
-        fatGoal: parseInt(settings.fatGoal),
-        squatExercise: settings.squatExercise || null,
-        benchExercise: settings.benchExercise || null,
-        deadliftExercise: settings.deadliftExercise || null,
-      }),
-    })
-      .then(() => showSuccess(t("settings.saved")))
-      .catch((err) => {
-        console.error(err);
-        showError(err.message || t("settings.saveError"));
-      });
-  };
-
   return (
     <div className={styles.page}>
       <h1 className={styles.heading}>{t("settings.title")}</h1>
+      <p className={styles.autoSaveHint}>{t("settings.autoSaveHint")}</p>
 
       <div className={styles.field}>
         <span className={styles.fieldLabel}>{t("settings.language")}</span>
@@ -299,59 +298,24 @@ function Settings() {
         </div>
       </div>
 
-      <div className={styles.field}>
-        <span className={styles.fieldLabel}>{t("settings.kcalGoal")}</span>
-        <input
-          type="number"
-          className={styles.fieldInput}
-          value={settings?.kcalGoal || ""}
-          onChange={(event) => setSettings((prev) => ({ ...prev, kcalGoal: event.target.value }))}
-        />
-      </div>
-
-      <div className={styles.field}>
-        <span className={styles.fieldLabel}>{t("settings.proteinGoal")}</span>
-        <input
-          type="number"
-          className={styles.fieldInput}
-          value={settings?.proteinGoal || ""}
-          onChange={(event) =>
-            setSettings((prev) => ({ ...prev, proteinGoal: event.target.value }))
-          }
-        />
-      </div>
-
-      <div className={styles.field}>
-        <span className={styles.fieldLabel}>{t("settings.trainingsPerWeek")}</span>
-        <input
-          type="number"
-          className={styles.fieldInput}
-          value={settings?.trainingsPerWeek || ""}
-          onChange={(event) =>
-            setSettings((prev) => ({ ...prev, trainingsPerWeek: event.target.value }))
-          }
-        />
-      </div>
-
-      <div className={styles.field}>
-        <span className={styles.fieldLabel}>{t("settings.carbsGoal")}</span>
-        <input
-          type="number"
-          className={styles.fieldInput}
-          value={settings?.carbsGoal || ""}
-          onChange={(event) => setSettings((prev) => ({ ...prev, carbsGoal: event.target.value }))}
-        />
-      </div>
-
-      <div className={styles.field}>
-        <span className={styles.fieldLabel}>{t("settings.fatGoal")}</span>
-        <input
-          type="number"
-          className={styles.fieldInput}
-          value={settings?.fatGoal || ""}
-          onChange={(event) => setSettings((prev) => ({ ...prev, fatGoal: event.target.value }))}
-        />
-      </div>
+      {GOAL_FIELDS.map((field) => (
+        <div key={field} className={styles.field}>
+          <span className={styles.fieldLabel}>{t(`settings.${field}`)}</span>
+          <input
+            type="number"
+            min="0"
+            className={styles.fieldInput}
+            value={goalDrafts[field] ?? settings?.[field] ?? ""}
+            onChange={(event) =>
+              setGoalDrafts((drafts) => ({ ...drafts, [field]: event.target.value }))
+            }
+            onBlur={() => commitGoal(field)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") event.target.blur();
+            }}
+          />
+        </div>
+      ))}
 
       <p className={styles.sectionLabel}>{t("settings.dashboardWidgets")}</p>
 
@@ -359,12 +323,7 @@ function Settings() {
         <input
           type="checkbox"
           checked={settings?.showWorkoutWidget ?? true}
-          onChange={(event) =>
-            setSettings((prev) => ({
-              ...prev,
-              showWorkoutWidget: event.target.checked,
-            }))
-          }
+          onChange={(event) => updateSettings({ showWorkoutWidget: event.target.checked })}
         />
         {t("settings.showWorkoutWidget")}
       </label>
@@ -373,12 +332,7 @@ function Settings() {
         <input
           type="checkbox"
           checked={settings?.showNutritionWidget ?? true}
-          onChange={(event) =>
-            setSettings((prev) => ({
-              ...prev,
-              showNutritionWidget: event.target.checked,
-            }))
-          }
+          onChange={(event) => updateSettings({ showNutritionWidget: event.target.checked })}
         />
         {t("settings.showNutritionWidget")}
       </label>
@@ -387,12 +341,7 @@ function Settings() {
         <input
           type="checkbox"
           checked={settings?.showPrWidget ?? true}
-          onChange={(event) =>
-            setSettings((prev) => ({
-              ...prev,
-              showPrWidget: event.target.checked,
-            }))
-          }
+          onChange={(event) => updateSettings({ showPrWidget: event.target.checked })}
         />
         {t("settings.showPrWidget")}
       </label>
@@ -404,7 +353,7 @@ function Settings() {
           type="radio"
           name="exercisePickerMode"
           checked={(settings?.exercisePickerMode ?? "chips") === "chips"}
-          onChange={() => setSettings((prev) => ({ ...prev, exercisePickerMode: "chips" }))}
+          onChange={() => updateSettings({ exercisePickerMode: "chips" })}
         />
         {t("settings.exercisePickerChips")}
       </label>
@@ -414,7 +363,7 @@ function Settings() {
           type="radio"
           name="exercisePickerMode"
           checked={settings?.exercisePickerMode === "twoStep"}
-          onChange={() => setSettings((prev) => ({ ...prev, exercisePickerMode: "twoStep" }))}
+          onChange={() => updateSettings({ exercisePickerMode: "twoStep" })}
         />
         {t("settings.exercisePickerTwoStep")}
       </label>
@@ -425,12 +374,7 @@ function Settings() {
         <input
           type="checkbox"
           checked={settings?.showE1rm ?? true}
-          onChange={(event) =>
-            setSettings((prev) => ({
-              ...prev,
-              showE1rm: event.target.checked,
-            }))
-          }
+          onChange={(event) => updateSettings({ showE1rm: event.target.checked })}
         />
         {t("settings.showE1rm")}
       </label>
@@ -441,7 +385,7 @@ function Settings() {
             type="radio"
             name="e1rmFormula"
             checked={(settings?.e1rmFormula ?? "brzycki") === formula}
-            onChange={() => setSettings((prev) => ({ ...prev, e1rmFormula: formula }))}
+            onChange={() => updateSettings({ e1rmFormula: formula })}
           />
           {E1RM_FORMULA_LABELS[formula]}
         </label>
@@ -453,9 +397,7 @@ function Settings() {
         <input
           type="checkbox"
           checked={settings?.showPowerliftingTotal ?? false}
-          onChange={(event) =>
-            setSettings((prev) => ({ ...prev, showPowerliftingTotal: event.target.checked }))
-          }
+          onChange={(event) => updateSettings({ showPowerliftingTotal: event.target.checked })}
         />
         {t("settings.showPowerliftingTotal")}
       </label>
@@ -468,7 +410,7 @@ function Settings() {
               type="radio"
               name="sex"
               checked={(settings?.sex ?? SEXES.male) === sex}
-              onChange={() => setSettings((prev) => ({ ...prev, sex }))}
+              onChange={() => updateSettings({ sex })}
             />
             {t(`settings.sexes.${sex}`)}
           </label>
@@ -484,9 +426,7 @@ function Settings() {
             <select
               className={styles.liftSelect}
               value={settings?.[field] || ""}
-              onChange={(event) =>
-                setSettings((prev) => ({ ...prev, [field]: event.target.value }))
-              }
+              onChange={(event) => updateSettings({ [field]: event.target.value || null })}
             >
               <option value="">{t("settings.liftAuto")}</option>
               {settings?.[field] &&
@@ -501,10 +441,6 @@ function Settings() {
             </select>
           </div>
         ))}
-
-      <button className={styles.saveButton} onClick={save}>
-        {t("settings.save")}
-      </button>
 
       <p className={styles.sectionLabel}>{t("settings.backupSection")}</p>
       <p className={styles.backupHint}>{t("settings.backupHint")}</p>

@@ -7,6 +7,13 @@
   font-size: 1.5rem;
   font-weight: var(--heading-weight);
   color: var(--color-text);
+  margin-bottom: 0.25rem;
+}
+
+.autoSaveHint {
+  color: var(--color-text-dim);
+  font-family: var(--font-body);
+  font-size: 0.8rem;
   margin-bottom: 1.5rem;
 }
 
@@ -131,11 +138,6 @@
   width: 14px;
   height: 14px;
   cursor: pointer;
-}
-
-.saveButton {
-  composes: button from "../styles/shared.module.css";
-  margin-top: 1.5rem;
 }
 
 .backupHint {
