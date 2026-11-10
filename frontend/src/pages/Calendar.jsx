@@ -31,30 +31,28 @@ function Calendar() {
   const todayMonth = today.getUTCMonth() + 1;
   const todayDay = today.getUTCDate();
 
+  // Everything below only shows entries of the current month, so the previous month's data can
+  // stay until the new data arrives. A response for a month already left behind is dropped, so
+  // a slow one can't overwrite the month on screen.
   useEffect(() => {
-    setWorkoutDates([]);
-    setMonthBwEntries([]);
+    let isStale = false;
+    const load = (path, setData) =>
+      fetchJson(path)
+        .then((data) => {
+          if (!isStale) setData(data);
+        })
+        .catch((err) => {
+          console.error(err);
+          showError(err.message);
+        });
 
-    fetchJson(`/api/workouts/month?year=${currentYear}&month=${currentMonth}`)
-      .then((data) => setWorkoutDates(data))
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
-
-    fetchJson(`/api/bodyweight?year=${currentYear}&month=${currentMonth}`)
-      .then((data) => setMonthBwEntries(data))
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
-
-    fetchJson(`/api/body-measurements?year=${currentYear}&month=${currentMonth}`)
-      .then((data) => setMonthMeasurements(data))
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+    const query = `year=${currentYear}&month=${currentMonth}`;
+    load(`/api/workouts/month?${query}`, setWorkoutDates);
+    load(`/api/bodyweight?${query}`, setMonthBwEntries);
+    load(`/api/body-measurements?${query}`, setMonthMeasurements);
+    return () => {
+      isStale = true;
+    };
   }, [currentYear, currentMonth, showError]);
 
   useEffect(() => {
