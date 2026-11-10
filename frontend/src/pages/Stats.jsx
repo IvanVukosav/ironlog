@@ -17,6 +17,7 @@ import {
 } from "../utils/featuredExercises";
 import { useToast } from "../context/useToast";
 import { getCssVar } from "../utils/theme";
+import { formatDayMonth } from "../utils/dates";
 import MuscleGroupVolumeChart from "../components/MuscleGroupVolumeChart";
 import MainLiftsChart from "../components/MainLiftsChart";
 import FeaturedExercises from "../components/FeaturedExercises";
@@ -39,11 +40,6 @@ function getRecentPr(sets, formula) {
   return bestOverall?.date === latestDate ? bestOverall : null;
 }
 
-function formatChartDate(dateString) {
-  const date = new Date(dateString);
-  return `${date.getUTCDate()}/${date.getUTCMonth() + 1}`;
-}
-
 // Best e1RM per session; isPr marks sessions that beat every earlier one.
 function buildProgressData(history, formula) {
   let runningBest = null;
@@ -54,7 +50,7 @@ function buildProgressData(history, formula) {
       const isPr = runningBest !== null && bestSet.e1rm > runningBest;
       runningBest = runningBest === null ? bestSet.e1rm : Math.max(runningBest, bestSet.e1rm);
       return {
-        label: formatChartDate(entry.date),
+        label: formatDayMonth(entry.date),
         e1rm: parseFloat(bestSet.e1rm.toFixed(E1RM_DECIMAL_PLACES)),
         isPr,
       };
@@ -349,7 +345,7 @@ function Stats() {
                   {row.e1rm.toFixed(E1RM_DECIMAL_PLACES)}kg e1RM — {row.weight}kg × {row.reps} @ RPE{" "}
                   {row.rpe ?? "—"}
                 </span>
-                <span className={styles.recentPrDate}>{formatChartDate(row.date)}</span>
+                <span className={styles.recentPrDate}>{formatDayMonth(row.date)}</span>
               </button>
             ))}
           </div>
@@ -419,7 +415,7 @@ function Stats() {
                     {expandedHistoryEntries.map((entry) => (
                       <div key={entry.id} className={styles.historyEntryRow}>
                         <span className={styles.historyEntryDate}>
-                          {formatChartDate(entry.date)}
+                          {formatDayMonth(entry.date)}
                         </span>
                         <span className={styles.historyEntryDetail}>
                           {entry.sets.length > 0

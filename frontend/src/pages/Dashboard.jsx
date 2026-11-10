@@ -17,6 +17,7 @@ import { useToast } from "../context/useToast";
 import { getCssVar } from "../utils/theme";
 import { DEFAULT_E1RM_FORMULA, findBestSetByE1rm } from "../utils/oneRepMax";
 import { addWeightTrend, weeklyTrendChange } from "../utils/weightTrend";
+import { dateKeyOf, formatDayMonth } from "../utils/dates";
 import MuscleGroupVolumeChart from "../components/MuscleGroupVolumeChart";
 import styles from "./Dashboard.module.css";
 
@@ -54,13 +55,6 @@ function getLatestPr(prs, formula) {
     }
   });
   return latest;
-}
-
-function formatDateString(date) {
-  const year = date.getUTCFullYear();
-  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(date.getUTCDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
 }
 
 function isSameCalendarDay(firstDate, secondDate) {
@@ -228,11 +222,6 @@ function Dashboard() {
       });
   };
 
-  const formatBwDate = (dateString) => {
-    const date = new Date(dateString);
-    return `${date.getUTCDate()}/${date.getUTCMonth() + 1}`;
-  };
-
   const allItems = nutritionDay?.meals?.flatMap((meal) => meal.items) || [];
   const totalKcal = allItems.reduce((sum, item) => sum + item.kcal, 0);
   const totalProtein = allItems.reduce((sum, item) => sum + item.protein, 0);
@@ -267,7 +256,7 @@ function Dashboard() {
     );
     return {
       label: weekdayNames[dayIndex],
-      dateString: formatDateString(date),
+      dateString: dateKeyOf(date),
       trained: Boolean(matchingWorkout),
       workoutName: matchingWorkout?.name || null,
       isToday: isSameCalendarDay(date, todayDate),
@@ -555,7 +544,7 @@ function Dashboard() {
                 <LineChart
                   data={bodyweightChart.entries.map((entry) => ({
                     ...entry,
-                    label: formatBwDate(entry.date),
+                    label: formatDayMonth(entry.date),
                   }))}
                 >
                   <XAxis

@@ -7,17 +7,13 @@ import {
   MAX_E1RM_REPS_TO_FAILURE,
 } from "../utils/oneRepMax";
 import { useToast } from "../context/useToast";
+import { formatDayMonth } from "../utils/dates";
 import { useDragReorder } from "../hooks/useDragReorder";
 import styles from "./ExerciseCard.module.css";
 
 const WEIGHT_STEP_KG = 1;
 const MINIMUM_WEIGHT_KG = 0;
 const E1RM_DECIMAL_PLACES = 1;
-
-function formatShortDate(dateString) {
-  const date = new Date(dateString);
-  return `${date.getUTCDate()}/${date.getUTCMonth() + 1}`;
-}
 
 function formatSetShort(workoutSet) {
   const base = `${workoutSet.weight}×${workoutSet.reps}`;
@@ -376,7 +372,7 @@ function Exercise({
       {lastWorkingSets.length > 0 && (
         <div className={styles.lastSession}>
           <span className={styles.lastSessionLabel}>
-            {t("log.lastTime", { date: formatShortDate(lastSession.date) })}
+            {t("log.lastTime", { date: formatDayMonth(lastSession.date) })}
           </span>
           {lastWorkingSets.map((previousSet) => (
             <button

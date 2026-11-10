@@ -1,13 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { toDateKey } from "../utils/dates";
 import styles from "./DatePicker.module.css";
 
 const SUNDAY_INDEX = 0;
 const DAYS_PER_WEEK = 7;
-
-function formatDateString(year, month, day) {
-  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-}
 
 function DatePicker({ value, onChange }) {
   const { t } = useTranslation();
@@ -54,7 +51,7 @@ function DatePicker({ value, onChange }) {
   };
 
   const selectDay = (day) => {
-    onChange(formatDateString(viewYear, viewMonth, day));
+    onChange(toDateKey(viewYear, viewMonth, day));
     setIsOpen(false);
   };
 

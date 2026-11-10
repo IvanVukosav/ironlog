@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { fetchJson } from "../api";
 import { useToast } from "../context/useToast";
+import { toDateKey } from "../utils/dates";
 import styles from "./Calendar.module.css";
 
 const EMPTY_MEASUREMENTS = { waist: "", chest: "", arms: "", thighs: "", hips: "" };
@@ -130,13 +131,13 @@ function Calendar() {
   };
 
   const handleWorkoutClick = (day) => {
-    const dateString = `${currentYear}-${String(currentMonth).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    const dateString = toDateKey(currentYear, currentMonth, day);
     setActiveDropdown(null);
     navigate(`/log?date=${dateString}`);
   };
 
   const handleBwClick = (day) => {
-    const dateString = `${currentYear}-${String(currentMonth).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    const dateString = toDateKey(currentYear, currentMonth, day);
     setActiveDropdown(null);
     setBwModalDate(dateString);
     const existingEntry = getBwEntry(day);
@@ -187,7 +188,7 @@ function Calendar() {
   };
 
   const handleMeasurementsClick = (day) => {
-    const dateString = `${currentYear}-${String(currentMonth).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    const dateString = toDateKey(currentYear, currentMonth, day);
     setActiveDropdown(null);
     setMeasurementsModalDate(dateString);
     const existingEntry = getMeasurementsEntry(day);

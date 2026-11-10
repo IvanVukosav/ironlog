@@ -11,17 +11,13 @@ import { useTranslation } from "react-i18next";
 import { buildE1rmTimeline } from "../utils/oneRepMax";
 import { MAIN_LIFTS } from "../utils/strengthScores";
 import { getCssVar } from "../utils/theme";
+import { formatDayMonth } from "../utils/dates";
 import styles from "./MainLiftsChart.module.css";
 
 const E1RM_DECIMAL_PLACES = 1;
 const PR_DOT_RADIUS = 4;
 // Same size as a PR marker (8px across) but without the ring, so it doesn't read as a PR.
 const SINGLE_POINT_DOT_RADIUS = 4;
-
-function formatChartDate(time) {
-  const date = new Date(time);
-  return `${date.getUTCDate()}/${date.getUTCMonth() + 1}`;
-}
 
 function ChartTooltip({ active, payload, label, liftNames }) {
   const entries = (payload ?? []).filter(
@@ -31,7 +27,7 @@ function ChartTooltip({ active, payload, label, liftNames }) {
 
   return (
     <div className={styles.tooltip}>
-      <div className={styles.tooltipDate}>{formatChartDate(label)}</div>
+      <div className={styles.tooltipDate}>{formatDayMonth(label)}</div>
       {entries.map((entry) => (
         <div key={entry.dataKey} className={styles.tooltipRow}>
           <span className={styles.swatch} style={{ backgroundColor: entry.color }} />
@@ -135,7 +131,7 @@ function MainLiftsChart({ exerciseSets, mainLiftBests, formula }) {
             type="number"
             scale="time"
             domain={["dataMin", "dataMax"]}
-            tickFormatter={formatChartDate}
+            tickFormatter={formatDayMonth}
             tick={{ fill: textDimColor, fontFamily: chartFontFamily, fontSize: 11 }}
             axisLine={false}
             tickLine={false}
