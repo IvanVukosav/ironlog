@@ -422,7 +422,11 @@ function Exercise({
           value={set.rpe}
           onChange={(event) => setSet((prev) => ({ ...prev, rpe: event.target.value }))}
         />
-        <button className={styles.addSetButton} onClick={() => addSet(exercise.id)}>
+        <button
+          className={styles.addSetButton}
+          disabled={!set.weight.trim() || !set.reps.trim()}
+          onClick={() => addSet(exercise.id)}
+        >
           {t("log.addSet")}
         </button>
       </div>
@@ -450,6 +454,7 @@ function Exercise({
               />
               <button
                 className={styles.saveSetButton}
+                disabled={!editSet.weight.trim() || !editSet.reps.trim()}
                 onClick={() => saveEditingSet(workoutSet.id)}
               >
                 {t("common.save")}

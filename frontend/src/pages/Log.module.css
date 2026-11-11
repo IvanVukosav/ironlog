@@ -303,11 +303,6 @@
   font-size: 0.8rem;
 }
 
-.savePromptYes:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 .savePromptNo {
   background: transparent;
   border: none;

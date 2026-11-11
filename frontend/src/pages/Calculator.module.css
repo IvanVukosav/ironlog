@@ -31,11 +31,6 @@
   composes: button from "../styles/shared.module.css";
 }
 
-.calculateButton:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 .error {
   color: var(--color-accent);
   font-family: var(--font-body);

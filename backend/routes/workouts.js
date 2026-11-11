@@ -5,6 +5,26 @@ const { getDayRange, getWeekRange, getMonthRange, getYearRange } = require("../u
 const RANGE_GETTERS = { month: getMonthRange, year: getYearRange };
 const prisma = require("../prisma/client");
 
+const RPE_MIN = 1;
+const RPE_MAX = 10;
+
+// Returns { data } ready for prisma, or { error } for a 400. The fields arrive as text from the
+// inputs; RPE may be left out.
+function parseSetBody(body) {
+  const weight = parseFloat(body?.weight);
+  const reps = parseInt(body?.reps);
+  const rpe =
+    body?.rpe === undefined || body?.rpe === null || body?.rpe === "" ? null : parseFloat(body.rpe);
+
+  if (!(weight >= 0)) return { error: "Weight must be a number of 0 or more" };
+  if (!Number.isInteger(reps) || reps < 0)
+    return { error: "Reps must be a whole number of 0 or more" };
+  if (rpe !== null && !(rpe >= RPE_MIN && rpe <= RPE_MAX)) {
+    return { error: `RPE must be between ${RPE_MIN} and ${RPE_MAX}` };
+  }
+  return { data: { weight, reps, rpe, isWarmup: Boolean(body?.isWarmup) } };
+}
+
 router.get("/", async (req, res) => {
   try {
     const { date, limit } = req.query;
@@ -292,19 +312,13 @@ router.delete("/exercises/:id", async (req, res) => {
 });
 
 router.post("/exercises/:id/sets", async (req, res) => {
+  const { data, error } = parseSetBody(req.body);
+  if (error) return res.status(400).json({ error });
   try {
-    const { weight, reps, rpe, isWarmup } = req.body;
     const exerciseId = parseInt(req.params.id);
     const existingSetCount = await prisma.set.count({ where: { exerciseId } });
     const set = await prisma.set.create({
-      data: {
-        weight: parseFloat(weight),
-        reps: parseInt(reps),
-        rpe: parseFloat(rpe),
-        order: existingSetCount,
-        isWarmup: Boolean(isWarmup),
-        exercise: { connect: { id: exerciseId } },
-      },
+      data: { ...data, order: existingSetCount, exercise: { connect: { id: exerciseId } } },
     });
 
     res.json(set);
@@ -343,17 +357,10 @@ router.patch("/exercises/:id/sets/reorder", async (req, res) => {
 });
 
 router.patch("/sets/:id", async (req, res) => {
+  const { data, error } = parseSetBody(req.body);
+  if (error) return res.status(400).json({ error });
   try {
-    const { weight, reps, rpe, isWarmup } = req.body;
-    const set = await prisma.set.update({
-      where: { id: parseInt(req.params.id) },
-      data: {
-        weight: parseFloat(weight),
-        reps: parseInt(reps),
-        rpe: parseFloat(rpe),
-        isWarmup: Boolean(isWarmup),
-      },
-    });
+    const set = await prisma.set.update({ where: { id: parseInt(req.params.id) }, data });
     res.json(set);
   } catch (err) {
     console.error(err);

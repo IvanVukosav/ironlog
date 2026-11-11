@@ -70,11 +70,6 @@
   composes: button from "../styles/shared.module.css";
 }
 
-.loadButton:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 .cancelButton {
   background: transparent;
   border: none;

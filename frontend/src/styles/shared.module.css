@@ -44,6 +44,11 @@
   content: var(--button-after);
 }
 
+:where(.button):disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 :where(.input) {
   background: var(--input-bg);
   border: var(--input-border);
