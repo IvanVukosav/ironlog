@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { Fragment, useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import ExerciseCard from "../components/ExerciseCard";
@@ -169,7 +169,7 @@ function Log() {
   };
 
   const updateWorkoutName = (name) => {
-    if (!workout) return;
+    if (!workout || name.trim() === (workout.name || "")) return;
     fetchJson(`/api/workouts/${workout.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -368,27 +368,26 @@ function Log() {
       )}
 
       {workout && (
-        <input
-          type="text"
-          className={styles.workoutNameInput}
-          placeholder={t("log.workoutNamePlaceholder")}
-          defaultValue={workout.name || ""}
-          onBlur={(event) => updateWorkoutName(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") event.target.blur();
-          }}
-        />
-      )}
-
-      {workout && (
-        <textarea
-          key={workout.id}
-          className={styles.workoutNotesInput}
-          placeholder={t("log.workoutNotesPlaceholder")}
-          rows={2}
-          defaultValue={workout.notes || ""}
-          onBlur={(event) => updateWorkoutNotes(event.target.value)}
-        />
+        // Both boxes are uncontrolled: the key is what makes them show the next day's workout.
+        <Fragment key={workout.id}>
+          <input
+            type="text"
+            className={styles.workoutNameInput}
+            placeholder={t("log.workoutNamePlaceholder")}
+            defaultValue={workout.name || ""}
+            onBlur={(event) => updateWorkoutName(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") event.target.blur();
+            }}
+          />
+          <textarea
+            className={styles.workoutNotesInput}
+            placeholder={t("log.workoutNotesPlaceholder")}
+            rows={2}
+            defaultValue={workout.notes || ""}
+            onBlur={(event) => updateWorkoutNotes(event.target.value)}
+          />
+        </Fragment>
       )}
 
       {!workout && (
