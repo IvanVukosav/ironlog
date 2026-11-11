@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { fetchJson } from "../api";
 import { useToast } from "../context/useToast";
-import { toDateKey } from "../utils/dates";
+import { toDateKey, todayParts } from "../utils/dates";
 import styles from "./Calendar.module.css";
 
 const EMPTY_MEASUREMENTS = { waist: "", chest: "", arms: "", thighs: "", hips: "" };
@@ -13,8 +13,9 @@ function Calendar() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { showError } = useToast();
-  const [currentYear, setCurrentYear] = useState(new Date().getUTCFullYear());
-  const [currentMonth, setCurrentMonth] = useState(new Date().getUTCMonth() + 1);
+  const { year: todayYear, month: todayMonth, day: todayDay } = todayParts();
+  const [currentYear, setCurrentYear] = useState(todayYear);
+  const [currentMonth, setCurrentMonth] = useState(todayMonth);
   const [workoutDates, setWorkoutDates] = useState([]);
   const [monthBwEntries, setMonthBwEntries] = useState([]);
   const [activeDropdown, setActiveDropdown] = useState(null);
@@ -26,11 +27,6 @@ function Calendar() {
   const [measurementsForm, setMeasurementsForm] = useState(EMPTY_MEASUREMENTS);
   const [measurementsEntryId, setMeasurementsEntryId] = useState(null);
   const dropdownRef = useRef(null);
-
-  const today = new Date();
-  const todayYear = today.getUTCFullYear();
-  const todayMonth = today.getUTCMonth() + 1;
-  const todayDay = today.getUTCDate();
 
   // Everything below only shows entries of the current month, so the previous month's data can
   // stay until the new data arrives. A response for a month already left behind is dropped, so

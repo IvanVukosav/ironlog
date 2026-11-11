@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const prisma = require("../prisma/client");
-const { getWeekRange, getMonthRange, getYearRange } = require("../utils/dateRange");
+const { getWeekRange, getMonthRange, getYearRange, isDateKey } = require("../utils/dateRange");
 
 const UNCATEGORIZED_MUSCLE_GROUP = "Ostalo";
 const VOLUME_RANGE_GETTERS = { week: getWeekRange, month: getMonthRange, year: getYearRange };
@@ -209,8 +209,10 @@ router.get("/tdee", async (req, res) => {
   }
 });
 
+// `date` is the client's today: the server's clock may already be on another day.
 router.get("/streak", async (req, res) => {
   try {
+    const todayKey = isDateKey(req.query.date) ? req.query.date : toDateKey(new Date());
     const workouts = await prisma.workout.findMany({ select: { date: true } });
     const dateKeys = new Set(workouts.map((workout) => toDateKey(workout.date)));
     const sortedKeys = Array.from(dateKeys).sort();
@@ -229,7 +231,6 @@ router.get("/streak", async (req, res) => {
       previousDate = currentDate;
     }
 
-    const todayKey = toDateKey(new Date());
     let cursor = dateKeys.has(todayKey)
       ? new Date(todayKey)
       : new Date(new Date(todayKey).getTime() - MS_PER_DAY);

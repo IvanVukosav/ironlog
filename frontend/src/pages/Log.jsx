@@ -9,6 +9,7 @@ import { useToast } from "../context/useToast";
 import { useSettings } from "../context/useSettings";
 import { useDragReorder } from "../hooks/useDragReorder";
 import { DEFAULT_E1RM_FORMULA } from "../utils/oneRepMax";
+import { todayKey } from "../utils/dates";
 import styles from "./Log.module.css";
 
 const MUSCLE_GROUPS = [
@@ -28,9 +29,7 @@ function Log() {
   const { t } = useTranslation();
   const { showError } = useToast();
   const [searchParams] = useSearchParams();
-  const [date, setDate] = useState(
-    searchParams.get("date") || new Date().toISOString().split("T")[0],
-  );
+  const [date, setDate] = useState(searchParams.get("date") || todayKey());
   const [workout, setWorkout] = useState(null);
   const [exerciseName, setExerciseName] = useState("");
   const [exerciseTemplates, setExerciseTemplates] = useState([]);

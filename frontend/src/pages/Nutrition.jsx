@@ -7,6 +7,7 @@ import TdeeCard from "../components/TdeeCard";
 import { useToast } from "../context/useToast";
 import { useSettings } from "../context/useSettings";
 import { getCssVar } from "../utils/theme";
+import { todayKey } from "../utils/dates";
 import styles from "./Nutrition.module.css";
 
 const KCAL_PER_GRAM_PROTEIN = 4;
@@ -63,7 +64,7 @@ function Nutrition() {
   const chartProteinColor = getCssVar("--color-protein");
   const chartCarbsColor = getCssVar("--color-carbs");
   const chartFatColor = getCssVar("--color-fat");
-  const [today] = useState(() => new Date().toISOString().split("T")[0]);
+  const [today] = useState(todayKey);
   const [date, setDate] = useState(today);
   const [day, setDay] = useState(null);
   const [mealName, setMealName] = useState("");

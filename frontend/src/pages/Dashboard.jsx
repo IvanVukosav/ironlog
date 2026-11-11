@@ -18,7 +18,7 @@ import { useSettings } from "../context/useSettings";
 import { getCssVar } from "../utils/theme";
 import { DEFAULT_E1RM_FORMULA, findBestSetByE1rm } from "../utils/oneRepMax";
 import { addWeightTrend, weeklyTrendChange } from "../utils/weightTrend";
-import { dateKeyOf, formatDayMonth } from "../utils/dates";
+import { dateKeyOf, formatDayMonth, todayKey } from "../utils/dates";
 import MuscleGroupVolumeChart from "../components/MuscleGroupVolumeChart";
 import styles from "./Dashboard.module.css";
 
@@ -113,7 +113,7 @@ function Dashboard() {
   const [streak, setStreak] = useState({ currentStreak: 0, longestStreak: 0 });
   const [prs, setPrs] = useState([]);
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = todayKey();
 
   useEffect(() => {
     fetchJson(`/api/workouts?date=${today}`)
@@ -151,7 +151,7 @@ function Dashboard() {
         showError(err.message);
       });
 
-    fetchJson("/api/stats/streak")
+    fetchJson(`/api/stats/streak?date=${today}`)
       .then((data) => setStreak(data))
       .catch((err) => {
         console.error(err);

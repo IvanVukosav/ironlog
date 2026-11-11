@@ -15,3 +15,15 @@ export function toDateKey(year, month, day) {
 export function dateKeyOf(date) {
   return toDateKey(date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate());
 }
+
+// Today on the user's clock, as { year, month, day } and as a key. The one place the local
+// clock comes in: the keys become UTC midnights, which is what everything else compares by.
+export function todayParts() {
+  const now = new Date();
+  return { year: now.getFullYear(), month: now.getMonth() + 1, day: now.getDate() };
+}
+
+export function todayKey() {
+  const { year, month, day } = todayParts();
+  return toDateKey(year, month, day);
+}

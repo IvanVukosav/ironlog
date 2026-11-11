@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { fetchJson } from "../api";
 import { useToast } from "../context/useToast";
+import { todayKey } from "../utils/dates";
 import styles from "./MuscleGroupVolumeChart.module.css";
 
 const MINIMUM_MAX_VOLUME = 1;
@@ -18,7 +19,7 @@ function MuscleGroupVolumeChart() {
   ];
 
   useEffect(() => {
-    const today = new Date().toISOString().split("T")[0];
+    const today = todayKey();
     fetchJson(`/api/stats/volume?range=${range}&date=${today}`)
       .then((data) => setVolumeData(data))
       .catch((err) => {
