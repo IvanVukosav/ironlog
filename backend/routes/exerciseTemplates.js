@@ -1,51 +1,30 @@
 const express = require("express");
 const router = express.Router();
 const prisma = require("../prisma/client");
+const { parseId } = require("../utils/validate");
 
 router.get("/", async (req, res) => {
-  try {
-    const templates = await prisma.exerciseTemplate.findMany({
-      orderBy: { name: "asc" },
-    });
-    res.json(templates);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Internal server error" });
-  }
+  const templates = await prisma.exerciseTemplate.findMany({ orderBy: { name: "asc" } });
+  res.json(templates);
 });
 
 router.post("/", async (req, res) => {
-  try {
-    const { name, muscleGroup } = req.body;
-    if (!name || !name.trim()) {
-      return res.status(400).json({ error: "Name is required" });
-    }
-    if (!muscleGroup || !muscleGroup.trim()) {
-      return res.status(400).json({ error: "Muscle group is required" });
-    }
-    const template = await prisma.exerciseTemplate.create({
-      data: { name: name.trim(), muscleGroup: muscleGroup.trim() },
-    });
-    res.json(template);
-  } catch (err) {
-    if (err.code === "P2002") {
-      return res.status(409).json({ error: "Exercise already exists" });
-    }
-    console.error(err);
-    res.status(500).json({ error: "Internal server error" });
+  const { name, muscleGroup } = req.body ?? {};
+  if (!name || !name.trim()) {
+    return res.status(400).json({ error: "Name is required" });
   }
+  if (!muscleGroup || !muscleGroup.trim()) {
+    return res.status(400).json({ error: "Muscle group is required" });
+  }
+  const template = await prisma.exerciseTemplate.create({
+    data: { name: name.trim(), muscleGroup: muscleGroup.trim() },
+  });
+  res.json(template);
 });
 
 router.delete("/:id", async (req, res) => {
-  try {
-    await prisma.exerciseTemplate.delete({
-      where: { id: parseInt(req.params.id) },
-    });
-    res.json({ success: true });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Internal server error" });
-  }
+  await prisma.exerciseTemplate.delete({ where: { id: parseId(req.params.id) } });
+  res.json({ success: true });
 });
 
 module.exports = router;

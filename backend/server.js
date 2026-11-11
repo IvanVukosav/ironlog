@@ -2,6 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const { isAuthEnabled, requireAuth } = require("./utils/auth");
+const { errorHandler } = require("./utils/errorHandler");
 
 const app = express();
 
@@ -61,6 +62,10 @@ app.use("/api/food-item-templates", foodItemTemplatesRouter);
 app.use("/api/workout-templates", workoutTemplatesRouter);
 app.use("/api/programs", programsRouter);
 app.use("/api/backup", backupRouter);
+
+// Anything under /api that no route took.
+app.use("/api", (req, res) => res.status(404).json({ error: "Not found" }));
+app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

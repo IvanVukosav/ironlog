@@ -1,124 +1,96 @@
 const express = require("express");
 const router = express.Router();
 const prisma = require("../prisma/client");
+const { parseId } = require("../utils/validate");
+
+const TEMPLATE_INCLUDE = { exercises: { include: { sets: true } } };
 
 router.get("/", async (req, res) => {
-  try {
-    const templates = await prisma.workoutTemplate.findMany({
-      include: { exercises: { include: { sets: true } } },
-      orderBy: { name: "asc" },
-    });
-    res.json(templates);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Internal server error" });
-  }
+  const templates = await prisma.workoutTemplate.findMany({
+    include: TEMPLATE_INCLUDE,
+    orderBy: { name: "asc" },
+  });
+  res.json(templates);
 });
 
 router.post("/", async (req, res) => {
-  try {
-    const { name, exercises } = req.body;
-
-    if (!name || !name.trim()) {
-      return res.status(400).json({ error: "Name is required" });
-    }
-    if (!Array.isArray(exercises) || exercises.length === 0) {
-      return res.status(400).json({ error: "At least one exercise is required" });
-    }
-
-    const template = await prisma.workoutTemplate.create({
-      data: {
-        name: name.trim(),
-        exercises: {
-          create: exercises.map((exercise) => ({
-            name: exercise.name,
-            sets: {
-              create: (exercise.sets || []).map((set) => ({
-                weight: set.weight,
-                reps: set.reps,
-                rpe: set.rpe,
-              })),
-            },
-          })),
-        },
-      },
-      include: { exercises: { include: { sets: true } } },
-    });
-
-    res.json(template);
-  } catch (err) {
-    if (err.code === "P2002") {
-      return res.status(409).json({ error: "Workout template already exists" });
-    }
-    console.error(err);
-    res.status(500).json({ error: "Internal server error" });
+  const { name, exercises } = req.body ?? {};
+  if (!name || !name.trim()) {
+    return res.status(400).json({ error: "Name is required" });
   }
-});
+  if (!Array.isArray(exercises) || exercises.length === 0) {
+    return res.status(400).json({ error: "At least one exercise is required" });
+  }
+  if (exercises.some((exercise) => !exercise.name?.trim())) {
+    return res.status(400).json({ error: "Every exercise needs a name" });
+  }
 
-router.post("/:id/apply", async (req, res) => {
-  try {
-    const { workoutId } = req.body;
-
-    const template = await prisma.workoutTemplate.findUnique({
-      where: { id: parseInt(req.params.id) },
-      include: { exercises: { include: { sets: true } } },
-    });
-
-    if (!template) {
-      return res.status(404).json({ error: "Workout template not found" });
-    }
-
-    const workoutIdInt = parseInt(workoutId);
-    const existingExerciseCount = await prisma.exercise.count({
-      where: { workoutId: workoutIdInt },
-    });
-
-    const createdExercises = [];
-    for (const [index, templateExercise] of template.exercises.entries()) {
-      const exercise = await prisma.exercise.create({
-        data: {
-          name: templateExercise.name,
-          order: existingExerciseCount + index,
-          workoutId: workoutIdInt,
+  const template = await prisma.workoutTemplate.create({
+    data: {
+      name: name.trim(),
+      exercises: {
+        create: exercises.map((exercise) => ({
+          name: exercise.name.trim(),
           sets: {
-            create: templateExercise.sets.map((set) => ({
+            create: (exercise.sets || []).map((set) => ({
               weight: set.weight,
               reps: set.reps,
               rpe: set.rpe,
             })),
           },
-        },
-        include: { sets: true },
-      });
-      createdExercises.push(exercise);
-    }
+        })),
+      },
+    },
+    include: TEMPLATE_INCLUDE,
+  });
+  res.json(template);
+});
 
-    res.json(createdExercises);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Internal server error" });
+router.post("/:id/apply", async (req, res) => {
+  const workoutId = parseId(req.body?.workoutId);
+  const template = await prisma.workoutTemplate.findUnique({
+    where: { id: parseId(req.params.id) },
+    include: TEMPLATE_INCLUDE,
+  });
+  if (!template) {
+    return res.status(404).json({ error: "Workout template not found" });
   }
+
+  const existingExerciseCount = await prisma.exercise.count({ where: { workoutId } });
+  const createdExercises = [];
+  for (const [index, templateExercise] of template.exercises.entries()) {
+    const exercise = await prisma.exercise.create({
+      data: {
+        name: templateExercise.name,
+        order: existingExerciseCount + index,
+        workoutId,
+        sets: {
+          create: templateExercise.sets.map((set) => ({
+            weight: set.weight,
+            reps: set.reps,
+            rpe: set.rpe,
+          })),
+        },
+      },
+      include: { sets: true },
+    });
+    createdExercises.push(exercise);
+  }
+  res.json(createdExercises);
 });
 
 router.delete("/:id", async (req, res) => {
-  try {
-    const templateId = parseInt(req.params.id);
-    const exercises = await prisma.workoutTemplateExercise.findMany({
-      where: { workoutTemplateId: templateId },
-    });
-    const exerciseIds = exercises.map((exercise) => exercise.id);
-    await prisma.workoutTemplateSet.deleteMany({
-      where: { workoutTemplateExerciseId: { in: exerciseIds } },
-    });
-    await prisma.workoutTemplateExercise.deleteMany({
-      where: { workoutTemplateId: templateId },
-    });
-    await prisma.workoutTemplate.delete({ where: { id: templateId } });
-    res.json({ success: true });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Internal server error" });
-  }
+  const templateId = parseId(req.params.id);
+  const exercises = await prisma.workoutTemplateExercise.findMany({
+    where: { workoutTemplateId: templateId },
+  });
+  const exerciseIds = exercises.map((exercise) => exercise.id);
+  await prisma.workoutTemplateSet.deleteMany({
+    where: { workoutTemplateExerciseId: { in: exerciseIds } },
+  });
+  await prisma.workoutTemplateExercise.deleteMany({ where: { workoutTemplateId: templateId } });
+  await prisma.workoutTemplate.delete({ where: { id: templateId } });
+  res.json({ success: true });
 });
 
 module.exports = router;

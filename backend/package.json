@@ -7,7 +7,7 @@
     "start": "node server.js",
     "format": "prettier --write . --ignore-path ../.gitignore --ignore-path ../.prettierignore",
     "format:check": "prettier --check . --ignore-path ../.gitignore --ignore-path ../.prettierignore",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --test"
   },
   "keywords": [],
   "author": "",

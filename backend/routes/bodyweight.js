@@ -1,57 +1,33 @@
 const express = require("express");
 const router = express.Router();
 const prisma = require("../prisma/client");
+const { parseId, parseDateKey, parseDateRangeQuery } = require("../utils/validate");
 
 router.get("/", async (req, res) => {
-  try {
-    let where = {};
-    if (req.query.year && req.query.month) {
-      const start = new Date(Date.UTC(req.query.year, req.query.month - 1, 1));
-      const end = new Date(Date.UTC(req.query.year, req.query.month, 1));
-      where = { date: { gte: start, lt: end } };
-    } else {
-      const days = parseInt(req.query.days) || 30;
-      const since = new Date();
-      since.setDate(since.getDate() - days);
-      where = { date: { gte: since } };
-    }
-    const entries = await prisma.bodyweight.findMany({
-      where,
-      orderBy: { date: "asc" },
-    });
-    res.json(entries);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Internal server error" });
-  }
+  const entries = await prisma.bodyweight.findMany({
+    where: { date: parseDateRangeQuery(req.query) },
+    orderBy: { date: "asc" },
+  });
+  res.json(entries);
 });
 
 router.post("/", async (req, res) => {
-  try {
-    const { date, weight } = req.body;
-    if (!date || !weight) {
-      return res.status(400).json({ error: "date and weight are required" });
-    }
-    const entry = await prisma.bodyweight.upsert({
-      where: { date: new Date(date) },
-      update: { weight: parseFloat(weight) },
-      create: { date: new Date(date), weight: parseFloat(weight) },
-    });
-    res.json(entry);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Internal server error" });
+  const date = new Date(parseDateKey(req.body?.date));
+  const weight = parseFloat(req.body?.weight);
+  if (!(weight > 0)) {
+    return res.status(400).json({ error: "weight must be a number above 0" });
   }
+  const entry = await prisma.bodyweight.upsert({
+    where: { date },
+    update: { weight },
+    create: { date, weight },
+  });
+  res.json(entry);
 });
 
 router.delete("/:id", async (req, res) => {
-  try {
-    await prisma.bodyweight.delete({ where: { id: parseInt(req.params.id) } });
-    res.json({ success: true });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Internal server error" });
-  }
+  await prisma.bodyweight.delete({ where: { id: parseId(req.params.id) } });
+  res.json({ success: true });
 });
 
 module.exports = router;
