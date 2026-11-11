@@ -119,11 +119,9 @@ router.post("/meals", async (req, res) => {
   res.json(meal);
 });
 
-// DELETE /api/nutrition/meals/:id
+// DELETE /api/nutrition/meals/:id (its items go with it)
 router.delete("/meals/:id", async (req, res) => {
-  const mealId = parseId(req.params.id);
-  await prisma.foodItem.deleteMany({ where: { mealId } });
-  await prisma.meal.delete({ where: { id: mealId } });
+  await prisma.meal.delete({ where: { id: parseId(req.params.id) } });
   res.json({ success: true });
 });
 

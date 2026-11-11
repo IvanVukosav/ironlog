@@ -79,17 +79,9 @@ router.post("/:id/apply", async (req, res) => {
   res.json(createdExercises);
 });
 
+// Its exercises and sets go with it.
 router.delete("/:id", async (req, res) => {
-  const templateId = parseId(req.params.id);
-  const exercises = await prisma.workoutTemplateExercise.findMany({
-    where: { workoutTemplateId: templateId },
-  });
-  const exerciseIds = exercises.map((exercise) => exercise.id);
-  await prisma.workoutTemplateSet.deleteMany({
-    where: { workoutTemplateExerciseId: { in: exerciseIds } },
-  });
-  await prisma.workoutTemplateExercise.deleteMany({ where: { workoutTemplateId: templateId } });
-  await prisma.workoutTemplate.delete({ where: { id: templateId } });
+  await prisma.workoutTemplate.delete({ where: { id: parseId(req.params.id) } });
   res.json({ success: true });
 });
 

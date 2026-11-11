@@ -94,11 +94,9 @@ router.patch("/:id", async (req, res) => {
   res.json(workout);
 });
 
+// Exercises and sets go with the workout (onDelete: Cascade in the schema).
 router.delete("/:id", async (req, res) => {
-  const workoutId = parseId(req.params.id);
-  await prisma.set.deleteMany({ where: { exercise: { workoutId } } });
-  await prisma.exercise.deleteMany({ where: { workoutId } });
-  await prisma.workout.delete({ where: { id: workoutId } });
+  await prisma.workout.delete({ where: { id: parseId(req.params.id) } });
   res.json({ success: true });
 });
 
@@ -216,18 +214,12 @@ router.patch("/:id/exercises/reorder", async (req, res) => {
 });
 
 router.delete("/exercises/by-name/:name", async (req, res) => {
-  const exerciseName = req.params.name;
-  const exercises = await prisma.exercise.findMany({ where: { name: exerciseName } });
-  const exerciseIds = exercises.map((exercise) => exercise.id);
-  await prisma.set.deleteMany({ where: { exerciseId: { in: exerciseIds } } });
-  await prisma.exercise.deleteMany({ where: { name: exerciseName } });
-  res.json({ success: true, deletedCount: exerciseIds.length });
+  const { count } = await prisma.exercise.deleteMany({ where: { name: req.params.name } });
+  res.json({ success: true, deletedCount: count });
 });
 
 router.delete("/exercises/:id", async (req, res) => {
-  const exerciseId = parseId(req.params.id);
-  await prisma.set.deleteMany({ where: { exerciseId } });
-  await prisma.exercise.delete({ where: { id: exerciseId } });
+  await prisma.exercise.delete({ where: { id: parseId(req.params.id) } });
   res.json({ success: true });
 });
 

@@ -17,8 +17,12 @@ model Workout {
   programWeek Int?
   programDay  Int?
   exercises Exercise[]
+
+  @@index([date])
 }
 
+// Children go with their parent (onDelete: Cascade), so deleting a workout, a meal or a template
+// is one call and one transaction. SQLite does not index foreign keys on its own.
 model Exercise {
   id             Int     @id @default(autoincrement())
   name           String
@@ -26,8 +30,11 @@ model Exercise {
   supersetGroup  String?
   notes          String?
   workoutId      Int
-  workout        Workout @relation(fields: [workoutId], references: [id])
+  workout        Workout @relation(fields: [workoutId], references: [id], onDelete: Cascade)
   sets           Set[]
+
+  @@index([workoutId])
+  @@index([name])
 }
 
 model Set {
@@ -38,7 +45,9 @@ model Set {
   order      Int      @default(0)
   isWarmup   Boolean  @default(false)
   exerciseId Int
-  exercise   Exercise @relation(fields: [exerciseId], references: [id])
+  exercise   Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+
+  @@index([exerciseId])
 }
 
 model NutritionDay {
@@ -51,8 +60,10 @@ model Meal {
   id             Int          @id @default(autoincrement())
   name           String
   nutritionDayId Int
-  nutritionDay   NutritionDay @relation(fields: [nutritionDayId], references: [id])
+  nutritionDay   NutritionDay @relation(fields: [nutritionDayId], references: [id], onDelete: Cascade)
   items          FoodItem[]
+
+  @@index([nutritionDayId])
 }
 
 model FoodItem {
@@ -63,14 +74,15 @@ model FoodItem {
   carbs   Float
   fat     Float
   mealId  Int
-  meal    Meal   @relation(fields: [mealId], references: [id])
+  meal    Meal   @relation(fields: [mealId], references: [id], onDelete: Cascade)
+
+  @@index([mealId])
 }
 
 model Settings {
   id                  Int     @id @default(1)
   showWorkoutWidget   Boolean @default(true)
   showNutritionWidget Boolean @default(true)
-  showCalendarWidget  Boolean @default(true)
   showPrWidget        Boolean @default(true)
   kcalGoal            Int     @default(2500)
   proteinGoal         Int     @default(180)
@@ -134,8 +146,10 @@ model WorkoutTemplateExercise {
   id                Int                  @id @default(autoincrement())
   name              String
   workoutTemplateId Int
-  workoutTemplate   WorkoutTemplate      @relation(fields: [workoutTemplateId], references: [id])
+  workoutTemplate   WorkoutTemplate      @relation(fields: [workoutTemplateId], references: [id], onDelete: Cascade)
   sets              WorkoutTemplateSet[]
+
+  @@index([workoutTemplateId])
 }
 
 model WorkoutTemplateSet {
@@ -144,7 +158,9 @@ model WorkoutTemplateSet {
   reps                      Int
   rpe                       Float?
   workoutTemplateExerciseId Int
-  workoutTemplateExercise   WorkoutTemplateExercise @relation(fields: [workoutTemplateExerciseId], references: [id])
+  workoutTemplateExercise   WorkoutTemplateExercise @relation(fields: [workoutTemplateExerciseId], references: [id], onDelete: Cascade)
+
+  @@index([workoutTemplateExerciseId])
 }
 
 model Program {
@@ -163,6 +179,8 @@ model ProgramDay {
   programId Int
   program   Program           @relation(fields: [programId], references: [id], onDelete: Cascade)
   exercises ProgramExercise[]
+
+  @@index([programId])
 }
 
 model ProgramExercise {
@@ -173,4 +191,6 @@ model ProgramExercise {
   weekSchemes  String
   programDayId Int
   programDay   ProgramDay @relation(fields: [programDayId], references: [id], onDelete: Cascade)
+
+  @@index([programDayId])
 }
