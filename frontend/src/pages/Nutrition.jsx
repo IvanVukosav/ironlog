@@ -5,6 +5,7 @@ import { fetchJson } from "../api";
 import MealCard from "../components/MealCard";
 import TdeeCard from "../components/TdeeCard";
 import { useToast } from "../context/useToast";
+import { useSettings } from "../context/useSettings";
 import { getCssVar } from "../utils/theme";
 import styles from "./Nutrition.module.css";
 
@@ -68,7 +69,7 @@ function Nutrition() {
   const [mealName, setMealName] = useState("");
   const [foodItemTemplates, setFoodItemTemplates] = useState([]);
   const [recentItems, setRecentItems] = useState([]);
-  const [settings, setSettings] = useState(null);
+  const { settings } = useSettings();
   const [quickAddName, setQuickAddName] = useState("");
   const [showQuickPicker, setShowQuickPicker] = useState(false);
   const quickAddRef = useRef(null);
@@ -103,13 +104,6 @@ function Nutrition() {
 
     fetchJson(`/api/nutrition/recent-items?limit=${RECENT_ITEMS_LIMIT}`)
       .then((data) => setRecentItems(data))
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
-
-    fetchJson("/api/settings")
-      .then((data) => setSettings(data))
       .catch((err) => {
         console.error(err);
         showError(err.message);
@@ -279,11 +273,7 @@ function Nutrition() {
         />
       </div>
 
-      <TdeeCard
-        today={today}
-        kcalGoal={settings?.kcalGoal}
-        onGoalChange={(kcalGoal) => setSettings((prev) => ({ ...prev, kcalGoal }))}
-      />
+      <TdeeCard today={today} />
 
       {!day && (
         <div className={styles.startRow}>

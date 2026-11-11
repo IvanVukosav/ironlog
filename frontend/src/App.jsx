@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import i18n from "./i18n";
 import { fetchJson, UNAUTHORIZED_EVENT } from "./api";
 import { ToastProvider } from "./context/ToastContext";
+import { SettingsProvider } from "./context/SettingsContext";
 import ToastContainer from "./components/ToastContainer";
 import RestTimer from "./components/RestTimer";
 import NavBar from "./components/NavBar";
@@ -42,20 +42,6 @@ function App() {
     return () => window.removeEventListener(UNAUTHORIZED_EVENT, handleUnauthorized);
   }, []);
 
-  useEffect(() => {
-    if (authState !== AUTH_STATES.ok) return;
-
-    fetchJson("/api/settings")
-      .then((data) => {
-        if (data?.language && data.language !== i18n.language) {
-          i18n.changeLanguage(data.language);
-        }
-        if (data?.theme) document.documentElement.setAttribute("data-theme", data.theme);
-        if (data?.template) document.documentElement.setAttribute("data-template", data.template);
-      })
-      .catch((err) => console.error(err));
-  }, [authState]);
-
   if (authState === AUTH_STATES.checking) {
     return null;
   }
@@ -66,23 +52,25 @@ function App() {
 
   return (
     <ToastProvider>
-      <BrowserRouter>
-        <NavBar />
-        <div className={styles.routes}>
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/log" element={<Log />} />
-            <Route path="/programs" element={<Programs />} />
-            <Route path="/nutrition" element={<Nutrition />} />
-            <Route path="/calendar" element={<Calendar />} />
-            <Route path="/calculator" element={<Calculator />} />
-            <Route path="/stats" element={<Stats />} />
-            <Route path="/settings" element={<Settings />} />
-          </Routes>
-        </div>
-      </BrowserRouter>
-      <ToastContainer />
-      <RestTimer />
+      <SettingsProvider>
+        <BrowserRouter>
+          <NavBar />
+          <div className={styles.routes}>
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/log" element={<Log />} />
+              <Route path="/programs" element={<Programs />} />
+              <Route path="/nutrition" element={<Nutrition />} />
+              <Route path="/calendar" element={<Calendar />} />
+              <Route path="/calculator" element={<Calculator />} />
+              <Route path="/stats" element={<Stats />} />
+              <Route path="/settings" element={<Settings />} />
+            </Routes>
+          </div>
+        </BrowserRouter>
+        <ToastContainer />
+        <RestTimer />
+      </SettingsProvider>
     </ToastProvider>
   );
 }

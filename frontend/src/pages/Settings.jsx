@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { downloadFile, fetchJson, getToken, setToken, UNAUTHORIZED_EVENT } from "../api";
 import { DEFAULT_E1RM_FORMULA, E1RM_FORMULAS } from "../utils/oneRepMax";
 import { useToast } from "../context/useToast";
+import { useSettings } from "../context/useSettings";
 import PowerliftingSetup from "../components/PowerliftingSetup";
 import styles from "./Settings.module.css";
 
@@ -39,9 +40,10 @@ const TEMPLATES = [
 ];
 
 function Settings() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { showError, showSuccess } = useToast();
-  const [settings, setSettings] = useState(null);
+  // Every change saves right away; the screen updates first and goes back if saving fails.
+  const { settings, updateSettings } = useSettings();
   // Goal fields being typed in, by field name; saved when the field is left.
   const [goalDrafts, setGoalDrafts] = useState({});
   // Logged exercises with their sets and the latest bodyweight, for the powerlifting setup.
@@ -59,7 +61,6 @@ function Settings() {
           showError(err.message);
         });
 
-    load("/api/settings", setSettings);
     load("/api/stats/prs", setExerciseSets);
     load(`/api/bodyweight?days=${BODYWEIGHT_LOOKBACK_DAYS}`, (entries) =>
       setLatestBodyweight(entries.at(-1) ?? null),
@@ -88,60 +89,15 @@ function Settings() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [templateMenuOpen]);
 
-  const changeLanguage = (lang) => {
-    i18n.changeLanguage(lang);
-    setSettings((prev) => ({ ...prev, language: lang }));
-    fetchJson("/api/settings", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ language: lang }),
-    }).catch((err) => {
-      console.error(err);
-      showError(err.message);
-    });
-  };
-
+  // The page's theme, template and language follow the settings (SettingsProvider).
   const changeTheme = (theme) => {
-    document.documentElement.setAttribute("data-theme", theme);
-    setSettings((prev) => ({ ...prev, theme }));
     setThemeMenuOpen(false);
-    fetchJson("/api/settings", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ theme }),
-    }).catch((err) => {
-      console.error(err);
-      showError(err.message);
-    });
+    updateSettings({ theme });
   };
 
   const changeTemplate = (template) => {
-    document.documentElement.setAttribute("data-template", template);
-    setSettings((prev) => ({ ...prev, template }));
     setTemplateMenuOpen(false);
-    fetchJson("/api/settings", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ template }),
-    }).catch((err) => {
-      console.error(err);
-      showError(err.message);
-    });
-  };
-
-  // Every change saves right away; the screen updates first and goes back if saving fails.
-  const updateSettings = (patch) => {
-    const previousSettings = settings;
-    setSettings((prev) => ({ ...prev, ...patch }));
-    fetchJson("/api/settings", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(patch),
-    }).catch((err) => {
-      console.error(err);
-      showError(err.message || t("settings.saveError"));
-      setSettings(previousSettings);
-    });
+    updateSettings({ template });
   };
 
   // Anything but a whole number of zero or more puts the saved goal back.
@@ -210,7 +166,7 @@ function Settings() {
         <select
           className={styles.languageSelect}
           value={settings?.language || "hr"}
-          onChange={(event) => changeLanguage(event.target.value)}
+          onChange={(event) => updateSettings({ language: event.target.value })}
         >
           <option value="hr">Hrvatski</option>
           <option value="en">English</option>

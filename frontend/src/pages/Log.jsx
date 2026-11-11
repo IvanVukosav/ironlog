@@ -6,6 +6,7 @@ import DatePicker from "../components/DatePicker";
 import ProgramLoader from "../components/ProgramLoader";
 import { fetchJson } from "../api";
 import { useToast } from "../context/useToast";
+import { useSettings } from "../context/useSettings";
 import { useDragReorder } from "../hooks/useDragReorder";
 import { DEFAULT_E1RM_FORMULA } from "../utils/oneRepMax";
 import styles from "./Log.module.css";
@@ -37,7 +38,7 @@ function Log() {
   const [savePromptName, setSavePromptName] = useState(null);
   const [savePromptMuscleGroup, setSavePromptMuscleGroup] = useState("");
   const [muscleGroupFilter, setMuscleGroupFilter] = useState(ALL_MUSCLE_GROUPS_FILTER);
-  const [settings, setSettings] = useState(null);
+  const { settings } = useSettings();
   const [workoutTemplates, setWorkoutTemplates] = useState([]);
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
   const [saveTemplateName, setSaveTemplateName] = useState(null);
@@ -76,13 +77,6 @@ function Log() {
   }, [date, showError]);
 
   useEffect(() => {
-    fetchJson("/api/settings")
-      .then((data) => setSettings(data))
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
-
     fetchJson("/api/workout-templates")
       .then((data) => setWorkoutTemplates(data))
       .catch((err) => {

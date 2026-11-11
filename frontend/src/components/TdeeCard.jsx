@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { fetchJson } from "../api";
 import { useToast } from "../context/useToast";
+import { useSettings } from "../context/useSettings";
 import styles from "./TdeeCard.module.css";
 
 const KCAL_PER_KG_BODYWEIGHT = 7700;
@@ -24,9 +25,11 @@ function formatSignedKg(kg) {
   return `${rounded > 0 ? "+" : ""}${rounded}`;
 }
 
-function TdeeCard({ today, kcalGoal, onGoalChange }) {
+function TdeeCard({ today }) {
   const { t, i18n } = useTranslation();
   const { showError, showSuccess } = useToast();
+  const { settings, updateSettings } = useSettings();
+  const kcalGoal = settings?.kcalGoal;
   const [estimate, setEstimate] = useState(null);
 
   useEffect(() => {
@@ -39,19 +42,9 @@ function TdeeCard({ today, kcalGoal, onGoalChange }) {
   }, [today, showError]);
 
   const setGoal = (kcal) => {
-    fetchJson("/api/settings", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ kcalGoal: kcal }),
-    })
-      .then(() => {
-        onGoalChange(kcal);
-        showSuccess(t("tdee.goalSet", { kcal }));
-      })
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+    updateSettings({ kcalGoal: kcal }).then((saved) => {
+      if (saved) showSuccess(t("tdee.goalSet", { kcal }));
+    });
   };
 
   if (!estimate) return null;

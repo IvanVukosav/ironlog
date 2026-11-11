@@ -16,6 +16,7 @@ import {
   resolveFeaturedExercises,
 } from "../utils/featuredExercises";
 import { useToast } from "../context/useToast";
+import { useSettings } from "../context/useSettings";
 import { getCssVar } from "../utils/theme";
 import { formatDayMonth } from "../utils/dates";
 import MuscleGroupVolumeChart from "../components/MuscleGroupVolumeChart";
@@ -70,7 +71,7 @@ function Stats() {
   const chartTextColor = getCssVar("--color-text");
   const chartFontFamily = getCssVar("--font-body");
   const [prs, setPrs] = useState([]);
-  const [settings, setSettings] = useState(null);
+  const { settings, updateSettings } = useSettings();
   const [selectedExercise, setSelectedExercise] = useState("");
   const [history, setHistory] = useState([]);
   const [manageMenuFor, setManageMenuFor] = useState(null);
@@ -98,13 +99,6 @@ function Stats() {
 
   useEffect(() => {
     fetchPrs();
-
-    fetchJson("/api/settings")
-      .then((data) => setSettings(data))
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
 
     fetchJson(`/api/bodyweight?days=${BODYWEIGHT_LOOKBACK_DAYS}`)
       .then((entries) => setLatestBodyweight(entries.at(-1) ?? null))
@@ -149,7 +143,7 @@ function Stats() {
   const featured = resolveFeaturedExercises(prs, parseFeaturedExercises(settings), formula);
   const isFeatured = (name) => !featured.isAuto && featured.names.includes(name);
 
-  // Saved straight away (Stats has no Save button) and rolled back if the request fails.
+  // Saved straight away: Stats has no Save button.
   const toggleFeatured = (name) => {
     const current = featured.isAuto ? [] : featured.names;
     const next = current.includes(name)
@@ -159,19 +153,7 @@ function Stats() {
       showError(t("stats.featuredLimit", { max: MAX_FEATURED_EXERCISES }));
       return;
     }
-
-    const previousSettings = settings;
-    const featuredExercises = JSON.stringify(next);
-    setSettings((prev) => ({ ...prev, featuredExercises }));
-    fetchJson("/api/settings", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ featuredExercises }),
-    }).catch((err) => {
-      console.error(err);
-      showError(err.message);
-      setSettings(previousSettings);
-    });
+    updateSettings({ featuredExercises: JSON.stringify(next) });
   };
 
   const deleteAllRecordsForExercise = (name) => {

@@ -1,9 +1,8 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { fetchJson } from "../api";
 import { calculateOneRepMax, DEFAULT_E1RM_FORMULA, E1RM_FORMULAS } from "../utils/oneRepMax";
 import { BAR_WEIGHTS_KG, DEFAULT_PLATE_SETUP, STANDARD_PLATES_KG } from "../utils/plates";
-import { useToast } from "../context/useToast";
+import { useSettings } from "../context/useSettings";
 import PlateCalculator from "../components/PlateCalculator";
 import WarmupGenerator from "../components/WarmupGenerator";
 import styles from "./Calculator.module.css";
@@ -34,14 +33,13 @@ function loadPlateSetup() {
 
 function Calculator() {
   const { t } = useTranslation();
-  const { showError } = useToast();
+  const { settings } = useSettings();
   const [weight, setWeight] = useState("");
   const [reps, setReps] = useState("");
   const [oneRM, setOneRM] = useState(null);
   const [step, setStep] = useState(5);
   const [minPct, setMinPct] = useState(70);
   const [error, setError] = useState(null);
-  const [settings, setSettings] = useState(null);
   const [plateTarget, setPlateTarget] = useState("");
   const [plateSetup, setPlateSetup] = useState(loadPlateSetup);
   const plateSectionRef = useRef(null);
@@ -60,15 +58,6 @@ function Calculator() {
     setPlateTarget(String(weightKg));
     plateSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
-
-  useEffect(() => {
-    fetchJson("/api/settings")
-      .then((data) => setSettings(data))
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
-  }, [showError]);
 
   const calculate = () => {
     if (!weight || !reps) return;

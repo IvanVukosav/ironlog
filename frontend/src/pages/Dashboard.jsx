@@ -14,6 +14,7 @@ import {
   Cell,
 } from "recharts";
 import { useToast } from "../context/useToast";
+import { useSettings } from "../context/useSettings";
 import { getCssVar } from "../utils/theme";
 import { DEFAULT_E1RM_FORMULA, findBestSetByE1rm } from "../utils/oneRepMax";
 import { addWeightTrend, weeklyTrendChange } from "../utils/weightTrend";
@@ -97,7 +98,7 @@ function Dashboard() {
   const chartFatColor = getCssVar("--color-fat");
   const [workout, setWorkout] = useState(null);
   const [nutritionDay, setNutritionDay] = useState(null);
-  const [settings, setSettings] = useState(null);
+  const { settings, updateSettings } = useSettings();
   const [kcalGoalInput, setKcalGoalInput] = useState(null);
   const [bodyweightChart, setBodyweightChart] = useState({
     entries: [],
@@ -124,13 +125,6 @@ function Dashboard() {
 
     fetchJson(`/api/nutrition?date=${today}`)
       .then((data) => setNutritionDay(data[0] || null))
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
-
-    fetchJson("/api/settings")
-      .then((data) => setSettings(data))
       .catch((err) => {
         console.error(err);
         showError(err.message);
@@ -178,19 +172,9 @@ function Dashboard() {
       setKcalGoalInput(null);
       return;
     }
-    fetchJson("/api/settings", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...settings, kcalGoal: parsed }),
-    })
-      .then(() => {
-        setSettings((prev) => ({ ...prev, kcalGoal: parsed }));
-        setKcalGoalInput(null);
-      })
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+    updateSettings({ kcalGoal: parsed }).then((saved) => {
+      if (saved) setKcalGoalInput(null);
+    });
   };
 
   const handleWorkoutRangeChange = (range) => {
