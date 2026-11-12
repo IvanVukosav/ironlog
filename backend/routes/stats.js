@@ -103,8 +103,9 @@ router.get("/volume", async (req, res) => {
     return res.status(400).json({ error: "Invalid range" });
   }
 
+  // Working sets only: a warm-up is preparation, not training volume.
   const sets = await prisma.set.findMany({
-    where: { exercise: { workout: { date: getRange(parseDateKey(date)) } } },
+    where: { isWarmup: false, exercise: { workout: { date: getRange(parseDateKey(date)) } } },
     include: { exercise: true },
   });
 
