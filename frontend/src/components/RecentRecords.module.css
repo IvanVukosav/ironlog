@@ -1,0 +1,120 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.heading {
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  font-weight: var(--heading-weight);
+  color: var(--color-text);
+}
+
+.empty {
+  composes: card from "../styles/shared.module.css";
+  color: var(--color-text-dim);
+  font-size: 0.85rem;
+}
+
+.list {
+  composes: card from "../styles/shared.module.css";
+  list-style: none;
+  padding: 0;
+  overflow: hidden;
+}
+
+.list li + li {
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 60px;
+  padding: 8px 16px;
+  background: transparent;
+  border: none;
+  color: var(--color-text);
+  font-family: var(--font-body);
+  text-align: left;
+  cursor: pointer;
+}
+
+.row:hover {
+  background: var(--color-bg-hover);
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: var(--badge-radius);
+  background: rgba(var(--color-accent-rgb), 0.14);
+  color: var(--color-accent);
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.detail {
+  color: var(--color-text-dim);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.value {
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.date {
+  color: var(--color-text-dim);
+  font-size: 0.75rem;
+}
+
+.moreButton {
+  align-self: flex-start;
+  min-height: 36px;
+  padding: 0 8px;
+  margin-left: -8px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: var(--color-accent);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.moreButton:hover {
+  background: var(--color-bg-hover);
+}

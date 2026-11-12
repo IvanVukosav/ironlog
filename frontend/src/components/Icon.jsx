@@ -28,6 +28,13 @@ const ICONS = {
     </>
   ),
   close: <path d="M6 6l12 12M18 6 6 18" />,
+  trophy: (
+    <>
+      <path d="M8 21h8M12 17v4" />
+      <path d="M7 4h10v5a5 5 0 0 1-10 0V4z" />
+      <path d="M17 6h3v1.5A3.5 3.5 0 0 1 16.6 11M7 6H4v1.5A3.5 3.5 0 0 0 7.4 11" />
+    </>
+  ),
   minus: <path d="M5 12h14" />,
   plus: <path d="M12 5v14M5 12h14" />,
 };

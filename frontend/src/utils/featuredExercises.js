@@ -17,16 +17,16 @@ export function parseFeaturedExercises(settings) {
 }
 
 /**
- * Card numbers for one exercise (`sets` in the /api/stats/prs shape): the best e1RM, how much it
- * grew over the last 30 days (null when the exercise is newer than that) and the e1RM of the
- * latest sessions for the trend line. Null when no set has an e1RM.
+ * Numbers for one featured exercise (`sets` in the /api/stats/prs shape): the best e1RM, how much
+ * it grew since the time `since` (null when the exercise has no session before it; the last 30
+ * days by default) and the e1RM of the latest sessions for the trend line. Null when no set has
+ * an e1RM.
  */
-export function summarizeExercise(sets, formula, now = Date.now()) {
+export function summarizeExercise(sets, formula, since = Date.now() - CHANGE_WINDOW_DAYS * DAY_MS) {
   const timeline = buildE1rmTimeline(sets, formula);
   if (timeline.length === 0) return null;
   const best = Math.max(...timeline.map((point) => point.e1rm));
-  const cutoff = now - CHANGE_WINDOW_DAYS * DAY_MS;
-  const earlier = timeline.filter((point) => point.time < cutoff);
+  const earlier = timeline.filter((point) => point.time < since);
   return {
     best,
     change: earlier.length > 0 ? best - Math.max(...earlier.map((point) => point.e1rm)) : null,

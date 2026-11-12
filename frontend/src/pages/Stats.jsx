@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, Fragment } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, Fragment } from "react";
 import { useSearchParams } from "react-router-dom";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { useTranslation } from "react-i18next";
@@ -15,14 +15,25 @@ import {
   parseFeaturedExercises,
   resolveFeaturedExercises,
 } from "../utils/featuredExercises";
+import {
+  DEFAULT_STATS_PERIOD,
+  STATS_PERIODS,
+  periodStart,
+  summarizePeriod,
+  volumeBuckets,
+} from "../utils/statsSummary";
 import { useToast } from "../context/useToast";
 import { useSettings } from "../context/useSettings";
 import { useReportError } from "../hooks/useReportError";
 import { AXIS_TICK, CHART_COLORS, TOOLTIP_STYLE } from "../utils/chartTheme";
-import { formatDayMonth } from "../utils/dates";
+import { formatDayMonth, formatShortDate, todayKey } from "../utils/dates";
+import { formatNumber, formatSet, formatVolume } from "../utils/numbers";
+import Icon from "../components/Icon";
 import MuscleGroupVolumeChart from "../components/MuscleGroupVolumeChart";
 import MainLiftsChart from "../components/MainLiftsChart";
 import FeaturedExercises from "../components/FeaturedExercises";
+import RecentRecords from "../components/RecentRecords";
+import VolumeBars from "../components/VolumeBars";
 import styles from "./Stats.module.css";
 
 const E1RM_DECIMAL_PLACES = 1;
@@ -30,17 +41,6 @@ const SCORE_DECIMAL_PLACES = 1;
 const PR_DOT_RADIUS = 4;
 const POINT_DOT_RADIUS = 2;
 const BODYWEIGHT_LOOKBACK_DAYS = 3650;
-
-function getRecentPr(sets, formula) {
-  if (sets.length === 0) return null;
-  const bestOverall = findBestSetByE1rm(sets, formula);
-  const latestDate = sets.reduce(
-    (latest, set) => (!latest || set.date > latest ? set.date : latest),
-    null,
-  );
-  // No best set at all when every set is a warm-up or has no e1RM.
-  return bestOverall?.date === latestDate ? bestOverall : null;
-}
 
 // Best e1RM per session; isPr marks sessions that beat every earlier one.
 function buildProgressData(history, formula) {
@@ -61,7 +61,8 @@ function buildProgressData(history, formula) {
 }
 
 function Stats() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const language = i18n.language;
   const { showError } = useToast();
   const reportError = useReportError();
   const [searchParams] = useSearchParams();
@@ -74,8 +75,19 @@ function Stats() {
   const [expandedHistoryFor, setExpandedHistoryFor] = useState(null);
   const [expandedHistoryEntries, setExpandedHistoryEntries] = useState([]);
   const [latestBodyweight, setLatestBodyweight] = useState(null);
+  const [period, setPeriod] = useState(DEFAULT_STATS_PERIOD);
   const chartSectionRef = useRef(null);
+  const allExercisesRef = useRef(null);
   const formula = settings?.e1rmFormula ?? DEFAULT_E1RM_FORMULA;
+
+  // Days are UTC midnights, the way workouts are stored; today is the user's own today.
+  const todayStart = Date.parse(todayKey());
+  const since = periodStart(todayStart, STATS_PERIODS[period]);
+  const periodSpan = t(`stats.periodSpan.${period}`);
+  // Every set ever logged goes through these, so they are worked out again only when needed.
+  const summary = useMemo(() => summarizePeriod(prs, formula, since), [prs, formula, since]);
+  const volume = useMemo(() => volumeBuckets(prs, period, todayStart), [prs, period, todayStart]);
+  const kg = (value) => `${formatNumber(value, language, { decimals: E1RM_DECIMAL_PLACES })} kg`;
 
   const fetchPrs = useCallback(() => {
     fetchJson("/api/stats/prs")
@@ -190,14 +202,6 @@ function Stats() {
     .filter(Boolean)
     .sort((rowA, rowB) => rowB.e1rm - rowA.e1rm);
 
-  const recentPrRows = prs
-    .map((pr) => {
-      const recentPr = getRecentPr(pr.sets, formula);
-      return recentPr ? { name: pr.name, ...recentPr } : null;
-    })
-    .filter(Boolean)
-    .sort((rowA, rowB) => (rowA.date < rowB.date ? 1 : -1));
-
   const mainLiftBests = findMainLiftBests(prs, settings, formula);
   const hasAllMainLifts = MAIN_LIFTS.every((lift) => mainLiftBests[lift]);
   const hasAnyMainLift = MAIN_LIFTS.some((lift) => mainLiftBests[lift]);
@@ -210,9 +214,12 @@ function Stats() {
     total && latestBodyweight
       ? calculateWilks(total, latestBodyweight.weight, settings?.sex)
       : null;
+  const score = (value) =>
+    value ? formatNumber(value, language, { decimals: SCORE_DECIMAL_PLACES }) : "—";
 
   const chartData = buildProgressData(history, formula);
 
+  // The chart sits on a card, so a PR's ring takes the card's colour to stand clear of the line.
   const renderProgressDot = ({ cx, cy, index, payload }) => (
     <circle
       key={index}
@@ -220,225 +227,276 @@ function Stats() {
       cy={cy}
       r={payload.isPr ? PR_DOT_RADIUS : POINT_DOT_RADIUS}
       fill={CHART_COLORS.accent}
-      stroke={payload.isPr ? CHART_COLORS.surface : "none"}
+      stroke={payload.isPr ? CHART_COLORS.card : "none"}
       strokeWidth={2}
     />
   );
 
   return (
     <div className={styles.page}>
-      <h1 className={styles.heading}>{t("nav.stats")}</h1>
-      <FeaturedExercises
-        exerciseSets={prs}
-        names={featured.names}
-        isAuto={featured.isAuto}
-        formula={formula}
-        onSelect={showProgressFor}
-      />
-      {settings?.showPowerliftingTotal && hasAnyMainLift && (
-        <div className={styles.totalSection}>
-          <h2 className={styles.recentPrHeading}>{t("stats.powerliftingTotal")}</h2>
-          <div className={styles.totalGrid}>
-            {MAIN_LIFTS.map((lift) => (
-              <div key={lift} className={styles.totalCard}>
-                <span className={styles.totalLabel}>{t(`stats.lifts.${lift}`)}</span>
-                <span className={styles.totalValue}>
-                  {mainLiftBests[lift]
-                    ? `${mainLiftBests[lift].e1rm.toFixed(E1RM_DECIMAL_PLACES)}kg`
-                    : "—"}
-                </span>
-                {mainLiftBests[lift] && (
-                  <span className={styles.totalDetail}>{mainLiftBests[lift].name}</span>
+      <header className={styles.header}>
+        <h1 className={styles.heading}>{t("nav.stats")}</h1>
+        <div className={styles.periods} role="group" aria-label={t("stats.periodLabel")}>
+          {Object.keys(STATS_PERIODS).map((key) => (
+            <button
+              key={key}
+              type="button"
+              className={styles.periodButton}
+              aria-pressed={period === key}
+              onClick={() => setPeriod(key)}
+            >
+              {t(`stats.periods.${key}`)}
+            </button>
+          ))}
+        </div>
+      </header>
+
+      <div className={styles.sections}>
+        <div className={styles.tiles}>
+          <div className={styles.tile}>
+            <span className={styles.tileValue}>{formatNumber(summary.workouts, language)}</span>
+            <span className={styles.tileLabel}>{t("stats.tileWorkouts")}</span>
+          </div>
+          <div className={styles.tile}>
+            <span className={styles.tileValue}>{formatVolume(summary.volume, language)}</span>
+            <span className={styles.tileLabel}>{t("stats.tileVolume")}</span>
+          </div>
+          <div className={styles.tile}>
+            <span className={styles.tileValue}>
+              {formatNumber(summary.records.length, language)}
+            </span>
+            <span className={styles.tileLabel}>{t("stats.tileRecords")}</span>
+          </div>
+        </div>
+
+        <FeaturedExercises
+          exerciseSets={prs}
+          names={featured.names}
+          isAuto={featured.isAuto}
+          formula={formula}
+          since={since}
+          periodSpan={periodSpan}
+          onSelect={showProgressFor}
+          onEdit={() =>
+            allExercisesRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+          }
+        />
+
+        <RecentRecords
+          records={summary.records}
+          periodSpan={periodSpan}
+          todayStart={todayStart}
+          onSelect={showProgressFor}
+        />
+
+        <VolumeBars unit={volume.unit} buckets={volume.buckets} />
+
+        {settings?.showPowerliftingTotal && hasAnyMainLift && (
+          <section className={styles.section}>
+            <h2 className={styles.sectionHeading}>{t("stats.powerliftingTotal")}</h2>
+            <div className={styles.totalGrid}>
+              {MAIN_LIFTS.map((lift) => (
+                <div key={lift} className={styles.tile}>
+                  <span className={styles.tileLabel}>{t(`stats.lifts.${lift}`)}</span>
+                  <span className={styles.tileValue}>
+                    {mainLiftBests[lift] ? kg(mainLiftBests[lift].e1rm) : "—"}
+                  </span>
+                  {mainLiftBests[lift] && (
+                    <span className={styles.tileDetail}>{mainLiftBests[lift].name}</span>
+                  )}
+                </div>
+              ))}
+              <div className={styles.tile}>
+                <span className={styles.tileLabel}>{t("stats.total")}</span>
+                <span className={styles.tileValue}>{total ? kg(total) : "—"}</span>
+                <span className={styles.tileDetail}>e1RM</span>
+              </div>
+              <div className={styles.tile}>
+                <span className={styles.tileLabel}>DOTS</span>
+                <span className={styles.tileValue}>{score(dots)}</span>
+                {latestBodyweight && (
+                  <span className={styles.tileDetail}>
+                    {t("stats.atBodyweight", {
+                      weight: formatNumber(latestBodyweight.weight, language),
+                    })}
+                  </span>
                 )}
               </div>
-            ))}
-            <div className={styles.totalCard}>
-              <span className={styles.totalLabel}>{t("stats.total")}</span>
-              <span className={styles.totalValue}>
-                {total ? `${total.toFixed(E1RM_DECIMAL_PLACES)}kg` : "—"}
-              </span>
-              <span className={styles.totalDetail}>e1RM</span>
+              <div className={styles.tile}>
+                <span className={styles.tileLabel}>Wilks</span>
+                <span className={styles.tileValue}>{score(wilks)}</span>
+              </div>
             </div>
-            <div className={styles.totalCard}>
-              <span className={styles.totalLabel}>DOTS</span>
-              <span className={styles.totalValue}>
-                {dots ? dots.toFixed(SCORE_DECIMAL_PLACES) : "—"}
-              </span>
-              {latestBodyweight && (
-                <span className={styles.totalDetail}>
-                  {t("stats.atBodyweight", { weight: latestBodyweight.weight })}
-                </span>
-              )}
-            </div>
-            <div className={styles.totalCard}>
-              <span className={styles.totalLabel}>Wilks</span>
-              <span className={styles.totalValue}>
-                {wilks ? wilks.toFixed(SCORE_DECIMAL_PLACES) : "—"}
-              </span>
-            </div>
-          </div>
-          {!hasAllMainLifts && <p className={styles.totalHint}>{t("stats.totalMissingLifts")}</p>}
-          {hasAllMainLifts && !latestBodyweight && (
-            <p className={styles.totalHint}>{t("stats.totalMissingBodyweight")}</p>
-          )}
-        </div>
-      )}
-      {settings?.showPowerliftingTotal && hasAnyMainLift && (
-        <MainLiftsChart exerciseSets={prs} mainLiftBests={mainLiftBests} formula={formula} />
-      )}
-      {recentPrRows.length > 0 && (
-        <div className={styles.recentPrSection}>
-          <h2 className={styles.recentPrHeading}>{t("stats.recentPrs")}</h2>
-          <div className={styles.recentPrList}>
-            {recentPrRows.map((row) => (
-              <button
-                key={row.name}
-                className={
-                  row.name === selectedExercise
-                    ? `${styles.recentPrRow} ${styles.recentPrRowActive}`
-                    : styles.recentPrRow
-                }
-                onClick={() => showProgressFor(row.name)}
-              >
-                <span className={styles.recentPrName}>{row.name}</span>
-                <span className={styles.recentPrDetail}>
-                  {row.e1rm.toFixed(E1RM_DECIMAL_PLACES)}kg e1RM — {row.weight}kg × {row.reps} @ RPE{" "}
-                  {row.rpe ?? "—"}
-                </span>
-                <span className={styles.recentPrDate}>{formatDayMonth(row.date)}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-      <table className={styles.table}>
-        <thead>
-          <tr>
-            <th>{t("stats.allExercisesHeader")}</th>
-            <th>e1RM</th>
-            <th>{t("stats.bestSetHeader")}</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {prRows.map((row) => (
-            <Fragment key={row.name}>
-              <tr>
-                <td>
-                  <button
-                    type="button"
-                    className={
-                      isFeatured(row.name)
-                        ? `${styles.starButton} ${styles.starButtonActive}`
-                        : styles.starButton
-                    }
-                    onClick={() => toggleFeatured(row.name)}
-                    aria-pressed={isFeatured(row.name)}
-                    title={t(isFeatured(row.name) ? "stats.featuredUnstar" : "stats.featuredStar")}
-                  >
-                    {isFeatured(row.name) ? "★" : "☆"}
-                  </button>
-                  {row.name}
-                </td>
-                <td>{row.e1rm.toFixed(E1RM_DECIMAL_PLACES)}kg</td>
-                <td>
-                  {row.weight}kg × {row.reps} @ RPE {row.rpe ?? "—"}
-                </td>
-                <td className={styles.manageCell} data-manage-menu>
-                  <button
-                    className={styles.manageMenuButton}
-                    onClick={() => setManageMenuFor(manageMenuFor === row.name ? null : row.name)}
-                  >
-                    ⋮
-                  </button>
-                  {manageMenuFor === row.name && (
-                    <div className={styles.manageMenuDropdown}>
-                      <button
-                        className={styles.manageMenuItem}
-                        onClick={() => toggleHistoryPanel(row.name)}
-                      >
-                        {t("stats.showByDate")}
-                      </button>
-                      <button
-                        className={styles.manageMenuItem}
-                        onClick={() => deleteAllRecordsForExercise(row.name)}
-                      >
-                        {t("stats.deleteAllRecords")}
-                      </button>
-                    </div>
-                  )}
-                </td>
-              </tr>
-              {expandedHistoryFor === row.name && (
-                <tr>
-                  <td colSpan={4} className={styles.historyPanel}>
-                    {expandedHistoryEntries.map((entry) => (
-                      <div key={entry.id} className={styles.historyEntryRow}>
-                        <span className={styles.historyEntryDate}>
-                          {formatDayMonth(entry.date)}
-                        </span>
-                        <span className={styles.historyEntryDetail}>
-                          {entry.sets.length > 0
-                            ? entry.sets.map((set) => `${set.weight}kg×${set.reps}`).join(", ")
-                            : t("stats.noSets")}
-                        </span>
-                        <button
-                          className={styles.historyEntryDelete}
-                          onClick={() => deleteHistoryEntry(entry.id)}
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    ))}
-                  </td>
-                </tr>
-              )}
-            </Fragment>
-          ))}
-        </tbody>
-      </table>
-
-      <div className={styles.chartSection} ref={chartSectionRef}>
-        <div className={styles.chartHeader}>
-          <h2 className={styles.chartHeading}>{t("stats.progress")}</h2>
-          {prs.length > 0 && (
-            <select
-              className={styles.exerciseSelect}
-              value={selectedExercise}
-              onChange={(event) => setSelectedExercise(event.target.value)}
-            >
-              {prs.map((pr) => (
-                <option key={pr.name} value={pr.name}>
-                  {pr.name}
-                </option>
-              ))}
-            </select>
-          )}
-        </div>
-        {chartData.length > 0 ? (
-          <ResponsiveContainer width="100%" height={220}>
-            <LineChart data={chartData}>
-              <XAxis dataKey="label" tick={AXIS_TICK} axisLine={false} tickLine={false} />
-              <YAxis tick={AXIS_TICK} axisLine={false} tickLine={false} domain={["auto", "auto"]} />
-              <Tooltip {...TOOLTIP_STYLE} formatter={(value) => [`${value}kg`, "e1RM"]} />
-              <Line
-                type="monotone"
-                dataKey="e1rm"
-                stroke={CHART_COLORS.accent}
-                strokeWidth={2}
-                dot={renderProgressDot}
-                activeDot={{ r: 5 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        ) : (
-          <p className={styles.emptyState}>{t("dashboard.noData")}</p>
+            {!hasAllMainLifts && <p className={styles.hint}>{t("stats.totalMissingLifts")}</p>}
+            {hasAllMainLifts && !latestBodyweight && (
+              <p className={styles.hint}>{t("stats.totalMissingBodyweight")}</p>
+            )}
+          </section>
         )}
-      </div>
+        {settings?.showPowerliftingTotal && hasAnyMainLift && (
+          <MainLiftsChart exerciseSets={prs} mainLiftBests={mainLiftBests} formula={formula} />
+        )}
 
-      <div className={styles.volumeSection}>
-        <h2 className={styles.chartHeading}>{t("dashboard.muscleGroupVolume")}</h2>
-        <MuscleGroupVolumeChart />
+        <section className={styles.section} ref={chartSectionRef}>
+          <div className={styles.sectionHeader}>
+            <h2 className={styles.sectionHeading}>{t("stats.progress")}</h2>
+            {prs.length > 0 && (
+              <select
+                className={styles.exerciseSelect}
+                aria-label={t("stats.exercise")}
+                value={selectedExercise}
+                onChange={(event) => setSelectedExercise(event.target.value)}
+              >
+                {prs.map((pr) => (
+                  <option key={pr.name} value={pr.name}>
+                    {pr.name}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+          <div className={styles.card}>
+            {chartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={220}>
+                <LineChart data={chartData}>
+                  <XAxis dataKey="label" tick={AXIS_TICK} axisLine={false} tickLine={false} />
+                  <YAxis
+                    tick={AXIS_TICK}
+                    axisLine={false}
+                    tickLine={false}
+                    domain={["auto", "auto"]}
+                  />
+                  <Tooltip {...TOOLTIP_STYLE} formatter={(value) => [kg(value), "e1RM"]} />
+                  <Line
+                    type="monotone"
+                    dataKey="e1rm"
+                    stroke={CHART_COLORS.accent}
+                    strokeWidth={2}
+                    dot={renderProgressDot}
+                    activeDot={{ r: 5 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className={styles.emptyState}>{t("dashboard.noData")}</p>
+            )}
+          </div>
+        </section>
+
+        <section className={styles.section} ref={allExercisesRef}>
+          <h2 className={styles.sectionHeading}>{t("stats.allExercisesHeader")}</h2>
+          <div className={styles.tableCard}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th scope="col">{t("stats.exercise")}</th>
+                  <th scope="col">e1RM</th>
+                  <th scope="col">{t("stats.bestSetHeader")}</th>
+                  <th scope="col">
+                    <span className={styles.srOnly}>{t("stats.options")}</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {prRows.map((row) => (
+                  <Fragment key={row.name}>
+                    <tr>
+                      <td>
+                        <span className={styles.nameCell}>
+                          <button
+                            type="button"
+                            className={
+                              isFeatured(row.name)
+                                ? `${styles.starButton} ${styles.starButtonActive}`
+                                : styles.starButton
+                            }
+                            onClick={() => toggleFeatured(row.name)}
+                            aria-pressed={isFeatured(row.name)}
+                            aria-label={t("stats.featuredStar")}
+                            title={t(
+                              isFeatured(row.name) ? "stats.featuredUnstar" : "stats.featuredStar",
+                            )}
+                          >
+                            {isFeatured(row.name) ? "★" : "☆"}
+                          </button>
+                          {row.name}
+                        </span>
+                      </td>
+                      <td className={styles.numberCell}>{kg(row.e1rm)}</td>
+                      <td>{formatSet(row, language)}</td>
+                      <td className={styles.manageCell} data-manage-menu>
+                        <button
+                          type="button"
+                          className={styles.manageMenuButton}
+                          aria-label={t("stats.exerciseOptions", { name: row.name })}
+                          aria-expanded={manageMenuFor === row.name}
+                          onClick={() =>
+                            setManageMenuFor(manageMenuFor === row.name ? null : row.name)
+                          }
+                        >
+                          <Icon name="more" />
+                        </button>
+                        {manageMenuFor === row.name && (
+                          <div className={styles.manageMenuDropdown}>
+                            <button
+                              type="button"
+                              className={styles.manageMenuItem}
+                              onClick={() => toggleHistoryPanel(row.name)}
+                            >
+                              {t("stats.showByDate")}
+                            </button>
+                            <button
+                              type="button"
+                              className={styles.manageMenuItem}
+                              onClick={() => deleteAllRecordsForExercise(row.name)}
+                            >
+                              {t("stats.deleteAllRecords")}
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                    {expandedHistoryFor === row.name && (
+                      <tr>
+                        <td colSpan={4} className={styles.historyPanel}>
+                          {expandedHistoryEntries.map((entry) => (
+                            <div key={entry.id} className={styles.historyEntryRow}>
+                              <span className={styles.historyEntryDate}>
+                                {formatShortDate(entry.date, language)}
+                              </span>
+                              <span className={styles.historyEntryDetail}>
+                                {entry.sets.length > 0
+                                  ? entry.sets
+                                      .map((set) => formatSet({ ...set, rpe: null }, language))
+                                      .join(", ")
+                                  : t("stats.noSets")}
+                              </span>
+                              <button
+                                type="button"
+                                className={styles.historyEntryDelete}
+                                aria-label={t("common.delete")}
+                                onClick={() => deleteHistoryEntry(entry.id)}
+                              >
+                                <Icon name="close" size={16} />
+                              </button>
+                            </div>
+                          ))}
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section className={styles.section}>
+          <h2 className={styles.sectionHeading}>{t("dashboard.muscleGroupVolume")}</h2>
+          <div className={styles.card}>
+            <MuscleGroupVolumeChart />
+          </div>
+        </section>
       </div>
     </div>
   );

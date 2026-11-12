@@ -7,6 +7,8 @@ export const CHART_COLORS = {
   accent: "var(--color-accent)",
   // What a chart is drawn on; rings around markers use it to stand clear of their line.
   surface: "var(--color-bg)",
+  // The same, for a chart inside a card.
+  card: "var(--color-bg-card)",
   textDim: "var(--color-text-dim)",
   grid: "var(--color-border-subtle)",
   protein: "var(--color-protein)",

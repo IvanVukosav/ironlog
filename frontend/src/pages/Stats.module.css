@@ -1,13 +1,177 @@
 .page {
   padding: 1.5rem;
+  max-width: calc(880px + 3rem);
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Header: the page's name and the period everything below the tiles is counted over. */
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 1rem;
 }
 
 .heading {
   font-family: var(--font-body);
-  font-size: 1.5rem;
+  font-size: 1.75rem;
+  font-weight: var(--heading-weight);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+}
+
+.periods {
+  display: flex;
+  padding: 3px;
+  border-radius: 12px;
+  background: var(--color-bg-card);
+  box-shadow: var(--card-shadow);
+}
+
+.periodButton {
+  min-width: 52px;
+  min-height: 38px;
+  padding: 0 12px;
+  background: transparent;
+  border: none;
+  border-radius: 9px;
+  color: var(--color-text-dim);
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.periodButton:hover {
+  color: var(--color-text);
+}
+
+.periodButton[aria-pressed="true"] {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}
+
+.sections {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Tiles: a number with what it counts. */
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.tile {
+  composes: card from "../styles/shared.module.css";
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 12px 14px;
+}
+
+.tileValue {
+  color: var(--color-text);
+  font-size: 1.35rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tileLabel {
+  color: var(--color-text-dim);
+  font-size: 0.75rem;
+}
+
+.tileDetail {
+  color: var(--color-text-dim);
+  font-size: 0.75rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.totalGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+}
+
+/* Sections: a heading, sometimes with a control beside it, over a card. */
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+
+.sectionHeading {
+  font-family: var(--font-body);
+  font-size: 1.05rem;
   font-weight: var(--heading-weight);
   color: var(--color-text);
-  margin-bottom: 1rem;
+}
+
+.card {
+  composes: card from "../styles/shared.module.css";
+}
+
+.hint {
+  color: var(--color-text-dim);
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+}
+
+.exerciseSelect {
+  composes: input from "../styles/shared.module.css";
+  min-height: 36px;
+  max-width: 100%;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.emptyState {
+  color: var(--color-text-dim);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+}
+
+/* Every exercise: its best set, a star to feature it, and a menu. */
+
+.tableCard {
+  composes: card from "../styles/shared.module.css";
+  padding-top: 4px;
+  padding-bottom: 4px;
+  overflow-x: auto;
 }
 
 .table {
@@ -18,79 +182,85 @@
 }
 
 .table th {
+  padding: 10px 12px 10px 0;
+  border-bottom: 1px solid var(--color-border-subtle);
   color: var(--color-text-dim);
   font-size: 0.7rem;
-  text-transform: uppercase;
+  font-weight: 600;
   letter-spacing: 0.05em;
   text-align: left;
-  padding: 0.5rem 1.5rem 0.5rem 0;
-  border-bottom: 1px solid var(--color-border);
-  font-weight: 400;
+  text-transform: uppercase;
 }
 
 .table td {
-  color: var(--color-text);
-  padding: 0.5rem 1.5rem 0.5rem 0;
+  padding: 6px 12px 6px 0;
   border-bottom: 1px solid var(--color-border-subtle);
+  color: var(--color-text);
+  vertical-align: middle;
 }
 
-.table tr:last-child td {
+.table tbody tr:last-child td {
   border-bottom: none;
 }
 
-.chartSection {
-  margin-top: 2rem;
-}
-
-.chartHeader {
-  display: flex;
+.nameCell {
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.75rem;
+  gap: 2px;
+  font-weight: 600;
 }
 
-.chartHeading {
-  font-family: var(--font-body);
-  font-size: 1rem;
-  font-weight: var(--heading-weight);
-  color: var(--color-text);
-  letter-spacing: 0.03em;
+.numberCell {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
-.exerciseSelect {
-  border-radius: var(--input-radius);
-  background-color: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  color: var(--color-text);
-  font-family: var(--font-body);
-  font-size: 0.8rem;
-  padding: 4px 8px;
-}
-
-.emptyState {
+.starButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  margin-left: -8px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
   color: var(--color-text-dim);
-  font-family: var(--font-body);
-  font-size: 0.85rem;
+  font-size: 1rem;
+  cursor: pointer;
 }
 
-.manageCell {
+.starButton:hover,
+.starButtonActive {
+  color: var(--color-accent);
+}
+
+.table td.manageCell {
   position: relative;
   width: 1%;
+  padding-right: 0;
   white-space: nowrap;
 }
 
 .manageMenuButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  margin-left: auto;
   background: transparent;
   border: none;
+  border-radius: 10px;
   color: var(--color-text-dim);
-  font-size: 1.1rem;
-  line-height: 1;
   cursor: pointer;
-  padding: 0 4px;
 }
 
-.manageMenuButton:hover {
-  color: var(--color-accent);
+.manageMenuButton:hover,
+.manageMenuButton[aria-expanded="true"] {
+  background: var(--color-bg-hover);
+  color: var(--color-text);
 }
 
 .manageMenuDropdown {
@@ -99,38 +269,25 @@
   top: 100%;
   right: 0;
   z-index: 20;
-  min-width: 190px;
+  min-width: 200px;
+  padding: 4px 0;
   overflow: hidden;
 }
 
 .manageMenuItem {
-  display: block;
-  width: 100%;
-  background: transparent;
-  border: none;
-  color: var(--color-text);
-  font-family: var(--font-body);
-  font-size: 0.8rem;
-  padding: 10px 14px;
-  text-align: left;
-  cursor: pointer;
+  composes: dropdownItem from "../styles/shared.module.css";
 }
 
-.manageMenuItem:hover {
-  background-color: var(--color-bg-card);
-  color: var(--color-accent);
-}
-
-.table .historyPanel {
-  background-color: var(--color-bg-card);
-  padding: 0.5rem 1rem;
+.table td.historyPanel {
+  padding: 4px 12px;
+  background: var(--row-bg);
 }
 
 .historyEntryRow {
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 6px 0;
+  min-height: 40px;
   border-bottom: 1px solid var(--color-border-subtle);
   font-size: 0.8rem;
 }
@@ -140,149 +297,29 @@
 }
 
 .historyEntryDate {
+  flex: 0 0 72px;
   color: var(--color-text-dim);
-  flex: 0 0 60px;
 }
 
 .historyEntryDetail {
-  color: var(--color-text);
   flex: 1;
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
 }
 
 .historyEntryDelete {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
   background: none;
   border: none;
+  border-radius: 8px;
   color: var(--color-text-dim);
   cursor: pointer;
-  padding: 0;
-  line-height: 1;
 }
 
 .historyEntryDelete:hover {
-  color: var(--color-accent);
-}
-
-.volumeSection {
-  margin-top: 2rem;
-}
-
-.volumeSection .chartHeading {
-  margin-bottom: 0.75rem;
-}
-
-.recentPrSection {
-  margin-bottom: 2rem;
-}
-
-.recentPrHeading {
-  font-family: var(--font-body);
-  font-size: 1rem;
-  font-weight: var(--heading-weight);
-  color: var(--color-text);
-  letter-spacing: 0.03em;
-  margin-bottom: 0.75rem;
-}
-
-.recentPrList {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.recentPrRow {
-  composes: card from "../styles/shared.module.css";
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  width: 100%;
-  padding: 0.6rem 1rem;
-  color: inherit;
-  cursor: pointer;
-  text-align: left;
-}
-
-.recentPrRow:hover {
-  background-color: var(--color-bg-hover);
-}
-
-.recentPrRowActive {
-  background-color: rgba(var(--color-accent-rgb), 0.08);
-  box-shadow:
-    var(--card-shadow),
-    inset 0 0 0 1px rgba(var(--color-accent-rgb), 0.6);
-}
-
-.recentPrRowActive:hover {
-  background-color: rgba(var(--color-accent-rgb), 0.14);
-}
-
-.recentPrName {
-  color: var(--color-text);
-  font-size: 0.9rem;
-  font-weight: 700;
-  flex: 0 0 160px;
-}
-
-.recentPrDetail {
-  color: var(--color-text-dim);
-  font-size: 0.8rem;
-}
-
-.recentPrDate {
-  color: var(--color-text-dim);
-  font-size: 0.8rem;
-  white-space: nowrap;
-}
-
-.totalSection {
-  margin-bottom: 2rem;
-}
-
-.totalGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 0.75rem;
-}
-
-.totalCard {
-  composes: card from "../styles/shared.module.css";
-  display: flex;
-  flex-direction: column;
-}
-
-.totalLabel {
-  composes: label from "../styles/shared.module.css";
-}
-
-.totalValue {
-  composes: value from "../styles/shared.module.css";
-}
-
-.totalDetail {
-  color: var(--color-text-dim);
-  font-family: var(--font-body);
-  font-size: 0.75rem;
-  margin-top: 0.25rem;
-}
-
-.totalHint {
-  color: var(--color-text-dim);
-  font-family: var(--font-body);
-  font-size: 0.8rem;
-  margin-top: 0.75rem;
-}
-
-.starButton {
-  background: transparent;
-  border: none;
-  color: var(--color-text-dim);
-  cursor: pointer;
-  font-size: 1rem;
-  line-height: 1;
-  padding: 0 0.5rem 0 0;
-}
-
-.starButton:hover,
-.starButtonActive {
   color: var(--color-accent);
 }

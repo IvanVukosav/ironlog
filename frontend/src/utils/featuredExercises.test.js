@@ -7,6 +7,7 @@ import {
 
 const NOW = Date.UTC(2026, 10, 10);
 const daysAgo = (days) => new Date(NOW - days * 864e5).toISOString();
+const LAST_30_DAYS = NOW - 30 * 864e5;
 // A single at RPE 10 has an e1RM equal to its weight (Brzycki: 36 / 36).
 const single = (weight, days) => ({ weight, reps: 1, rpe: 10, date: daysAgo(days) });
 
@@ -31,29 +32,41 @@ describe("summarizeExercise", () => {
     const summary = summarizeExercise(
       [single(100, 40), single(105, 35), single(110, 5)],
       "brzycki",
-      NOW,
+      LAST_30_DAYS,
     );
     expect(summary).toEqual({ best: 110, change: 5, trend: [100, 105, 110] });
   });
 
+  it("measures the change since the time it is given", () => {
+    const sets = [single(100, 100), single(105, 60), single(110, 5)];
+    expect(summarizeExercise(sets, "brzycki", NOW - 90 * 864e5).change).toBe(10);
+    expect(summarizeExercise(sets, "brzycki", NOW - 365 * 864e5).change).toBeNull();
+  });
+
   it("has no change for an exercise newer than 30 days", () => {
     expect(
-      summarizeExercise([single(100, 10), single(102.5, 3)], "brzycki", NOW).change,
+      summarizeExercise([single(100, 10), single(102.5, 3)], "brzycki", LAST_30_DAYS).change,
     ).toBeNull();
   });
 
   it("reports zero when there was no improvement", () => {
-    expect(summarizeExercise([single(110, 50), single(105, 5)], "brzycki", NOW).change).toBe(0);
+    expect(
+      summarizeExercise([single(110, 50), single(105, 5)], "brzycki", LAST_30_DAYS).change,
+    ).toBe(0);
   });
 
   it("keeps the last 12 sessions for the trend line", () => {
     const sets = Array.from({ length: 15 }, (_, index) => single(100 + index, 15 - index));
-    expect(summarizeExercise(sets, "brzycki", NOW).trend).toHaveLength(12);
+    expect(summarizeExercise(sets, "brzycki", LAST_30_DAYS).trend).toHaveLength(12);
   });
 
   it("is null when no set has an e1RM", () => {
     expect(
-      summarizeExercise([{ weight: 50, reps: 30, rpe: 10, date: daysAgo(1) }], "brzycki", NOW),
+      summarizeExercise(
+        [{ weight: 50, reps: 30, rpe: 10, date: daysAgo(1) }],
+        "brzycki",
+        LAST_30_DAYS,
+      ),
     ).toBeNull();
   });
 });

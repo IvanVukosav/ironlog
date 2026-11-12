@@ -12,6 +12,7 @@ import { buildE1rmTimeline } from "../utils/oneRepMax";
 import { MAIN_LIFTS } from "../utils/strengthScores";
 import { AXIS_TICK, CHART_COLORS } from "../utils/chartTheme";
 import { formatDayMonth } from "../utils/dates";
+import { formatNumber } from "../utils/numbers";
 import styles from "./MainLiftsChart.module.css";
 
 const E1RM_DECIMAL_PLACES = 1;
@@ -20,6 +21,7 @@ const PR_DOT_RADIUS = 4;
 const SINGLE_POINT_DOT_RADIUS = 4;
 
 function ChartTooltip({ active, payload, label, liftNames }) {
+  const { i18n } = useTranslation();
   const entries = (payload ?? []).filter(
     (entry) => entry.value !== null && entry.value !== undefined,
   );
@@ -32,7 +34,9 @@ function ChartTooltip({ active, payload, label, liftNames }) {
         <div key={entry.dataKey} className={styles.tooltipRow}>
           <span className={styles.swatch} style={{ backgroundColor: entry.color }} />
           <span>{liftNames[entry.dataKey]}</span>
-          <span className={styles.tooltipValue}>{entry.value}kg</span>
+          <span className={styles.tooltipValue}>
+            {`${formatNumber(entry.value, i18n.language, { decimals: E1RM_DECIMAL_PLACES })} kg`}
+          </span>
           {entry.payload[`${entry.dataKey}Pr`] && <span className={styles.prTag}>PR</span>}
         </div>
       ))}
@@ -46,7 +50,7 @@ function ChartTooltip({ active, payload, label, liftNames }) {
  * /api/stats/prs shape; `mainLiftBests` comes from findMainLiftBests.
  */
 function MainLiftsChart({ exerciseSets, mainLiftBests, formula }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const liftColors = CHART_COLORS.lifts;
 
   const lifts = MAIN_LIFTS.filter((lift) => mainLiftBests[lift]);
@@ -100,7 +104,7 @@ function MainLiftsChart({ exerciseSets, mainLiftBests, formula }) {
   };
 
   return (
-    <div className={styles.section}>
+    <section>
       <h2 className={styles.heading}>{t("stats.mainLiftsChart")}</h2>
       <ul className={styles.legend}>
         {lifts.map((lift) => (
@@ -108,7 +112,7 @@ function MainLiftsChart({ exerciseSets, mainLiftBests, formula }) {
             <span className={styles.swatch} style={{ backgroundColor: liftColors[lift] }} />
             <span>{liftNames[lift]}</span>
             <span className={styles.legendValue}>
-              {mainLiftBests[lift].e1rm.toFixed(E1RM_DECIMAL_PLACES)}kg
+              {`${formatNumber(mainLiftBests[lift].e1rm, i18n.language, { decimals: E1RM_DECIMAL_PLACES })} kg`}
             </span>
           </li>
         ))}
@@ -154,7 +158,7 @@ function MainLiftsChart({ exerciseSets, mainLiftBests, formula }) {
           ))}
         </LineChart>
       </ResponsiveContainer>
-    </div>
+    </section>
   );
 }
 

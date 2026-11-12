@@ -21,6 +21,18 @@ export function formatWeekdayDate(date, language, thisYear = todayParts().year) 
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
+// "28. lis" or "Oct 28": a day with its month, short, in the given language. The year is added
+// only when it is not `thisYear`.
+export function formatShortDate(date, language, thisYear = todayParts().year) {
+  const value = new Date(date);
+  return new Intl.DateTimeFormat(language, {
+    day: "numeric",
+    month: "short",
+    year: value.getUTCFullYear() === thisYear ? undefined : "numeric",
+    timeZone: "UTC",
+  }).format(value);
+}
+
 // "2026-11-04": the date format the API takes, from a year, a 1-based month and a day.
 export function toDateKey(year, month, day) {
   return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;

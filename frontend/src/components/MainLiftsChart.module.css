@@ -1,13 +1,8 @@
-.section {
-  margin-bottom: 2rem;
-}
-
 .heading {
   font-family: var(--font-body);
-  font-size: 1rem;
+  font-size: 1.05rem;
   font-weight: var(--heading-weight);
   color: var(--color-text);
-  letter-spacing: 0.03em;
   margin-bottom: 0.5rem;
 }
 

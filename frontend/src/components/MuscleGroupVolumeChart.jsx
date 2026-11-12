@@ -3,12 +3,13 @@ import { useTranslation } from "react-i18next";
 import { fetchJson } from "../api";
 import { useReportError } from "../hooks/useReportError";
 import { todayKey } from "../utils/dates";
+import { formatVolume } from "../utils/numbers";
 import styles from "./MuscleGroupVolumeChart.module.css";
 
 const MINIMUM_MAX_VOLUME = 1;
 
 function MuscleGroupVolumeChart() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const reportError = useReportError();
   const [range, setRange] = useState("week");
   const [volumeData, setVolumeData] = useState([]);
@@ -51,7 +52,7 @@ function MuscleGroupVolumeChart() {
                   style={{ width: `${(entry.volume / maxVolume) * 100}%` }}
                 />
               </div>
-              <span className={styles.barValue}>{Math.round(entry.volume)}kg</span>
+              <span className={styles.barValue}>{formatVolume(entry.volume, i18n.language)}</span>
             </div>
           ))}
         </div>

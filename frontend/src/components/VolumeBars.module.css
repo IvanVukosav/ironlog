@@ -1,0 +1,85 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+
+.heading {
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  font-weight: var(--heading-weight);
+  color: var(--color-text);
+}
+
+.current {
+  color: var(--color-text-dim);
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.bars {
+  list-style: none;
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 72px;
+}
+
+.slot {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+}
+
+.bar {
+  display: block;
+  width: 100%;
+  border-radius: 6px;
+  background: var(--color-border);
+}
+
+.barCurrent {
+  background: var(--color-accent);
+}
+
+/* Spaced like the bars, so each label sits under its own. */
+.labels {
+  display: flex;
+  gap: 6px;
+  margin-top: -4px;
+  color: var(--color-text-dim);
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.labels span {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  white-space: nowrap;
+  overflow: visible;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}

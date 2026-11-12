@@ -13,3 +13,25 @@ export function toDecimalText(text) {
 export function parseDecimal(text) {
   return parseFloat(toDecimalText(text));
 }
+
+// A number written the way the language writes it: "180,0" in Croatian, "180.0" in English.
+// `decimals` fixes the decimal places; without it, up to `maxDecimals` (2) show, none if whole.
+export function formatNumber(value, language, { decimals, maxDecimals = 2 } = {}) {
+  return new Intl.NumberFormat(language, {
+    minimumFractionDigits: decimals ?? 0,
+    maximumFractionDigits: decimals ?? maxDecimals,
+  }).format(value);
+}
+
+// A set as one line: "102,5 kg × 5 @ 8", without the "@" part when it has no RPE.
+export function formatSet({ weight, reps, rpe }, language) {
+  const base = `${formatNumber(weight, language)} kg × ${reps}`;
+  return Number.isFinite(rpe) ? `${base} @ ${formatNumber(rpe, language)}` : base;
+}
+
+// Weight moved: tonnes from 1000 kg up ("48,2 t"), kilograms below ("850 kg").
+export function formatVolume(kg, language) {
+  return kg >= 1000
+    ? `${formatNumber(kg / 1000, language, { decimals: 1 })} t`
+    : `${formatNumber(kg, language, { decimals: 0 })} kg`;
+}

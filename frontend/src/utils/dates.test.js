@@ -2,11 +2,21 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   dateKeyOf,
   formatDayMonth,
+  formatShortDate,
   formatWeekdayDate,
   toDateKey,
   todayKey,
   todayParts,
 } from "./dates";
+
+describe("formatShortDate", () => {
+  it("writes day and short month in the language, with the year only when it differs", () => {
+    expect(formatShortDate("2026-10-28", "hr", 2026)).toBe("28. lis");
+    expect(formatShortDate("2026-10-28", "en", 2026)).toBe("Oct 28");
+    expect(formatShortDate("2025-10-28", "hr", 2026)).toBe("28. lis 2025.");
+    expect(formatShortDate(Date.UTC(2025, 9, 28), "en", 2026)).toBe("Oct 28, 2025");
+  });
+});
 
 describe("formatWeekdayDate", () => {
   it("writes the day out, with a capital even in Croatian", () => {
