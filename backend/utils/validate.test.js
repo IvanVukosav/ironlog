@@ -6,6 +6,7 @@ const {
   parseYearMonth,
   parseDateKey,
   parseDateRangeQuery,
+  parseSet,
   parseMacros,
 } = require("./validate");
 
@@ -43,6 +44,56 @@ test("parseDateRangeQuery gives the month, or the last days up to now", () => {
   assert.ok(daysAgo > 6.9 && daysAgo < 7.1, `got ${daysAgo} days`);
   assert.equal("lt" in recent, false);
   assert.throws(() => parseDateRangeQuery({ year: "2026" }), isBadRequest);
+});
+
+test("parseSet reads a set as typed, with a decimal comma or point", () => {
+  assert.deepEqual(parseSet({ weight: "102,5", reps: "5", rpe: "7,5" }), {
+    weight: 102.5,
+    reps: 5,
+    rpe: 7.5,
+    isWarmup: false,
+  });
+  assert.deepEqual(parseSet({ weight: " 92.5 ", reps: 4, rpe: 8, isWarmup: true }), {
+    weight: 92.5,
+    reps: 4,
+    rpe: 8,
+    isWarmup: true,
+  });
+});
+
+test("parseSet leaves RPE out when none was given", () => {
+  for (const rpe of [undefined, null, ""]) {
+    assert.equal(parseSet({ weight: "100", reps: "5", rpe }).rpe, null);
+  }
+});
+
+test("parseSet takes zero, so bodyweight and failed sets can be logged", () => {
+  assert.deepEqual(parseSet({ weight: "0", reps: "0" }), {
+    weight: 0,
+    reps: 0,
+    rpe: null,
+    isWarmup: false,
+  });
+});
+
+test("parseSet refuses what is not a weight, whole reps or an RPE of 1 to 10", () => {
+  const bad = [
+    { weight: "", reps: "5" },
+    { reps: "5" },
+    { weight: "12abc", reps: "5" },
+    { weight: "-1", reps: "5" },
+    { weight: "100", reps: "" },
+    { weight: "100", reps: "pet" },
+    { weight: "100", reps: "5,5" },
+    { weight: "100", reps: "-1" },
+    { weight: "100", reps: "5", rpe: "11" },
+    { weight: "100", reps: "5", rpe: "0" },
+    { weight: "100", reps: "5", rpe: "  " },
+  ];
+  for (const body of bad) {
+    assert.throws(() => parseSet(body), isBadRequest, `accepted ${JSON.stringify(body)}`);
+  }
+  assert.throws(() => parseSet({ weight: "100", reps: "pet" }), /Reps must be a whole number/);
 });
 
 test("parseMacros trims the name and wants four numbers", () => {

@@ -1,31 +1,16 @@
 const express = require("express");
 const router = express.Router();
 const { getDayRange, getWeekRange, getMonthRange, getYearRange } = require("../utils/dateRange");
-const { parseId, parsePositiveInt, parseDateKey, parseYearMonth } = require("../utils/validate");
-const { HttpError } = require("../utils/errorHandler");
+const {
+  parseId,
+  parsePositiveInt,
+  parseDateKey,
+  parseYearMonth,
+  parseSet,
+} = require("../utils/validate");
 
 const RANGE_GETTERS = { month: getMonthRange, year: getYearRange };
 const prisma = require("../prisma/client");
-
-const RPE_MIN = 1;
-const RPE_MAX = 10;
-
-// The fields arrive as text from the inputs; RPE may be left out.
-function parseSetBody(body) {
-  const weight = parseFloat(body?.weight);
-  const reps = parseInt(body?.reps);
-  const rpe =
-    body?.rpe === undefined || body?.rpe === null || body?.rpe === "" ? null : parseFloat(body.rpe);
-
-  if (!(weight >= 0)) throw new HttpError(400, "Weight must be a number of 0 or more");
-  if (!Number.isInteger(reps) || reps < 0) {
-    throw new HttpError(400, "Reps must be a whole number of 0 or more");
-  }
-  if (rpe !== null && !(rpe >= RPE_MIN && rpe <= RPE_MAX)) {
-    throw new HttpError(400, `RPE must be between ${RPE_MIN} and ${RPE_MAX}`);
-  }
-  return { weight, reps, rpe, isWarmup: Boolean(body?.isWarmup) };
-}
 
 router.get("/", async (req, res) => {
   const { date, limit } = req.query;
@@ -224,7 +209,7 @@ router.delete("/exercises/:id", async (req, res) => {
 });
 
 router.post("/exercises/:id/sets", async (req, res) => {
-  const data = parseSetBody(req.body);
+  const data = parseSet(req.body);
   const exerciseId = parseId(req.params.id);
   const existingSetCount = await prisma.set.count({ where: { exerciseId } });
   const set = await prisma.set.create({
@@ -254,7 +239,7 @@ router.patch("/exercises/:id/sets/reorder", async (req, res) => {
 router.patch("/sets/:id", async (req, res) => {
   const set = await prisma.set.update({
     where: { id: parseId(req.params.id) },
-    data: parseSetBody(req.body),
+    data: parseSet(req.body),
   });
   res.json(set);
 });
