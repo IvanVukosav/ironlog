@@ -6,6 +6,7 @@ import MealCard from "../components/MealCard";
 import TdeeCard from "../components/TdeeCard";
 import { useToast } from "../context/useToast";
 import { useSettings } from "../context/useSettings";
+import { useReportError } from "../hooks/useReportError";
 import { getCssVar } from "../utils/theme";
 import { todayKey } from "../utils/dates";
 import styles from "./Nutrition.module.css";
@@ -56,6 +57,7 @@ function GoalBar({ value, goal, colorClass }) {
 function Nutrition() {
   const { t } = useTranslation();
   const { showError } = useToast();
+  const reportError = useReportError();
   const chartBgCardColor = getCssVar("--color-bg-card");
   const chartBorderColor = getCssVar("--color-border");
   const chartTextDimColor = getCssVar("--color-text-dim");
@@ -78,11 +80,8 @@ function Nutrition() {
   useEffect(() => {
     fetchJson(`/api/nutrition?date=${date}`)
       .then((data) => setDay(data[0] || null))
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
-  }, [date, showError]);
+      .catch(reportError);
+  }, [date, reportError]);
 
   useEffect(() => {
     if (!showQuickPicker) return undefined;
@@ -96,41 +95,28 @@ function Nutrition() {
   }, [showQuickPicker]);
 
   useEffect(() => {
-    fetchJson("/api/food-item-templates")
-      .then((data) => setFoodItemTemplates(data))
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+    fetchJson("/api/food-item-templates").then(setFoodItemTemplates).catch(reportError);
 
     fetchJson(`/api/nutrition/recent-items?limit=${RECENT_ITEMS_LIMIT}`)
-      .then((data) => setRecentItems(data))
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
-  }, [showError]);
+      .then(setRecentItems)
+      .catch(reportError);
+  }, [reportError]);
 
   const createDay = () => {
     fetchJson("/api/nutrition/days", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ date }),
+      json: { date },
     })
-      .then((data) => setDay(data))
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+      .then(setDay)
+      .catch(reportError);
   };
 
   const copyPreviousDay = () => {
     fetchJson("/api/nutrition/days/copy", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ fromDate: previousDateString(date), toDate: date }),
+      json: { fromDate: previousDateString(date), toDate: date },
     })
-      .then((data) => setDay(data))
+      .then(setDay)
       .catch((err) => {
         console.error(err);
         showError(
@@ -144,31 +130,26 @@ function Nutrition() {
   const addMeal = () => {
     fetchJson("/api/nutrition/meals", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: mealName, nutritionDayId: day.id }),
+      json: { name: mealName, nutritionDayId: day.id },
     })
       .then((data) => {
         setDay((prev) => ({ ...prev, meals: [...(prev.meals || []), data] }));
         setMealName("");
       })
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+      .catch(reportError);
   };
 
   const quickAddItem = (template) => {
     const addItemToMeal = (mealId) =>
       fetchJson(`/api/nutrition/meals/${mealId}/items`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+        json: {
           name: template.name,
           kcal: template.kcal,
           protein: template.protein,
           carbs: template.carbs,
           fat: template.fat,
-        }),
+        },
       });
 
     const applyItemToState = (mealId, item) => {
@@ -188,8 +169,7 @@ function Nutrition() {
       ? addItemToMeal(existingMeal.id).then((item) => applyItemToState(existingMeal.id, item))
       : fetchJson("/api/nutrition/meals", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: DEFAULT_MEAL_NAME, nutritionDayId: day.id }),
+          json: { name: DEFAULT_MEAL_NAME, nutritionDayId: day.id },
         }).then((newMeal) => {
           setDay((prev) => ({
             ...prev,
@@ -203,17 +183,13 @@ function Nutrition() {
         setQuickAddName("");
         setShowQuickPicker(false);
       })
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+      .catch(reportError);
   };
 
   const saveFoodItemTemplate = (item) => {
     fetchJson("/api/food-item-templates", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(item),
+      json: item,
     })
       .then((data) => {
         setFoodItemTemplates((prev) =>
@@ -222,10 +198,7 @@ function Nutrition() {
           ),
         );
       })
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+      .catch(reportError);
   };
 
   const quickAddQuery = quickAddName.trim().toLowerCase();

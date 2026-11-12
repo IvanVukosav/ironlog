@@ -4,6 +4,7 @@ import { downloadFile, fetchJson, getToken, setToken, UNAUTHORIZED_EVENT } from 
 import { DEFAULT_E1RM_FORMULA, E1RM_FORMULAS } from "../utils/oneRepMax";
 import { useToast } from "../context/useToast";
 import { useSettings } from "../context/useSettings";
+import { useReportError } from "../hooks/useReportError";
 import PowerliftingSetup from "../components/PowerliftingSetup";
 import styles from "./Settings.module.css";
 
@@ -42,6 +43,7 @@ const TEMPLATES = [
 function Settings() {
   const { t } = useTranslation();
   const { showError, showSuccess } = useToast();
+  const reportError = useReportError();
   // Every change saves right away; the screen updates first and goes back if saving fails.
   const { settings, updateSettings } = useSettings();
   // Goal fields being typed in, by field name; saved when the field is left.
@@ -53,19 +55,13 @@ function Settings() {
   const [templateMenuOpen, setTemplateMenuOpen] = useState(false);
 
   useEffect(() => {
-    const load = (path, onData) =>
-      fetchJson(path)
-        .then(onData)
-        .catch((err) => {
-          console.error(err);
-          showError(err.message);
-        });
+    const load = (path, onData) => fetchJson(path).then(onData).catch(reportError);
 
     load("/api/stats/prs", setExerciseSets);
     load(`/api/bodyweight?days=${BODYWEIGHT_LOOKBACK_DAYS}`, (entries) =>
       setLatestBodyweight(entries.at(-1) ?? null),
     );
-  }, [showError]);
+  }, [reportError]);
 
   useEffect(() => {
     if (!themeMenuOpen) return undefined;
@@ -115,10 +111,7 @@ function Settings() {
   };
 
   const download = (path, fallbackName) => {
-    downloadFile(path, fallbackName).catch((err) => {
-      console.error(err);
-      showError(err.message);
-    });
+    downloadFile(path, fallbackName).catch(reportError);
   };
 
   const importBackup = async (file) => {
@@ -134,18 +127,14 @@ function Settings() {
 
     fetchJson("/api/backup/import", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(backup),
+      json: backup,
     })
       .then(() => {
         showSuccess(t("settings.backupImported"));
         // Everything changed, including theme and language: start fresh.
         window.location.reload();
       })
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+      .catch(reportError);
   };
 
   const logout = () => {

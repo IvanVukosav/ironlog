@@ -8,6 +8,7 @@ import { fetchJson } from "../api";
 import { useToast } from "../context/useToast";
 import { useSettings } from "../context/useSettings";
 import { useDragReorder } from "../hooks/useDragReorder";
+import { useReportError } from "../hooks/useReportError";
 import { DEFAULT_E1RM_FORMULA } from "../utils/oneRepMax";
 import { todayKey } from "../utils/dates";
 import styles from "./Log.module.css";
@@ -28,6 +29,7 @@ const SUPERSET_COLORS = ["#3ba7ff", "#3ec95c", "#ffb020", "#c678dd", "#ff6b9d"];
 function Log() {
   const { t } = useTranslation();
   const { showError } = useToast();
+  const reportError = useReportError();
   const [searchParams] = useSearchParams();
   const [date, setDate] = useState(searchParams.get("date") || todayKey());
   const [workout, setWorkout] = useState(null);
@@ -51,45 +53,23 @@ function Log() {
     setWorkout((prev) => ({ ...prev, exercises: newExercises }));
     fetchJson(`/api/workouts/${workout.id}/exercises/reorder`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ exerciseIds: newExercises.map((exercise) => exercise.id) }),
-    }).catch((err) => {
-      console.error(err);
-      showError(err.message);
-    });
+      json: { exerciseIds: newExercises.map((exercise) => exercise.id) },
+    }).catch(reportError);
   });
 
   useEffect(() => {
     fetchJson(`/api/workouts?date=${date}`)
       .then((data) => setWorkout(data[0] || null))
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+      .catch(reportError);
 
-    fetchJson("/api/exercise-templates")
-      .then((data) => setExerciseTemplates(data))
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
-  }, [date, showError]);
+    fetchJson("/api/exercise-templates").then(setExerciseTemplates).catch(reportError);
+  }, [date, reportError]);
 
   useEffect(() => {
-    fetchJson("/api/workout-templates")
-      .then((data) => setWorkoutTemplates(data))
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+    fetchJson("/api/workout-templates").then(setWorkoutTemplates).catch(reportError);
 
-    fetchJson("/api/programs")
-      .then((data) => setPrograms(data))
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
-  }, [showError]);
+    fetchJson("/api/programs").then(setPrograms).catch(reportError);
+  }, [reportError]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -107,14 +87,10 @@ function Log() {
   const createWorkout = () => {
     fetchJson("/api/workouts", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ date }),
+      json: { date },
     })
-      .then((data) => setWorkout(data))
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+      .then(setWorkout)
+      .catch(reportError);
   };
 
   const cancelWorkout = () => {
@@ -124,10 +100,7 @@ function Log() {
     }
     fetchJson(`/api/workouts/${workout.id}`, { method: "DELETE" })
       .then(() => setWorkout(null))
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+      .catch(reportError);
   };
 
   const addExercise = () => {
@@ -150,8 +123,7 @@ function Log() {
 
     fetchJson(`/api/workouts/${workout.id}/exercises`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: exerciseName }),
+      json: { name: exerciseName },
     })
       .then((data) => {
         setWorkout((prev) => ({
@@ -161,46 +133,34 @@ function Log() {
         setExerciseName("");
         setShowExercisePicker(false);
       })
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+      .catch(reportError);
   };
 
   const updateWorkoutName = (name) => {
     if (!workout || name.trim() === (workout.name || "")) return;
     fetchJson(`/api/workouts/${workout.id}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name }),
+      json: { name },
     })
       .then((data) => setWorkout((prev) => ({ ...prev, name: data.name })))
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+      .catch(reportError);
   };
 
   const updateWorkoutNotes = (notes) => {
     if (!workout || notes.trim() === (workout.notes || "")) return;
     fetchJson(`/api/workouts/${workout.id}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ notes }),
+      json: { notes },
     })
       .then((data) => setWorkout((prev) => ({ ...prev, notes: data.notes })))
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+      .catch(reportError);
   };
 
   const saveExerciseTemplate = (name, muscleGroup) => {
     if (!muscleGroup) return;
     fetchJson("/api/exercise-templates", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, muscleGroup }),
+      json: { name, muscleGroup },
     })
       .then((data) => {
         setExerciseTemplates((prev) =>
@@ -211,18 +171,14 @@ function Log() {
         setSavePromptName(null);
         setSavePromptMuscleGroup("");
       })
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+      .catch(reportError);
   };
 
   const saveWorkoutTemplate = () => {
     if (!saveTemplateName || !saveTemplateName.trim() || !workout) return;
     fetchJson("/api/workout-templates", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+      json: {
         name: saveTemplateName.trim(),
         exercises: workout.exercises.map((exercise) => ({
           name: exercise.name,
@@ -232,7 +188,7 @@ function Log() {
             rpe: set.rpe,
           })),
         })),
-      }),
+      },
     })
       .then((data) => {
         setWorkoutTemplates((prev) =>
@@ -242,17 +198,13 @@ function Log() {
         );
         setSaveTemplateName(null);
       })
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+      .catch(reportError);
   };
 
   const applyWorkoutTemplate = (templateId) => {
     fetchJson(`/api/workout-templates/${templateId}/apply`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ workoutId: workout.id }),
+      json: { workoutId: workout.id },
     })
       .then((createdExercises) => {
         setWorkout((prev) => ({
@@ -261,10 +213,7 @@ function Log() {
         }));
         setShowTemplatePicker(false);
       })
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+      .catch(reportError);
   };
 
   const deleteWorkoutTemplate = (templateId) => {
@@ -272,19 +221,13 @@ function Log() {
       .then(() =>
         setWorkoutTemplates((prev) => prev.filter((template) => template.id !== templateId)),
       )
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+      .catch(reportError);
   };
 
   const removeExerciseTemplate = (id) => {
     fetchJson(`/api/exercise-templates/${id}`, { method: "DELETE" })
       .then(() => setExerciseTemplates((prev) => prev.filter((template) => template.id !== id)))
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+      .catch(reportError);
   };
 
   const filteredTemplates = exerciseTemplates.filter((template) => {

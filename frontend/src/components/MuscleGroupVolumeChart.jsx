@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { fetchJson } from "../api";
-import { useToast } from "../context/useToast";
+import { useReportError } from "../hooks/useReportError";
 import { todayKey } from "../utils/dates";
 import styles from "./MuscleGroupVolumeChart.module.css";
 
@@ -9,7 +9,7 @@ const MINIMUM_MAX_VOLUME = 1;
 
 function MuscleGroupVolumeChart() {
   const { t } = useTranslation();
-  const { showError } = useToast();
+  const reportError = useReportError();
   const [range, setRange] = useState("week");
   const [volumeData, setVolumeData] = useState([]);
   const ranges = [
@@ -21,12 +21,9 @@ function MuscleGroupVolumeChart() {
   useEffect(() => {
     const today = todayKey();
     fetchJson(`/api/stats/volume?range=${range}&date=${today}`)
-      .then((data) => setVolumeData(data))
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
-  }, [range, showError]);
+      .then(setVolumeData)
+      .catch(reportError);
+  }, [range, reportError]);
 
   const maxVolume = Math.max(...volumeData.map((entry) => entry.volume), MINIMUM_MAX_VOLUME);
 

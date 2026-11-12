@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { fetchJson } from "../api";
-import { useToast } from "../context/useToast";
+import { useReportError } from "../hooks/useReportError";
 import { toDateKey, todayParts } from "../utils/dates";
 import styles from "./Calendar.module.css";
 
@@ -12,7 +12,7 @@ const MEASUREMENT_FIELDS = ["waist", "chest", "arms", "thighs", "hips"];
 function Calendar() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { showError } = useToast();
+  const reportError = useReportError();
   const { year: todayYear, month: todayMonth, day: todayDay } = todayParts();
   const [currentYear, setCurrentYear] = useState(todayYear);
   const [currentMonth, setCurrentMonth] = useState(todayMonth);
@@ -38,10 +38,7 @@ function Calendar() {
         .then((data) => {
           if (!isStale) setData(data);
         })
-        .catch((err) => {
-          console.error(err);
-          showError(err.message);
-        });
+        .catch(reportError);
 
     const query = `year=${currentYear}&month=${currentMonth}`;
     load(`/api/workouts/month?${query}`, setWorkoutDates);
@@ -50,7 +47,7 @@ function Calendar() {
     return () => {
       isStale = true;
     };
-  }, [currentYear, currentMonth, showError]);
+  }, [currentYear, currentMonth, reportError]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -146,8 +143,7 @@ function Calendar() {
     if (!bwWeight || isNaN(parsed) || parsed <= 0) return;
     fetchJson("/api/bodyweight", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ date: bwModalDate, weight: parsed }),
+      json: { date: bwModalDate, weight: parsed },
     })
       .then((data) => {
         setBwModalDate(null);
@@ -164,10 +160,7 @@ function Calendar() {
           return [...filtered, data];
         });
       })
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+      .catch(reportError);
   };
 
   const deleteBw = () => {
@@ -177,10 +170,7 @@ function Calendar() {
         setBwModalDate(null);
         setMonthBwEntries((prev) => prev.filter((entry) => entry.id !== bwEntryId));
       })
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+      .catch(reportError);
   };
 
   const handleMeasurementsClick = (day) => {
@@ -207,8 +197,7 @@ function Calendar() {
     if (!hasAnyValue) return;
     fetchJson("/api/body-measurements", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ date: measurementsModalDate, ...measurementsForm }),
+      json: { date: measurementsModalDate, ...measurementsForm },
     })
       .then((data) => {
         setMeasurementsModalDate(null);
@@ -225,10 +214,7 @@ function Calendar() {
           return [...filtered, data];
         });
       })
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+      .catch(reportError);
   };
 
   const deleteMeasurements = () => {
@@ -238,10 +224,7 @@ function Calendar() {
         setMeasurementsModalDate(null);
         setMonthMeasurements((prev) => prev.filter((entry) => entry.id !== measurementsEntryId));
       })
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+      .catch(reportError);
   };
 
   const prevMonthDays = new Date(Date.UTC(currentYear, currentMonth - 1, 0)).getUTCDate();

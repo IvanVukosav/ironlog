@@ -13,7 +13,7 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import { useToast } from "../context/useToast";
+import { useReportError } from "../hooks/useReportError";
 import { useSettings } from "../context/useSettings";
 import { getCssVar } from "../utils/theme";
 import { DEFAULT_E1RM_FORMULA, findBestSetByE1rm } from "../utils/oneRepMax";
@@ -86,7 +86,7 @@ function getWeekDates(anchorDateString) {
 function Dashboard() {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { showError } = useToast();
+  const reportError = useReportError();
   const chartAccentColor = getCssVar("--color-accent");
   const chartTextDimColor = getCssVar("--color-text-dim");
   const chartBgCardColor = getCssVar("--color-bg-card");
@@ -118,53 +118,24 @@ function Dashboard() {
   useEffect(() => {
     fetchJson(`/api/workouts?date=${today}`)
       .then((data) => setWorkout(data[0] || null))
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+      .catch(reportError);
 
     fetchJson(`/api/nutrition?date=${today}`)
       .then((data) => setNutritionDay(data[0] || null))
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+      .catch(reportError);
 
     fetchJson(`/api/bodyweight?days=${DAYS_PER_WEEK + TREND_WARMUP_DAYS}`)
       .then((data) => setBodyweightChart(toBodyweightChart(data, DAYS_PER_WEEK)))
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+      .catch(reportError);
 
-    fetchJson("/api/workouts?limit=5")
-      .then((data) => setRecentWorkouts(data))
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+    fetchJson("/api/workouts?limit=5").then(setRecentWorkouts).catch(reportError);
 
-    fetchJson(`/api/workouts/week?date=${today}`)
-      .then((data) => setWeeklyWorkouts(data))
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+    fetchJson(`/api/workouts/week?date=${today}`).then(setWeeklyWorkouts).catch(reportError);
 
-    fetchJson(`/api/stats/streak?date=${today}`)
-      .then((data) => setStreak(data))
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+    fetchJson(`/api/stats/streak?date=${today}`).then(setStreak).catch(reportError);
 
-    fetchJson("/api/stats/prs")
-      .then((data) => setPrs(data))
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
-  }, [today, showError]);
+    fetchJson("/api/stats/prs").then(setPrs).catch(reportError);
+  }, [today, reportError]);
 
   const saveKcalGoal = () => {
     const parsed = parseInt(kcalGoalInput);
@@ -180,19 +151,11 @@ function Dashboard() {
   const handleWorkoutRangeChange = (range) => {
     setWorkoutRangeView(range);
     if (range === "week") {
-      fetchJson(`/api/workouts/week?date=${today}`)
-        .then((data) => setWeeklyWorkouts(data))
-        .catch((err) => {
-          console.error(err);
-          showError(err.message);
-        });
+      fetchJson(`/api/workouts/week?date=${today}`).then(setWeeklyWorkouts).catch(reportError);
     } else {
       fetchJson(`/api/workouts/count?range=${range}&date=${today}`)
         .then((data) => setRangeWorkoutCount(data.count))
-        .catch((err) => {
-          console.error(err);
-          showError(err.message);
-        });
+        .catch(reportError);
     }
   };
 
@@ -200,10 +163,7 @@ function Dashboard() {
     setBwRange(days);
     fetchJson(`/api/bodyweight?days=${days + TREND_WARMUP_DAYS}`)
       .then((data) => setBodyweightChart(toBodyweightChart(data, days)))
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+      .catch(reportError);
   };
 
   const allItems = nutritionDay?.meals?.flatMap((meal) => meal.items) || [];

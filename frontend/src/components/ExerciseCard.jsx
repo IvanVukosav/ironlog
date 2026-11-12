@@ -9,6 +9,7 @@ import {
 import { useToast } from "../context/useToast";
 import { formatDayMonth } from "../utils/dates";
 import { useDragReorder } from "../hooks/useDragReorder";
+import { useReportError } from "../hooks/useReportError";
 import styles from "./ExerciseCard.module.css";
 
 const WEIGHT_STEP_KG = 1;
@@ -94,7 +95,8 @@ function Exercise({
   dragHandleProps,
 }) {
   const { t } = useTranslation();
-  const { showError, showSuccess } = useToast();
+  const { showSuccess } = useToast();
+  const reportError = useReportError();
   const [set, setSet] = useState({ weight: "", reps: "", rpe: "", isWarmup: false });
   const [showMenu, setShowMenu] = useState(false);
   const [editingSetId, setEditingSetId] = useState(null);
@@ -109,7 +111,7 @@ function Exercise({
     fetchJson(
       `/api/stats/exercise/${encodeURIComponent(exercise.name)}/last?workoutId=${exercise.workoutId}`,
     )
-      .then((data) => setLastSession(data))
+      .then(setLastSession)
       .catch((err) => console.error(err));
   }, [exercise.name, exercise.workoutId]);
 
@@ -130,19 +132,17 @@ function Exercise({
       for (const previousSet of lastWorkingSets) {
         const data = await fetchJson(`/api/workouts/exercises/${exercise.id}/sets`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
+          json: {
             weight: previousSet.weight,
             reps: previousSet.reps,
             rpe: previousSet.rpe,
             isWarmup: false,
-          }),
+          },
         });
         onAddSet(data);
       }
     } catch (err) {
-      console.error(err);
-      showError(err.message);
+      reportError(err);
     }
   };
 
@@ -150,12 +150,8 @@ function Exercise({
     onReorderSets(newSets);
     fetchJson(`/api/workouts/exercises/${exercise.id}/sets/reorder`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ setIds: newSets.map((workoutSet) => workoutSet.id) }),
-    }).catch((err) => {
-      console.error(err);
-      showError(err.message);
-    });
+      json: { setIds: newSets.map((workoutSet) => workoutSet.id) },
+    }).catch(reportError);
   });
 
   useEffect(() => {
@@ -178,8 +174,7 @@ function Exercise({
 
         return fetchJson(`/api/workouts/exercises/${exerciseId}/sets`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(set),
+          json: set,
         }).then((data) => {
           onAddSet(data);
           setSet({ weight: "", reps: "", rpe: "", isWarmup: false });
@@ -204,10 +199,7 @@ function Exercise({
           }
         });
       })
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+      .catch(reportError);
   };
 
   const deleteSet = (setId) => {
@@ -215,10 +207,7 @@ function Exercise({
       method: "DELETE",
     })
       .then(() => onDeleteSet(setId))
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+      .catch(reportError);
   };
 
   const deleteExercise = () => {
@@ -228,28 +217,21 @@ function Exercise({
     }
     fetchJson(`/api/workouts/exercises/${exercise.id}`, { method: "DELETE" })
       .then(() => onDeleteExercise(exercise.id))
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+      .catch(reportError);
   };
 
   const duplicateSet = (workoutSet) => {
     fetchJson(`/api/workouts/exercises/${exercise.id}/sets`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+      json: {
         weight: workoutSet.weight,
         reps: workoutSet.reps,
         rpe: workoutSet.rpe,
         isWarmup: workoutSet.isWarmup,
-      }),
+      },
     })
       .then((data) => onAddSet(data))
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+      .catch(reportError);
   };
 
   const startEditingSet = (workoutSet) => {
@@ -265,14 +247,10 @@ function Exercise({
   const updateSupersetGroup = (value) => {
     fetchJson(`/api/workouts/exercises/${exercise.id}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ supersetGroup: value }),
+      json: { supersetGroup: value },
     })
       .then((data) => onUpdateExercise(data))
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      })
+      .catch(reportError)
       // Show the saved group again (or the old one if saving failed), unless the box was
       // already edited further while the request was in flight.
       .finally(() => setSupersetDraft((draft) => (draft === value ? null : draft)));
@@ -282,30 +260,22 @@ function Exercise({
     if (notes.trim() === (exercise.notes || "")) return;
     fetchJson(`/api/workouts/exercises/${exercise.id}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ notes }),
+      json: { notes },
     })
       .then((data) => onUpdateExercise(data))
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+      .catch(reportError);
   };
 
   const saveEditingSet = (setId) => {
     fetchJson(`/api/workouts/sets/${setId}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(editSet),
+      json: editSet,
     })
       .then((data) => {
         onUpdateSet(data);
         setEditingSetId(null);
       })
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+      .catch(reportError);
   };
 
   return (

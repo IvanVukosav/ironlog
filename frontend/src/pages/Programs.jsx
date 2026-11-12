@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { fetchJson } from "../api";
 import { useToast } from "../context/useToast";
+import { useReportError } from "../hooks/useReportError";
 import ProgramEditor from "../components/ProgramEditor";
 import styles from "./Programs.module.css";
 
@@ -9,33 +10,25 @@ const NEW_PROGRAM = "new";
 
 function Programs() {
   const { t } = useTranslation();
-  const { showError, showSuccess } = useToast();
+  const { showSuccess } = useToast();
+  const reportError = useReportError();
   const [programs, setPrograms] = useState([]);
   const [exerciseNames, setExerciseNames] = useState([]);
   const [editingId, setEditingId] = useState(null);
 
   useEffect(() => {
-    fetchJson("/api/programs")
-      .then((data) => setPrograms(data))
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+    fetchJson("/api/programs").then(setPrograms).catch(reportError);
 
     fetchJson("/api/exercise-templates")
       .then((data) => setExerciseNames(data.map((template) => template.name)))
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
-  }, [showError]);
+      .catch(reportError);
+  }, [reportError]);
 
   const saveProgram = (body) => {
     const isNew = editingId === NEW_PROGRAM;
     fetchJson(isNew ? "/api/programs" : `/api/programs/${editingId}`, {
       method: isNew ? "POST" : "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      json: body,
     })
       .then((saved) => {
         setPrograms((prev) =>
@@ -46,20 +39,14 @@ function Programs() {
         setEditingId(null);
         showSuccess(t("programs.saved"));
       })
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+      .catch(reportError);
   };
 
   const deleteProgram = (program) => {
     if (!window.confirm(t("programs.confirmDelete", { name: program.name }))) return;
     fetchJson(`/api/programs/${program.id}`, { method: "DELETE" })
       .then(() => setPrograms((prev) => prev.filter((other) => other.id !== program.id)))
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+      .catch(reportError);
   };
 
   if (editingId !== null) {

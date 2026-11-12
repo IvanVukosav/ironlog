@@ -17,8 +17,7 @@ function Login({ onLogin }) {
     setError(null);
     fetchJson("/api/auth/login", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password }),
+      json: { password },
     })
       .then((data) => {
         setToken(data.token);

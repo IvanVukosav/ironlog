@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { fetchJson } from "../api";
 import { findBestSetByE1rm } from "../utils/oneRepMax";
 import { buildProgramSets, parseScheme } from "../utils/programScheme";
-import { useToast } from "../context/useToast";
+import { useReportError } from "../hooks/useReportError";
 import styles from "./ProgramLoader.module.css";
 
 // "1×162.5 kg, 3×135 kg" from consecutive identical sets.
@@ -28,7 +28,7 @@ function summarizeSets(sets) {
 
 function ProgramLoader({ workout, programs, formula, onLoaded, onClose }) {
   const { t } = useTranslation();
-  const { showError } = useToast();
+  const reportError = useReportError();
   const [programId, setProgramId] = useState(programs[0]?.id ?? null);
   const [week, setWeek] = useState(1);
   const [day, setDay] = useState(1);
@@ -48,11 +48,8 @@ function ProgramLoader({ workout, programs, formula, onLoaded, onClose }) {
           ),
         ),
       )
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
-  }, [formula, showError]);
+      .catch(reportError);
+  }, [formula, reportError]);
 
   useEffect(() => {
     if (!programId) return;
@@ -62,11 +59,8 @@ function ProgramLoader({ workout, programs, formula, onLoaded, onClose }) {
         setDay(next.day);
         setIsProgramFinished(next.finished);
       })
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
-  }, [programId, showError]);
+      .catch(reportError);
+  }, [programId, reportError]);
 
   const programDay = program?.days.find((candidate) => candidate.dayNumber === day);
   const plannedExercises = (programDay?.exercises ?? [])
@@ -80,17 +74,13 @@ function ProgramLoader({ workout, programs, formula, onLoaded, onClose }) {
   const load = () => {
     fetchJson(`/api/workouts/${workout.id}/exercises/bulk`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+      json: {
         program: { id: programId, week, day },
         exercises: plannedExercises.map(({ name, sets }) => ({ name, sets })),
-      }),
+      },
     })
       .then((updatedWorkout) => onLoaded(updatedWorkout))
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+      .catch(reportError);
   };
 
   if (!program) return null;

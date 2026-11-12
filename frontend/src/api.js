@@ -41,7 +41,12 @@ async function authorizedFetch(path, options = {}) {
   return response;
 }
 
-export async function fetchJson(path, options = {}) {
+// `json` is the request body as a plain value: it is sent as JSON with the matching header.
+export async function fetchJson(path, { json, ...options } = {}) {
+  if (json !== undefined) {
+    options.headers = { "Content-Type": "application/json", ...options.headers };
+    options.body = JSON.stringify(json);
+  }
   const response = await authorizedFetch(path, options);
   const data = await response.json().catch(() => null);
 

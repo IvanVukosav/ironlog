@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { fetchJson } from "../api";
-import { useToast } from "../context/useToast";
+import { useReportError } from "../hooks/useReportError";
 import styles from "./MealCard.module.css";
 
 const EMPTY_FOOD_ITEM = { name: "", kcal: "", protein: "", carbs: "", fat: "" };
@@ -26,7 +26,7 @@ function MealCard({
   onSaveTemplate,
 }) {
   const { t } = useTranslation();
-  const { showError } = useToast();
+  const reportError = useReportError();
   const [foodItem, setFoodItem] = useState(EMPTY_FOOD_ITEM);
   const [showPicker, setShowPicker] = useState(false);
   const [savePromptItem, setSavePromptItem] = useState(null);
@@ -78,8 +78,7 @@ function MealCard({
 
     fetchJson(`/api/nutrition/meals/${meal.id}/items`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(foodItem),
+      json: foodItem,
     })
       .then((data) => {
         onAddItem(data);
@@ -89,19 +88,13 @@ function MealCard({
         setFoodItem(EMPTY_FOOD_ITEM);
         setShowPicker(false);
       })
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+      .catch(reportError);
   };
 
   const deleteItem = (itemId) => {
     fetchJson(`/api/nutrition/items/${itemId}`, { method: "DELETE" })
       .then(() => onDeleteItem(itemId))
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+      .catch(reportError);
   };
 
   const deleteMeal = () => {
@@ -111,10 +104,7 @@ function MealCard({
     }
     fetchJson(`/api/nutrition/meals/${meal.id}`, { method: "DELETE" })
       .then(() => onDeleteMeal(meal.id))
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+      .catch(reportError);
   };
 
   const startEditingItem = (item) => {
@@ -125,17 +115,13 @@ function MealCard({
   const saveEditingItem = (itemId) => {
     fetchJson(`/api/nutrition/items/${itemId}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(editItem),
+      json: editItem,
     })
       .then((data) => {
         onUpdateItem(data);
         setEditingItemId(null);
       })
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+      .catch(reportError);
   };
 
   return (

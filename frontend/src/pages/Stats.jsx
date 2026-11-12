@@ -17,6 +17,7 @@ import {
 } from "../utils/featuredExercises";
 import { useToast } from "../context/useToast";
 import { useSettings } from "../context/useSettings";
+import { useReportError } from "../hooks/useReportError";
 import { getCssVar } from "../utils/theme";
 import { formatDayMonth } from "../utils/dates";
 import MuscleGroupVolumeChart from "../components/MuscleGroupVolumeChart";
@@ -62,6 +63,7 @@ function buildProgressData(history, formula) {
 function Stats() {
   const { t } = useTranslation();
   const { showError } = useToast();
+  const reportError = useReportError();
   const [searchParams] = useSearchParams();
   const exerciseParam = searchParams.get("exercise");
   const chartAccentColor = getCssVar("--color-accent");
@@ -91,22 +93,16 @@ function Stats() {
           return data.length > 0 ? data[0].name : "";
         });
       })
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
-  }, [showError, exerciseParam]);
+      .catch(reportError);
+  }, [reportError, exerciseParam]);
 
   useEffect(() => {
     fetchPrs();
 
     fetchJson(`/api/bodyweight?days=${BODYWEIGHT_LOOKBACK_DAYS}`)
       .then((entries) => setLatestBodyweight(entries.at(-1) ?? null))
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
-  }, [fetchPrs, showError]);
+      .catch(reportError);
+  }, [fetchPrs, reportError]);
 
   useEffect(() => {
     if (exerciseParam && selectedExercise === exerciseParam) {
@@ -128,12 +124,9 @@ function Stats() {
   useEffect(() => {
     if (!selectedExercise) return;
     fetchJson(`/api/stats/exercise/${encodeURIComponent(selectedExercise)}/history`)
-      .then((data) => setHistory(data))
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
-  }, [selectedExercise, showError]);
+      .then(setHistory)
+      .catch(reportError);
+  }, [selectedExercise, reportError]);
 
   const showProgressFor = (name) => {
     setSelectedExercise(name);
@@ -168,10 +161,7 @@ function Stats() {
           setExpandedHistoryEntries([]);
         }
       })
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+      .catch(reportError);
   };
 
   const toggleHistoryPanel = (name) => {
@@ -186,10 +176,7 @@ function Stats() {
         setExpandedHistoryFor(name);
         setExpandedHistoryEntries(data);
       })
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+      .catch(reportError);
   };
 
   const deleteHistoryEntry = (exerciseId) => {
@@ -198,10 +185,7 @@ function Stats() {
         setExpandedHistoryEntries((prev) => prev.filter((entry) => entry.id !== exerciseId));
         fetchPrs();
       })
-      .catch((err) => {
-        console.error(err);
-        showError(err.message);
-      });
+      .catch(reportError);
   };
 
   const prRows = prs

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import i18n from "../i18n";
 import { fetchJson } from "../api";
-import { useToast } from "./useToast";
+import { useReportError } from "../hooks/useReportError";
 import { SettingsContext } from "./settingsContextDefinition";
 
 /**
@@ -10,16 +10,8 @@ import { SettingsContext } from "./settingsContextDefinition";
  * to whether it was saved; if saving fails, the error is shown and the changed fields go back.
  */
 export function SettingsProvider({ children }) {
-  const { showError } = useToast();
+  const reportError = useReportError();
   const [settings, setSettings] = useState(null);
-
-  const reportError = useCallback(
-    (err) => {
-      console.error(err);
-      showError(err.message);
-    },
-    [showError],
-  );
 
   useEffect(() => {
     fetchJson("/api/settings").then(setSettings).catch(reportError);
@@ -45,8 +37,7 @@ export function SettingsProvider({ children }) {
       setSettings((current) => ({ ...current, ...patch }));
       return fetchJson("/api/settings", {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(patch),
+        json: patch,
       }).then(
         () => true,
         (err) => {
