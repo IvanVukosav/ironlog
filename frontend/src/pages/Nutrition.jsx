@@ -1,23 +1,14 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Tooltip, PieChart, Pie, Cell } from "recharts";
 import { fetchJson } from "../api";
+import MacroDonut from "../components/MacroDonut";
 import MealCard from "../components/MealCard";
 import TdeeCard from "../components/TdeeCard";
 import { useToast } from "../context/useToast";
 import { useSettings } from "../context/useSettings";
 import { useReportError } from "../hooks/useReportError";
-import { getCssVar } from "../utils/theme";
 import { todayKey } from "../utils/dates";
 import styles from "./Nutrition.module.css";
-
-const KCAL_PER_GRAM_PROTEIN = 4;
-const KCAL_PER_GRAM_CARBS = 4;
-const KCAL_PER_GRAM_FAT = 9;
-const MACRO_CHART_SIZE = 140;
-const MACRO_CHART_INNER_RADIUS = 40;
-const MACRO_CHART_OUTER_RADIUS = 65;
-const PERCENT_MULTIPLIER = 100;
 
 const DEFAULT_MEAL_NAME = "Ostalo";
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -58,14 +49,6 @@ function Nutrition() {
   const { t } = useTranslation();
   const { showError } = useToast();
   const reportError = useReportError();
-  const chartBgCardColor = getCssVar("--color-bg-card");
-  const chartBorderColor = getCssVar("--color-border");
-  const chartTextDimColor = getCssVar("--color-text-dim");
-  const chartTextColor = getCssVar("--color-text");
-  const chartFontFamily = getCssVar("--font-body");
-  const chartProteinColor = getCssVar("--color-protein");
-  const chartCarbsColor = getCssVar("--color-carbs");
-  const chartFatColor = getCssVar("--color-fat");
   const [today] = useState(todayKey);
   const [date, setDate] = useState(today);
   const [day, setDay] = useState(null);
@@ -220,20 +203,6 @@ function Nutrition() {
     { kcal: 0, protein: 0, carbs: 0, fat: 0 },
   );
 
-  const macroKcal = {
-    protein: totals.protein * KCAL_PER_GRAM_PROTEIN,
-    carbs: totals.carbs * KCAL_PER_GRAM_CARBS,
-    fat: totals.fat * KCAL_PER_GRAM_FAT,
-  };
-  const macroKcalTotal = macroKcal.protein + macroKcal.carbs + macroKcal.fat;
-  const macroChartData = [
-    { name: "Protein", value: macroKcal.protein, color: chartProteinColor },
-    { name: "Carbs", value: macroKcal.carbs, color: chartCarbsColor },
-    { name: "Fat", value: macroKcal.fat, color: chartFatColor },
-  ].filter((entry) => entry.value > 0);
-  const macroPercent = (kcal) =>
-    macroKcalTotal > 0 ? Math.round((kcal / macroKcalTotal) * PERCENT_MULTIPLIER) : 0;
-
   return (
     <div className={styles.page}>
       <h1 className={styles.heading}>{t("nav.nutrition")}</h1>
@@ -264,58 +233,12 @@ function Nutrition() {
         <div>
           <div className={styles.totalsCard}>
             <div className={styles.totalsRow}>
-              {macroChartData.length > 0 && (
-                <div className={styles.macroChartBlock}>
-                  <PieChart width={MACRO_CHART_SIZE} height={MACRO_CHART_SIZE}>
-                    <Pie
-                      data={macroChartData}
-                      dataKey="value"
-                      nameKey="name"
-                      innerRadius={MACRO_CHART_INNER_RADIUS}
-                      outerRadius={MACRO_CHART_OUTER_RADIUS}
-                      paddingAngle={2}
-                    >
-                      {macroChartData.map((entry) => (
-                        <Cell key={entry.name} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      contentStyle={{
-                        background: chartBgCardColor,
-                        border: `1px solid ${chartBorderColor}`,
-                        fontFamily: chartFontFamily,
-                        fontSize: 12,
-                      }}
-                      labelStyle={{ color: chartTextDimColor }}
-                      itemStyle={{ color: chartTextColor }}
-                      formatter={(value, name) => [`${Math.round(value)} kcal`, name]}
-                    />
-                  </PieChart>
-                  <div className={styles.macroLegend}>
-                    <div className={styles.macroLegendRow}>
-                      <span
-                        className={styles.macroLegendDot}
-                        style={{ backgroundColor: chartProteinColor }}
-                      />
-                      {t("nutrition.macroProtein")} {macroPercent(macroKcal.protein)}%
-                    </div>
-                    <div className={styles.macroLegendRow}>
-                      <span
-                        className={styles.macroLegendDot}
-                        style={{ backgroundColor: chartCarbsColor }}
-                      />
-                      {t("nutrition.macroCarbs")} {macroPercent(macroKcal.carbs)}%
-                    </div>
-                    <div className={styles.macroLegendRow}>
-                      <span
-                        className={styles.macroLegendDot}
-                        style={{ backgroundColor: chartFatColor }}
-                      />
-                      {t("nutrition.macroFat")} {macroPercent(macroKcal.fat)}%
-                    </div>
-                  </div>
-                </div>
-              )}
+              <MacroDonut
+                className={styles.macroChartBlock}
+                protein={totals.protein}
+                carbs={totals.carbs}
+                fat={totals.fat}
+              />
 
               <div className={styles.totalsGrid}>
                 <div className={styles.totalsStat}>

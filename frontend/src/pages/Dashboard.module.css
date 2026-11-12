@@ -100,29 +100,6 @@
   margin-top: 0.75rem;
 }
 
-.macroLegend {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.macroLegendRow {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--color-text);
-  font-size: 0.82rem;
-  text-transform: capitalize;
-}
-
-.macroLegendDot {
-  display: inline-block;
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
 .kcalInlineInput {
   background: transparent;
   border: none;

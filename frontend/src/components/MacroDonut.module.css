@@ -1,0 +1,36 @@
+.legend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.legendRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-text);
+  font-size: 0.85rem;
+  text-transform: capitalize;
+}
+
+.legendDot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* The smaller donut on the dashboard card. */
+.compact .legend {
+  gap: 0.35rem;
+}
+
+.compact .legendRow {
+  font-size: 0.82rem;
+}
+
+.compact .legendDot {
+  width: 9px;
+  height: 9px;
+}

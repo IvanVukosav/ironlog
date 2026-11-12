@@ -215,29 +215,6 @@
   }
 }
 
-.macroLegend {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.macroLegendRow {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--color-text);
-  font-size: 0.85rem;
-  text-transform: capitalize;
-}
-
-.macroLegendDot {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
 .startRow {
   display: flex;
   align-items: center;

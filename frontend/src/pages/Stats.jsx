@@ -18,7 +18,7 @@ import {
 import { useToast } from "../context/useToast";
 import { useSettings } from "../context/useSettings";
 import { useReportError } from "../hooks/useReportError";
-import { getCssVar } from "../utils/theme";
+import { AXIS_TICK, CHART_COLORS, TOOLTIP_STYLE } from "../utils/chartTheme";
 import { formatDayMonth } from "../utils/dates";
 import MuscleGroupVolumeChart from "../components/MuscleGroupVolumeChart";
 import MainLiftsChart from "../components/MainLiftsChart";
@@ -66,12 +66,6 @@ function Stats() {
   const reportError = useReportError();
   const [searchParams] = useSearchParams();
   const exerciseParam = searchParams.get("exercise");
-  const chartAccentColor = getCssVar("--color-accent");
-  const chartTextDimColor = getCssVar("--color-text-dim");
-  const chartBgCardColor = getCssVar("--color-bg-card");
-  const chartBorderColor = getCssVar("--color-border");
-  const chartTextColor = getCssVar("--color-text");
-  const chartFontFamily = getCssVar("--font-body");
   const [prs, setPrs] = useState([]);
   const { settings, updateSettings } = useSettings();
   const [selectedExercise, setSelectedExercise] = useState("");
@@ -225,8 +219,8 @@ function Stats() {
       cx={cx}
       cy={cy}
       r={payload.isPr ? PR_DOT_RADIUS : POINT_DOT_RADIUS}
-      fill={chartAccentColor}
-      stroke={payload.isPr ? getCssVar("--color-bg") : "none"}
+      fill={CHART_COLORS.accent}
+      stroke={payload.isPr ? CHART_COLORS.surface : "none"}
       strokeWidth={2}
     />
   );
@@ -424,33 +418,13 @@ function Stats() {
         {chartData.length > 0 ? (
           <ResponsiveContainer width="100%" height={220}>
             <LineChart data={chartData}>
-              <XAxis
-                dataKey="label"
-                tick={{ fill: chartTextDimColor, fontFamily: chartFontFamily, fontSize: 11 }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis
-                tick={{ fill: chartTextDimColor, fontFamily: chartFontFamily, fontSize: 11 }}
-                axisLine={false}
-                tickLine={false}
-                domain={["auto", "auto"]}
-              />
-              <Tooltip
-                contentStyle={{
-                  background: chartBgCardColor,
-                  border: `1px solid ${chartBorderColor}`,
-                  fontFamily: chartFontFamily,
-                  fontSize: 12,
-                }}
-                labelStyle={{ color: chartTextDimColor }}
-                itemStyle={{ color: chartTextColor }}
-                formatter={(value) => [`${value}kg`, "e1RM"]}
-              />
+              <XAxis dataKey="label" tick={AXIS_TICK} axisLine={false} tickLine={false} />
+              <YAxis tick={AXIS_TICK} axisLine={false} tickLine={false} domain={["auto", "auto"]} />
+              <Tooltip {...TOOLTIP_STYLE} formatter={(value) => [`${value}kg`, "e1RM"]} />
               <Line
                 type="monotone"
                 dataKey="e1rm"
-                stroke={chartAccentColor}
+                stroke={CHART_COLORS.accent}
                 strokeWidth={2}
                 dot={renderProgressDot}
                 activeDot={{ r: 5 }}

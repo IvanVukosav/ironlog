@@ -2,23 +2,14 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { fetchJson } from "../api";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-} from "recharts";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { useReportError } from "../hooks/useReportError";
 import { useSettings } from "../context/useSettings";
-import { getCssVar } from "../utils/theme";
+import { AXIS_TICK, CHART_COLORS, TOOLTIP_STYLE } from "../utils/chartTheme";
 import { DEFAULT_E1RM_FORMULA, findBestSetByE1rm } from "../utils/oneRepMax";
 import { addWeightTrend, weeklyTrendChange } from "../utils/weightTrend";
 import { dateKeyOf, formatDayMonth, todayKey } from "../utils/dates";
+import MacroDonut from "../components/MacroDonut";
 import MuscleGroupVolumeChart from "../components/MuscleGroupVolumeChart";
 import styles from "./Dashboard.module.css";
 
@@ -28,13 +19,6 @@ const TREND_WARMUP_DAYS = 30;
 const DAYS_PER_WEEK = 7;
 const MAX_PROGRESS_PERCENT = 100;
 const PR_E1RM_DECIMAL_PLACES = 1;
-const KCAL_PER_GRAM_PROTEIN = 4;
-const KCAL_PER_GRAM_CARBS = 4;
-const KCAL_PER_GRAM_FAT = 9;
-const MACRO_CHART_SIZE = 110;
-const MACRO_CHART_INNER_RADIUS = 30;
-const MACRO_CHART_OUTER_RADIUS = 50;
-const PERCENT_MULTIPLIER = 100;
 
 // Trend over the whole fetch, then only the last `days` days for the chart.
 function toBodyweightChart(entries, days) {
@@ -87,15 +71,6 @@ function Dashboard() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const reportError = useReportError();
-  const chartAccentColor = getCssVar("--color-accent");
-  const chartTextDimColor = getCssVar("--color-text-dim");
-  const chartBgCardColor = getCssVar("--color-bg-card");
-  const chartBorderColor = getCssVar("--color-border");
-  const chartTextColor = getCssVar("--color-text");
-  const chartFontFamily = getCssVar("--font-body");
-  const chartProteinColor = getCssVar("--color-protein");
-  const chartCarbsColor = getCssVar("--color-carbs");
-  const chartFatColor = getCssVar("--color-fat");
   const [workout, setWorkout] = useState(null);
   const [nutritionDay, setNutritionDay] = useState(null);
   const { settings, updateSettings } = useSettings();
@@ -171,19 +146,6 @@ function Dashboard() {
   const totalProtein = allItems.reduce((sum, item) => sum + item.protein, 0);
   const totalCarbs = allItems.reduce((sum, item) => sum + item.carbs, 0);
   const totalFat = allItems.reduce((sum, item) => sum + item.fat, 0);
-  const macroKcal = {
-    protein: totalProtein * KCAL_PER_GRAM_PROTEIN,
-    carbs: totalCarbs * KCAL_PER_GRAM_CARBS,
-    fat: totalFat * KCAL_PER_GRAM_FAT,
-  };
-  const macroKcalTotal = macroKcal.protein + macroKcal.carbs + macroKcal.fat;
-  const macroChartData = [
-    { name: "Protein", value: macroKcal.protein, color: chartProteinColor },
-    { name: "Carbs", value: macroKcal.carbs, color: chartCarbsColor },
-    { name: "Fat", value: macroKcal.fat, color: chartFatColor },
-  ].filter((entry) => entry.value > 0);
-  const macroPercent = (kcal) =>
-    macroKcalTotal > 0 ? Math.round((kcal / macroKcalTotal) * PERCENT_MULTIPLIER) : 0;
 
   const latestPr = getLatestPr(prs, settings?.e1rmFormula ?? DEFAULT_E1RM_FORMULA);
 
@@ -297,58 +259,13 @@ function Dashboard() {
                 </>
               )}
             </p>
-            {macroChartData.length > 0 && (
-              <div className={styles.macroRow}>
-                <PieChart width={MACRO_CHART_SIZE} height={MACRO_CHART_SIZE}>
-                  <Pie
-                    data={macroChartData}
-                    dataKey="value"
-                    nameKey="name"
-                    innerRadius={MACRO_CHART_INNER_RADIUS}
-                    outerRadius={MACRO_CHART_OUTER_RADIUS}
-                    paddingAngle={2}
-                  >
-                    {macroChartData.map((entry) => (
-                      <Cell key={entry.name} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      background: chartBgCardColor,
-                      border: `1px solid ${chartBorderColor}`,
-                      fontFamily: chartFontFamily,
-                      fontSize: 12,
-                    }}
-                    labelStyle={{ color: chartTextDimColor }}
-                    itemStyle={{ color: chartTextColor }}
-                    formatter={(value, name) => [`${Math.round(value)} kcal`, name]}
-                  />
-                </PieChart>
-                <div className={styles.macroLegend}>
-                  <div className={styles.macroLegendRow}>
-                    <span
-                      className={styles.macroLegendDot}
-                      style={{ backgroundColor: chartProteinColor }}
-                    />
-                    {t("nutrition.macroProtein")} {macroPercent(macroKcal.protein)}%
-                  </div>
-                  <div className={styles.macroLegendRow}>
-                    <span
-                      className={styles.macroLegendDot}
-                      style={{ backgroundColor: chartCarbsColor }}
-                    />
-                    {t("nutrition.macroCarbs")} {macroPercent(macroKcal.carbs)}%
-                  </div>
-                  <div className={styles.macroLegendRow}>
-                    <span
-                      className={styles.macroLegendDot}
-                      style={{ backgroundColor: chartFatColor }}
-                    />
-                    {t("nutrition.macroFat")} {macroPercent(macroKcal.fat)}%
-                  </div>
-                </div>
-              </div>
-            )}
+            <MacroDonut
+              className={styles.macroRow}
+              compact
+              protein={totalProtein}
+              carbs={totalCarbs}
+              fat={totalFat}
+            />
           </div>
         )}
         <div className={styles.card}>
@@ -491,27 +408,15 @@ function Dashboard() {
                     label: formatDayMonth(entry.date),
                   }))}
                 >
-                  <XAxis
-                    dataKey="label"
-                    tick={{ fill: chartTextDimColor, fontFamily: chartFontFamily, fontSize: 11 }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
+                  <XAxis dataKey="label" tick={AXIS_TICK} axisLine={false} tickLine={false} />
                   <YAxis
-                    tick={{ fill: chartTextDimColor, fontFamily: chartFontFamily, fontSize: 11 }}
+                    tick={AXIS_TICK}
                     axisLine={false}
                     tickLine={false}
                     domain={["auto", "auto"]}
                   />
                   <Tooltip
-                    contentStyle={{
-                      background: chartBgCardColor,
-                      border: `1px solid ${chartBorderColor}`,
-                      fontFamily: chartFontFamily,
-                      fontSize: 12,
-                    }}
-                    labelStyle={{ color: chartTextDimColor }}
-                    itemStyle={{ color: chartTextColor }}
+                    {...TOOLTIP_STYLE}
                     formatter={(value, name) => [
                       `${value} kg`,
                       name === "trend" ? t("dashboard.trendLegend") : t("dashboard.weighInLegend"),
@@ -521,14 +426,14 @@ function Dashboard() {
                     type="monotone"
                     dataKey="weight"
                     stroke="none"
-                    dot={{ fill: chartTextDimColor, stroke: "none", r: 3 }}
-                    activeDot={{ r: 4, fill: chartTextDimColor }}
+                    dot={{ fill: CHART_COLORS.textDim, stroke: "none", r: 3 }}
+                    activeDot={{ r: 4, fill: CHART_COLORS.textDim }}
                     isAnimationActive={false}
                   />
                   <Line
                     type="monotone"
                     dataKey="trend"
-                    stroke={chartAccentColor}
+                    stroke={CHART_COLORS.accent}
                     strokeWidth={2}
                     dot={false}
                     activeDot={{ r: 5 }}

@@ -10,7 +10,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { buildE1rmTimeline } from "../utils/oneRepMax";
 import { MAIN_LIFTS } from "../utils/strengthScores";
-import { getCssVar } from "../utils/theme";
+import { AXIS_TICK, CHART_COLORS } from "../utils/chartTheme";
 import { formatDayMonth } from "../utils/dates";
 import styles from "./MainLiftsChart.module.css";
 
@@ -47,13 +47,7 @@ function ChartTooltip({ active, payload, label, liftNames }) {
  */
 function MainLiftsChart({ exerciseSets, mainLiftBests, formula }) {
   const { t } = useTranslation();
-  const surfaceColor = getCssVar("--color-bg");
-  const textDimColor = getCssVar("--color-text-dim");
-  const gridColor = getCssVar("--color-border-subtle");
-  const chartFontFamily = getCssVar("--font-body");
-  const liftColors = Object.fromEntries(
-    MAIN_LIFTS.map((lift) => [lift, getCssVar(`--color-lift-${lift}`)]),
-  );
+  const liftColors = CHART_COLORS.lifts;
 
   const lifts = MAIN_LIFTS.filter((lift) => mainLiftBests[lift]);
   const liftNames = Object.fromEntries(lifts.map((lift) => [lift, mainLiftBests[lift].name]));
@@ -92,7 +86,7 @@ function MainLiftsChart({ exerciseSets, mainLiftBests, formula }) {
           cy={cy}
           r={PR_DOT_RADIUS}
           fill={liftColors[lift]}
-          stroke={surfaceColor}
+          stroke={CHART_COLORS.surface}
           strokeWidth={2}
         />
       );
@@ -125,19 +119,19 @@ function MainLiftsChart({ exerciseSets, mainLiftBests, formula }) {
       </ul>
       <ResponsiveContainer width="100%" height={260}>
         <LineChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
-          <CartesianGrid stroke={gridColor} vertical={false} />
+          <CartesianGrid stroke={CHART_COLORS.grid} vertical={false} />
           <XAxis
             dataKey="time"
             type="number"
             scale="time"
             domain={["dataMin", "dataMax"]}
             tickFormatter={formatDayMonth}
-            tick={{ fill: textDimColor, fontFamily: chartFontFamily, fontSize: 11 }}
+            tick={AXIS_TICK}
             axisLine={false}
             tickLine={false}
           />
           <YAxis
-            tick={{ fill: textDimColor, fontFamily: chartFontFamily, fontSize: 11 }}
+            tick={AXIS_TICK}
             axisLine={false}
             tickLine={false}
             domain={["auto", "auto"]}
@@ -154,7 +148,7 @@ function MainLiftsChart({ exerciseSets, mainLiftBests, formula }) {
               strokeWidth={2}
               connectNulls
               dot={renderDot(lift)}
-              activeDot={{ r: 5, stroke: surfaceColor, strokeWidth: 2 }}
+              activeDot={{ r: 5, stroke: CHART_COLORS.surface, strokeWidth: 2 }}
               isAnimationActive={false}
             />
           ))}
