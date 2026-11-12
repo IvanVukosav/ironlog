@@ -20,9 +20,9 @@ function MacroDonut({ protein, carbs, fat, compact = false, className = "" }) {
   const { size, innerRadius, outerRadius } = compact ? DIMENSIONS.compact : DIMENSIONS.regular;
 
   const slices = [
-    { key: "protein", name: "Protein", label: t("nutrition.macroProtein"), grams: protein },
-    { key: "carbs", name: "Carbs", label: t("nutrition.macroCarbs"), grams: carbs },
-    { key: "fat", name: "Fat", label: t("nutrition.macroFat"), grams: fat },
+    { key: "protein", label: t("nutrition.macroProtein"), grams: protein },
+    { key: "carbs", label: t("nutrition.macroCarbs"), grams: carbs },
+    { key: "fat", label: t("nutrition.macroFat"), grams: fat },
   ].map((slice) => ({
     ...slice,
     value: slice.grams * KCAL_PER_GRAM[slice.key],
@@ -38,7 +38,7 @@ function MacroDonut({ protein, carbs, fat, compact = false, className = "" }) {
         <Pie
           data={eaten}
           dataKey="value"
-          nameKey="name"
+          nameKey="label"
           innerRadius={innerRadius}
           outerRadius={outerRadius}
           paddingAngle={2}
@@ -49,7 +49,11 @@ function MacroDonut({ protein, carbs, fat, compact = false, className = "" }) {
         </Pie>
         <Tooltip
           {...TOOLTIP_STYLE}
-          formatter={(value, name) => [`${Math.round(value)} kcal`, name]}
+          // The labels are lower case; the legend's CSS capitalises them, the tooltip can't.
+          formatter={(value, label) => [
+            `${Math.round(value)} kcal`,
+            label.charAt(0).toUpperCase() + label.slice(1),
+          ]}
         />
       </PieChart>
       <div className={styles.legend}>
