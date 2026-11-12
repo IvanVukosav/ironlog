@@ -50,12 +50,22 @@
   --button-transform: none;
   --button-before: "";
   --button-after: "";
+  /* The quieter button beside a main one ("Load template" next to "Add exercise"). */
+  --button-secondary-bg: var(--color-input-bg);
+  --button-secondary-color: var(--color-text);
+  --button-secondary-border: 1px solid var(--color-border);
   --input-bg: var(--color-input-bg);
   --input-border: 1px solid var(--color-border);
   --input-border-bottom: 1px solid var(--color-border);
   --input-radius: 10px;
   --input-padding: 10px 12px;
   --input-focus-ring: 0 0 0 3px rgba(var(--color-accent-rgb), 0.3);
+  /* A row in a list inside a card (a logged set), and the round number in front of it. */
+  --row-bg: var(--color-input-bg);
+  --row-radius: 12px;
+  --row-divider: none;
+  --row-gap: 6px;
+  --badge-radius: 999px;
   --dropdown-bg: var(--color-bg-elevated);
   --dropdown-border: 1px solid var(--color-border-subtle);
   --dropdown-radius: 14px;
@@ -229,6 +239,15 @@
   --label-transform: uppercase;
   --label-tracking: 0.05em;
   --input-focus-ring: none;
+  /* These templates have one kind of button, and their lists are lines, not boxes. */
+  --button-secondary-bg: var(--button-bg);
+  --button-secondary-color: var(--button-color);
+  --button-secondary-border: var(--button-border);
+  --row-bg: transparent;
+  --row-radius: 0;
+  --row-divider: 1px solid var(--color-border-subtle);
+  --row-gap: 0px;
+  --badge-radius: var(--input-radius);
   --nav-brand-display: none;
   --nav-home-display: inline;
   --nav-gap: 1.5rem;

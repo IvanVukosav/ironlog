@@ -1,5 +1,28 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { dateKeyOf, formatDayMonth, toDateKey, todayKey, todayParts } from "./dates";
+import {
+  dateKeyOf,
+  formatDayMonth,
+  formatWeekdayDate,
+  toDateKey,
+  todayKey,
+  todayParts,
+} from "./dates";
+
+describe("formatWeekdayDate", () => {
+  it("writes the day out, with a capital even in Croatian", () => {
+    expect(formatWeekdayDate("2026-11-12", "hr", 2026)).toBe("Četvrtak, 12. studenoga");
+    expect(formatWeekdayDate("2026-11-12", "en", 2026)).toBe("Thursday, November 12");
+  });
+
+  it("adds the year only when it is not this one", () => {
+    expect(formatWeekdayDate("2025-12-31", "hr", 2026)).toBe("Srijeda, 31. prosinca 2025.");
+    expect(formatWeekdayDate("2025-12-31", "en", 2026)).toBe("Wednesday, December 31, 2025");
+  });
+
+  it("reads the stored UTC day, whatever the clock's time zone", () => {
+    expect(formatWeekdayDate("2026-11-04T00:00:00.000Z", "en", 2026)).toBe("Wednesday, November 4");
+  });
+});
 
 describe("formatDayMonth", () => {
   it("shows day/month without leading zeros, from a string or a timestamp", () => {

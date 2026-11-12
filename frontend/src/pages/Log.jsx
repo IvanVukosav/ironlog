@@ -1,8 +1,9 @@
-import { Fragment, useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import ExerciseCard from "../components/ExerciseCard";
 import DatePicker from "../components/DatePicker";
+import Icon from "../components/Icon";
 import ProgramLoader from "../components/ProgramLoader";
 import { fetchJson } from "../api";
 import { useToast } from "../context/useToast";
@@ -11,7 +12,7 @@ import { useDragReorder } from "../hooks/useDragReorder";
 import { useReportError } from "../hooks/useReportError";
 import { useWorkout } from "../hooks/useWorkout";
 import { DEFAULT_E1RM_FORMULA } from "../utils/oneRepMax";
-import { todayKey } from "../utils/dates";
+import { formatWeekdayDate, todayKey } from "../utils/dates";
 import styles from "./Log.module.css";
 
 const MUSCLE_GROUPS = [
@@ -28,7 +29,7 @@ const ALL_MUSCLE_GROUPS_FILTER = "Sve";
 const SUPERSET_COLORS = ["#3ba7ff", "#3ec95c", "#ffb020", "#c678dd", "#ff6b9d"];
 
 function Log() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { showError } = useToast();
   const reportError = useReportError();
   const [searchParams] = useSearchParams();
@@ -46,9 +47,14 @@ function Log() {
   const [saveTemplateName, setSaveTemplateName] = useState(null);
   const [programs, setPrograms] = useState([]);
   const [showProgramLoader, setShowProgramLoader] = useState(false);
+  const [showWorkoutMenu, setShowWorkoutMenu] = useState(false);
+  // The workout whose notes box was opened from the menu; a workout with notes always shows it.
+  const [notesOpenFor, setNotesOpenFor] = useState(null);
   const exercisePickerRef = useRef(null);
   const templatePickerRef = useRef(null);
+  const workoutMenuRef = useRef(null);
   const pickerMode = settings?.exercisePickerMode ?? "chips";
+  const showWorkoutNotes = Boolean(workout?.notes) || notesOpenFor === workout?.id;
 
   const exerciseDrag = useDragReorder(workout?.exercises || [], actions.reorderExercises);
 
@@ -66,13 +72,22 @@ function Log() {
       if (templatePickerRef.current && !templatePickerRef.current.contains(event.target)) {
         setShowTemplatePicker(false);
       }
+      if (workoutMenuRef.current && !workoutMenuRef.current.contains(event.target)) {
+        setShowWorkoutMenu(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const cancelWorkout = () => {
-    if (window.confirm(t("log.confirmCancelWorkout"))) actions.deleteWorkout();
+  // Each menu item closes the menu, then does its thing.
+  const fromWorkoutMenu = (run) => () => {
+    setShowWorkoutMenu(false);
+    run();
+  };
+
+  const deleteWorkout = () => {
+    if (window.confirm(t("log.confirmDeleteWorkout"))) actions.deleteWorkout();
   };
 
   const addExercise = async () => {
@@ -82,6 +97,8 @@ function Log() {
     const isSameName = (other) => other.name.toLowerCase() === name.toLowerCase();
     if (workout.exercises.some(isSameName)) {
       showError(t("log.exerciseAlreadyAdded", { name }));
+      // Left open, the list would lie over the cards and take the next click meant for them.
+      setShowExercisePicker(false);
       return;
     }
 
@@ -192,33 +209,96 @@ function Log() {
 
   return (
     <div className={styles.page}>
-      <h1 className={styles.heading}>{t("log.title")}</h1>
+      {/* The bar above names the page; the heading is for screen readers. */}
+      <h1 className={styles.srOnly}>{t("log.title")}</h1>
 
-      <div className={styles.topRow}>
-        <DatePicker value={date} onChange={setDate} />
+      <header className={styles.header}>
+        <div className={styles.headerText}>
+          <DatePicker value={date} onChange={setDate} variant="text">
+            {formatWeekdayDate(date, i18n.language)}
+            <Icon name="chevronDown" size={16} />
+          </DatePicker>
+          {workout && (
+            // Uncontrolled: the key is what makes it show the next day's workout.
+            <input
+              key={workout.id}
+              type="text"
+              className={styles.workoutName}
+              aria-label={t("log.workoutNameLabel")}
+              placeholder={t("log.untitledWorkout")}
+              defaultValue={workout.name || ""}
+              onBlur={(event) => updateWorkoutName(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") event.target.blur();
+              }}
+            />
+          )}
+          {workoutProgram && (
+            <span className={styles.programTag}>
+              {t("log.programTag", {
+                name: workoutProgram.name,
+                week: workout.programWeek,
+                day: workout.programDay,
+              })}
+            </span>
+          )}
+        </div>
         {workout && (
-          <>
-            <span className={styles.meta}>{t("log.workoutId", { id: workout.id })}</span>
-            {workoutProgram && (
-              <span className={styles.meta}>
-                {t("log.programTag", {
-                  name: workoutProgram.name,
-                  week: workout.programWeek,
-                  day: workout.programDay,
-                })}
-              </span>
-            )}
-            <button className={styles.cancelButton} onClick={cancelWorkout}>
-              {t("common.cancel")}
+          <div className={styles.menuWrapper} ref={workoutMenuRef}>
+            <button
+              type="button"
+              className={styles.menuButton}
+              aria-label={t("log.workoutOptions")}
+              aria-expanded={showWorkoutMenu}
+              onClick={() => setShowWorkoutMenu((prev) => !prev)}
+            >
+              <Icon name="more" />
             </button>
-            {workout.exercises.length > 0 && (
-              <button className={styles.cancelButton} onClick={() => setSaveTemplateName("")}>
-                {t("log.saveAsTemplate")}
-              </button>
+            {showWorkoutMenu && (
+              <div className={styles.menuDropdown}>
+                {!showWorkoutNotes && (
+                  <button
+                    type="button"
+                    className={styles.menuItem}
+                    onClick={fromWorkoutMenu(() => setNotesOpenFor(workout.id))}
+                  >
+                    {t("log.addNote")}
+                  </button>
+                )}
+                {workout.exercises.length > 0 && (
+                  <button
+                    type="button"
+                    className={styles.menuItem}
+                    onClick={fromWorkoutMenu(() => setSaveTemplateName(""))}
+                  >
+                    {t("log.saveAsTemplate")}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className={styles.menuItem}
+                  onClick={fromWorkoutMenu(deleteWorkout)}
+                >
+                  {t("log.deleteWorkout")}
+                </button>
+              </div>
             )}
-          </>
+          </div>
         )}
-      </div>
+      </header>
+
+      {workout && showWorkoutNotes && (
+        <textarea
+          key={workout.id}
+          className={styles.workoutNotesInput}
+          aria-label={t("log.workoutNotesPlaceholder")}
+          placeholder={t("log.workoutNotesPlaceholder")}
+          rows={2}
+          autoFocus={!workout.notes}
+          defaultValue={workout.notes || ""}
+          onBlur={(event) => updateWorkoutNotes(event.target.value)}
+        />
+      )}
 
       {saveTemplateName !== null && (
         <div className={styles.savePrompt}>
@@ -247,126 +327,51 @@ function Log() {
         </div>
       )}
 
-      {workout && (
-        // Both boxes are uncontrolled: the key is what makes them show the next day's workout.
-        <Fragment key={workout.id}>
-          <input
-            type="text"
-            className={styles.workoutNameInput}
-            placeholder={t("log.workoutNamePlaceholder")}
-            defaultValue={workout.name || ""}
-            onBlur={(event) => updateWorkoutName(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") event.target.blur();
-            }}
-          />
-          <textarea
-            className={styles.workoutNotesInput}
-            placeholder={t("log.workoutNotesPlaceholder")}
-            rows={2}
-            defaultValue={workout.notes || ""}
-            onBlur={(event) => updateWorkoutNotes(event.target.value)}
-          />
-        </Fragment>
-      )}
-
       {/* Not offered until the day has answered: it may turn out to have a workout already. */}
       {!workout && !isLoading && (
-        <button className={styles.startButton} onClick={actions.createWorkout}>
-          {t("log.startWorkout")}
-        </button>
+        <div className={styles.emptyState}>
+          <p className={styles.emptyText}>{t("log.noWorkout")}</p>
+          <button type="button" className={styles.startButton} onClick={actions.createWorkout}>
+            {t("log.startWorkout")}
+          </button>
+        </div>
       )}
 
       {workout && (
         <div>
-          <div className={styles.addRow} style={{ position: "relative" }} ref={exercisePickerRef}>
-            <input
-              type="text"
-              className={styles.exerciseInput}
-              placeholder={t("log.searchOrTypeExercise")}
-              value={exerciseName}
-              onChange={(event) => {
-                setExerciseName(event.target.value);
-                setShowExercisePicker(true);
-                setSavePromptName(null);
-              }}
-              onFocus={() => setShowExercisePicker(true)}
-            />
-            <button className={styles.addButton} onClick={addExercise}>
-              {t("log.addExercise")}
-            </button>
-            {workoutTemplates.length > 0 && (
-              <div
-                style={{ position: "relative", display: "inline-block" }}
-                ref={templatePickerRef}
-              >
-                <button
-                  className={styles.addButton}
-                  onClick={() => setShowTemplatePicker((prev) => !prev)}
-                >
-                  {t("log.loadTemplate")}
-                </button>
-                {showTemplatePicker && (
-                  <div className={styles.exercisePicker}>
-                    {workoutTemplates.map((template) => (
-                      <div key={template.id} className={styles.exercisePickerItem}>
-                        <button
-                          className={styles.exercisePickerName}
-                          onClick={() => applyWorkoutTemplate(template.id)}
-                        >
-                          {template.name}
-                          <span className={styles.exercisePickerGroup}>
-                            {template.exercises.length} {t("log.exercisesSuffix")}
-                          </span>
-                        </button>
-                        <button
-                          className={styles.exercisePickerRemove}
-                          onClick={() => deleteWorkoutTemplate(template.id)}
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-            {programs.length > 0 && (
-              <button
-                className={styles.addButton}
-                onClick={() => setShowProgramLoader((prev) => !prev)}
-              >
-                {t("log.loadProgram")}
+          <div className={styles.addRow}>
+            <div className={styles.addExercise} ref={exercisePickerRef}>
+              <input
+                type="text"
+                className={styles.exerciseInput}
+                aria-label={t("log.searchOrTypeExercise")}
+                placeholder={t("log.searchOrTypeExercise")}
+                value={exerciseName}
+                onChange={(event) => {
+                  setExerciseName(event.target.value);
+                  setShowExercisePicker(true);
+                  setSavePromptName(null);
+                }}
+                onFocus={() => setShowExercisePicker(true)}
+                onKeyDown={(event) => {
+                  if (event.key === "Escape") setShowExercisePicker(false);
+                }}
+              />
+              <button type="button" className={styles.addButton} onClick={addExercise}>
+                {t("log.addExercise")}
               </button>
-            )}
-            {showExercisePicker && (
-              <div className={styles.exercisePicker}>
-                {pickerMode === "chips" && (
-                  <div className={styles.muscleGroupChips}>
-                    {[ALL_MUSCLE_GROUPS_FILTER, ...MUSCLE_GROUPS].map((group) => (
-                      <button
-                        key={group}
-                        className={
-                          muscleGroupFilter === group
-                            ? styles.muscleGroupChipActive
-                            : styles.muscleGroupChip
-                        }
-                        onClick={() => setMuscleGroupFilter(group)}
-                      >
-                        {group}
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {pickerMode === "twoStep" &&
-                  !exerciseName.trim() &&
-                  muscleGroupFilter === ALL_MUSCLE_GROUPS_FILTER && (
-                    <div className={styles.categoryList}>
-                      {MUSCLE_GROUPS.map((group) => (
+              {showExercisePicker && (
+                <div className={styles.exercisePicker}>
+                  {pickerMode === "chips" && (
+                    <div className={styles.muscleGroupChips}>
+                      {[ALL_MUSCLE_GROUPS_FILTER, ...MUSCLE_GROUPS].map((group) => (
                         <button
                           key={group}
-                          className={styles.categoryListItem}
+                          className={
+                            muscleGroupFilter === group
+                              ? styles.muscleGroupChipActive
+                              : styles.muscleGroupChip
+                          }
                           onClick={() => setMuscleGroupFilter(group)}
                         >
                           {group}
@@ -375,59 +380,126 @@ function Log() {
                     </div>
                   )}
 
-                {pickerMode === "twoStep" &&
-                  !exerciseName.trim() &&
-                  muscleGroupFilter !== ALL_MUSCLE_GROUPS_FILTER && (
-                    <button
-                      className={styles.backButton}
-                      onClick={() => setMuscleGroupFilter(ALL_MUSCLE_GROUPS_FILTER)}
-                    >
-                      {t("log.back")}
-                    </button>
-                  )}
-
-                {(pickerMode === "chips" ||
-                  exerciseName.trim() ||
-                  muscleGroupFilter !== ALL_MUSCLE_GROUPS_FILTER) && (
-                  <>
-                    {filteredTemplates.map((template) => (
-                      <div key={template.id} className={styles.exercisePickerItem}>
-                        <button
-                          className={styles.exercisePickerName}
-                          onClick={() => {
-                            setExerciseName(template.name);
-                            setShowExercisePicker(false);
-                          }}
-                        >
-                          {template.name}
-                          {template.muscleGroup && (
-                            <span className={styles.exercisePickerGroup}>
-                              {template.muscleGroup}
-                            </span>
-                          )}
-                        </button>
-                        <button
-                          className={styles.exercisePickerRemove}
-                          onClick={() => removeExerciseTemplate(template.id)}
-                        >
-                          ✕
-                        </button>
+                  {pickerMode === "twoStep" &&
+                    !exerciseName.trim() &&
+                    muscleGroupFilter === ALL_MUSCLE_GROUPS_FILTER && (
+                      <div className={styles.categoryList}>
+                        {MUSCLE_GROUPS.map((group) => (
+                          <button
+                            key={group}
+                            className={styles.categoryListItem}
+                            onClick={() => setMuscleGroupFilter(group)}
+                          >
+                            {group}
+                          </button>
+                        ))}
                       </div>
-                    ))}
-                    {exerciseName.trim() &&
-                      !exerciseTemplates.some(
-                        (template) =>
-                          template.name.toLowerCase() === exerciseName.trim().toLowerCase(),
-                      ) && (
-                        <button
-                          type="button"
-                          className={styles.exercisePickerCustom}
-                          onClick={addExercise}
-                        >
-                          {t("log.addAsExercise", { name: exerciseName.trim() })}
-                        </button>
-                      )}
-                  </>
+                    )}
+
+                  {pickerMode === "twoStep" &&
+                    !exerciseName.trim() &&
+                    muscleGroupFilter !== ALL_MUSCLE_GROUPS_FILTER && (
+                      <button
+                        className={styles.backButton}
+                        onClick={() => setMuscleGroupFilter(ALL_MUSCLE_GROUPS_FILTER)}
+                      >
+                        {t("log.back")}
+                      </button>
+                    )}
+
+                  {(pickerMode === "chips" ||
+                    exerciseName.trim() ||
+                    muscleGroupFilter !== ALL_MUSCLE_GROUPS_FILTER) && (
+                    <>
+                      {filteredTemplates.map((template) => (
+                        <div key={template.id} className={styles.exercisePickerItem}>
+                          <button
+                            className={styles.exercisePickerName}
+                            onClick={() => {
+                              setExerciseName(template.name);
+                              setShowExercisePicker(false);
+                            }}
+                          >
+                            {template.name}
+                            {template.muscleGroup && (
+                              <span className={styles.exercisePickerGroup}>
+                                {template.muscleGroup}
+                              </span>
+                            )}
+                          </button>
+                          <button
+                            className={styles.exercisePickerRemove}
+                            onClick={() => removeExerciseTemplate(template.id)}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                      {exerciseName.trim() &&
+                        !exerciseTemplates.some(
+                          (template) =>
+                            template.name.toLowerCase() === exerciseName.trim().toLowerCase(),
+                        ) && (
+                          <button
+                            type="button"
+                            className={styles.exercisePickerCustom}
+                            onClick={addExercise}
+                          >
+                            {t("log.addAsExercise", { name: exerciseName.trim() })}
+                          </button>
+                        )}
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+            {(workoutTemplates.length > 0 || programs.length > 0) && (
+              <div className={styles.loaders}>
+                {workoutTemplates.length > 0 && (
+                  <div className={styles.templatePicker} ref={templatePickerRef}>
+                    <button
+                      type="button"
+                      className={styles.secondaryButton}
+                      aria-expanded={showTemplatePicker}
+                      onClick={() => setShowTemplatePicker((prev) => !prev)}
+                    >
+                      {t("log.loadTemplate")}
+                    </button>
+                    {showTemplatePicker && (
+                      <div className={styles.exercisePicker}>
+                        {workoutTemplates.map((template) => (
+                          <div key={template.id} className={styles.exercisePickerItem}>
+                            <button
+                              className={styles.exercisePickerName}
+                              onClick={() => applyWorkoutTemplate(template.id)}
+                            >
+                              {template.name}
+                              <span className={styles.exercisePickerGroup}>
+                                {template.exercises.length} {t("log.exercisesSuffix")}
+                              </span>
+                            </button>
+                            <button
+                              className={styles.exercisePickerRemove}
+                              aria-label={t("common.delete")}
+                              onClick={() => deleteWorkoutTemplate(template.id)}
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+                {programs.length > 0 && (
+                  <button
+                    type="button"
+                    className={styles.secondaryButton}
+                    aria-expanded={showProgramLoader}
+                    onClick={() => setShowProgramLoader((prev) => !prev)}
+                  >
+                    {t("log.loadProgram")}
+                  </button>
                 )}
               </div>
             )}

@@ -6,6 +6,21 @@ export function formatDayMonth(date) {
   return `${value.getUTCDate()}/${value.getUTCMonth() + 1}`;
 }
 
+// "Srijeda, 4. studenoga" or "Wednesday, November 4": a day written out in the given language.
+// The year is added only when it is not `thisYear`, the one nobody needs told.
+export function formatWeekdayDate(date, language, thisYear = todayParts().year) {
+  const value = new Date(date);
+  const text = new Intl.DateTimeFormat(language, {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: value.getUTCFullYear() === thisYear ? undefined : "numeric",
+    timeZone: "UTC",
+  }).format(value);
+  // Croatian writes weekdays in lower case; at the start of a line they still take a capital.
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
 // "2026-11-04": the date format the API takes, from a year, a 1-based month and a day.
 export function toDateKey(year, month, day) {
   return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;

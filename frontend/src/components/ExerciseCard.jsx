@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { fetchJson } from "../api";
 import {
@@ -8,13 +8,15 @@ import {
 } from "../utils/oneRepMax";
 import { useToast } from "../context/useToast";
 import { formatDayMonth } from "../utils/dates";
+import { parseDecimal, toDecimalText } from "../utils/numbers";
 import { useDragReorder } from "../hooks/useDragReorder";
+import Icon from "./Icon";
 import styles from "./ExerciseCard.module.css";
 
 const WEIGHT_STEP_KG = 1;
 const MINIMUM_WEIGHT_KG = 0;
 const E1RM_DECIMAL_PLACES = 1;
-// The set form's fields hold what was typed, so they are strings.
+// The set forms hold what was typed, so their fields are strings.
 const EMPTY_SET = { weight: "", reps: "", rpe: "", isWarmup: false };
 
 function formatSetShort(workoutSet) {
@@ -22,32 +24,103 @@ function formatSetShort(workoutSet) {
   return Number.isFinite(workoutSet.rpe) ? `${base} @${workoutSet.rpe}` : base;
 }
 
-function WeightInput({ value, onChange }) {
+function formFromSet(workoutSet) {
+  return {
+    weight: String(workoutSet.weight),
+    reps: String(workoutSet.reps),
+    rpe: Number.isFinite(workoutSet.rpe) ? String(workoutSet.rpe) : "",
+    isWarmup: Boolean(workoutSet.isWarmup),
+  };
+}
+
+// What the API gets from a form: the numbers as typed, a decimal comma read as a point.
+function toSetValues(form) {
+  return {
+    weight: toDecimalText(form.weight),
+    reps: toDecimalText(form.reps),
+    rpe: toDecimalText(form.rpe),
+    isWarmup: form.isWarmup,
+  };
+}
+
+const isComplete = (form) => form.weight.trim() !== "" && form.reps.trim() !== "";
+
+// Weight, reps and RPE, each under its label. The weight has − and + for 1 kg steps.
+function SetFields({ values, onChange }) {
   const { t } = useTranslation();
-  const adjust = (amount) => {
-    const currentWeight = parseFloat(value) || 0;
-    const nextWeight = Math.max(currentWeight + amount, MINIMUM_WEIGHT_KG);
-    onChange(String(nextWeight));
+  const id = useId();
+  const change = (field) => (event) => onChange({ ...values, [field]: event.target.value });
+
+  const stepWeight = (amount) => {
+    const current = parseDecimal(values.weight);
+    const next = String(
+      Math.max((Number.isNaN(current) ? 0 : current) + amount, MINIMUM_WEIGHT_KG),
+    );
+    // A weight typed with a decimal comma keeps its comma.
+    onChange({ ...values, weight: values.weight.includes(",") ? next.replace(".", ",") : next });
   };
 
+  // Each label names its input with htmlFor: a label wrapped around the weight's buttons would
+  // name the first button instead, and a click on its text would press it.
   return (
-    <div className={styles.weightGroup}>
-      <button type="button" className={styles.stepButton} onClick={() => adjust(-WEIGHT_STEP_KG)}>
-        −
-      </button>
-      <div className={styles.weightInputWrapper}>
-        <input
-          type="text"
-          className={styles.setInput}
-          placeholder={t("log.weightPlaceholder")}
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-        />
-        <span className={styles.weightUnit}>kg</span>
+    <div className={styles.fields}>
+      <div className={styles.field} data-field="weight">
+        <label className={styles.fieldLabel} htmlFor={`${id}weight`}>
+          {t("log.weightLabel")}
+        </label>
+        <div className={styles.weightControl}>
+          <button
+            type="button"
+            className={styles.stepButton}
+            aria-label={t("log.lessWeight")}
+            onClick={() => stepWeight(-WEIGHT_STEP_KG)}
+          >
+            <Icon name="minus" size={18} />
+          </button>
+          <input
+            id={`${id}weight`}
+            className={styles.weightInput}
+            inputMode="decimal"
+            autoComplete="off"
+            value={values.weight}
+            onChange={change("weight")}
+          />
+          <button
+            type="button"
+            className={styles.stepButton}
+            aria-label={t("log.moreWeight")}
+            onClick={() => stepWeight(WEIGHT_STEP_KG)}
+          >
+            <Icon name="plus" size={18} />
+          </button>
+        </div>
       </div>
-      <button type="button" className={styles.stepButton} onClick={() => adjust(WEIGHT_STEP_KG)}>
-        +
-      </button>
+      <div className={styles.field} data-field="reps">
+        <label className={styles.fieldLabel} htmlFor={`${id}reps`}>
+          {t("log.repsLabel")}
+        </label>
+        <input
+          id={`${id}reps`}
+          className={styles.fieldInput}
+          inputMode="numeric"
+          autoComplete="off"
+          value={values.reps}
+          onChange={change("reps")}
+        />
+      </div>
+      <div className={styles.field} data-field="rpe">
+        <label className={styles.fieldLabel} htmlFor={`${id}rpe`}>
+          {t("log.rpeLabel")}
+        </label>
+        <input
+          id={`${id}rpe`}
+          className={styles.fieldInput}
+          inputMode="decimal"
+          autoComplete="off"
+          value={values.rpe}
+          onChange={change("rpe")}
+        />
+      </div>
     </div>
   );
 }
@@ -95,6 +168,7 @@ function Exercise({
   const { t } = useTranslation();
   const { showSuccess } = useToast();
   const [set, setSet] = useState(EMPTY_SET);
+  const [isAdding, setIsAdding] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [editingSetId, setEditingSetId] = useState(null);
   const [editSet, setEditSet] = useState(EMPTY_SET);
@@ -113,15 +187,6 @@ function Exercise({
   }, [exercise.name, exercise.workoutId]);
 
   const lastWorkingSets = lastSession?.sets.filter((previousSet) => !previousSet.isWarmup) ?? [];
-
-  const fillFromLastSet = (previousSet) => {
-    setSet({
-      weight: String(previousSet.weight),
-      reps: String(previousSet.reps),
-      rpe: Number.isFinite(previousSet.rpe) ? String(previousSet.rpe) : "",
-      isWarmup: false,
-    });
-  };
 
   const copyLastSession = async () => {
     // One after another so the copied sets keep their order; the first failure ends the copy.
@@ -146,6 +211,7 @@ function Exercise({
   }, [showMenu]);
 
   const addSet = async () => {
+    setIsAdding(true);
     // Asked for before saving, so the new set is not among the ones it has to beat. The set is
     // saved even when this fails; it just can't be called a PR then.
     const previousSets = await fetchJson(
@@ -158,7 +224,8 @@ function Exercise({
       },
     );
 
-    const saved = await actions.addSet(exercise.id, set);
+    const saved = await actions.addSet(exercise.id, toSetValues(set));
+    setIsAdding(false);
     if (!saved) return;
     setSet(EMPTY_SET);
     if (!previousSets || saved.isWarmup) return;
@@ -184,12 +251,7 @@ function Exercise({
 
   const startEditingSet = (workoutSet) => {
     setEditingSetId(workoutSet.id);
-    setEditSet({
-      weight: String(workoutSet.weight),
-      reps: String(workoutSet.reps),
-      rpe: Number.isFinite(workoutSet.rpe) ? String(workoutSet.rpe) : "",
-      isWarmup: Boolean(workoutSet.isWarmup),
-    });
+    setEditSet(formFromSet(workoutSet));
   };
 
   const updateSupersetGroup = async (value) => {
@@ -204,11 +266,119 @@ function Exercise({
   };
 
   const saveEditingSet = async (setId) => {
-    if (await actions.updateSet(setId, editSet)) setEditingSetId(null);
+    if (await actions.updateSet(setId, toSetValues(editSet))) setEditingSetId(null);
   };
 
+  // Working sets are numbered; a warm-up shows a W and does not count. A set being edited keeps
+  // its number, so the rows below it and the add button don't renumber meanwhile.
+  const setNumbers = [];
+  let workingSetCount = 0;
+  for (const workoutSet of exercise.sets) {
+    if (!workoutSet.isWarmup) workingSetCount += 1;
+    setNumbers.push(workoutSet.isWarmup ? null : workingSetCount);
+  }
+
+  const setRows = exercise.sets.map((workoutSet, index) => {
+    if (editingSetId === workoutSet.id) {
+      return (
+        <li key={workoutSet.id} className={styles.setRowEditing}>
+          <form
+            className={styles.editForm}
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (isComplete(editSet)) saveEditingSet(workoutSet.id);
+            }}
+          >
+            <SetFields values={editSet} onChange={setEditSet} />
+            <div className={styles.editActions}>
+              <button
+                type="submit"
+                className={styles.saveSetButton}
+                disabled={!isComplete(editSet)}
+              >
+                {t("common.save")}
+              </button>
+              <button
+                type="button"
+                className={styles.cancelSetButton}
+                onClick={() => setEditingSetId(null)}
+              >
+                {t("common.cancel")}
+              </button>
+            </div>
+          </form>
+        </li>
+      );
+    }
+
+    const hasRpe = Number.isFinite(workoutSet.rpe);
+    return (
+      <li
+        key={workoutSet.id}
+        className={[
+          styles.setRow,
+          workoutSet.isWarmup && styles.setRowWarmup,
+          setDrag.isDragging(workoutSet.id) && styles.setRowDragging,
+          setDrag.dropPosition(workoutSet.id) === "before" && styles.setRowDropBefore,
+          setDrag.dropPosition(workoutSet.id) === "after" && styles.setRowDropAfter,
+        ]
+          .filter(Boolean)
+          .join(" ")}
+        {...setDrag.getItemProps(workoutSet.id)}
+      >
+        <span
+          className={
+            workoutSet.isWarmup ? `${styles.setNumber} ${styles.setNumberWarmup}` : styles.setNumber
+          }
+          title={
+            workoutSet.isWarmup
+              ? `${t("log.warmupLabel")} · ${t("log.dragToReorder")}`
+              : t("log.dragToReorder")
+          }
+          {...setDrag.getHandleProps(workoutSet.id)}
+        >
+          {workoutSet.isWarmup ? t("log.warmupBadge") : setNumbers[index]}
+        </span>
+        <button
+          type="button"
+          className={styles.setText}
+          title={t("log.editSet")}
+          onClick={() => startEditingSet(workoutSet)}
+        >
+          <span className={styles.setMain}>
+            {t("log.setWeightReps", { weight: workoutSet.weight, reps: workoutSet.reps })}
+          </span>
+          {hasRpe && (
+            <span className={styles.setRpe}>{t("log.setRpe", { rpe: workoutSet.rpe })}</span>
+          )}
+          {showE1rm && hasRpe && <SetE1rm workoutSet={workoutSet} formula={e1rmFormula} />}
+        </button>
+        <div className={styles.setRowActions}>
+          <button
+            type="button"
+            className={styles.iconButton}
+            aria-label={t("log.duplicateSet")}
+            title={t("log.duplicateSet")}
+            onClick={() => duplicateSet(workoutSet)}
+          >
+            <Icon name="copy" size={16} />
+          </button>
+          <button
+            type="button"
+            className={styles.iconButton}
+            aria-label={t("log.deleteSet")}
+            title={t("log.deleteSet")}
+            onClick={() => actions.deleteSet(workoutSet.id)}
+          >
+            <Icon name="close" size={16} />
+          </button>
+        </div>
+      </li>
+    );
+  });
+
   return (
-    <div
+    <section
       className={[
         styles.card,
         supersetColor && styles.cardGrouped,
@@ -222,36 +392,71 @@ function Exercise({
       {...dragItemProps}
     >
       <div className={styles.cardHeader}>
-        <div className={styles.cardHeaderLeft}>
-          <span className={styles.dragHandle} {...dragHandleProps}>
-            ⠿
-          </span>
-          <h3 className={styles.heading}>{exercise.name}</h3>
-          <input
-            type="text"
-            className={
-              supersetColor
-                ? `${styles.supersetInput} ${styles.supersetInputActive}`
-                : styles.supersetInput
-            }
-            placeholder={t("log.supersetPlaceholder")}
-            value={supersetDraft ?? exercise.supersetGroup ?? ""}
-            maxLength={8}
-            onChange={(event) => setSupersetDraft(event.target.value)}
-            onBlur={(event) => updateSupersetGroup(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") event.target.blur();
-            }}
-          />
+        <span className={styles.dragHandle} title={t("log.dragToReorder")} {...dragHandleProps}>
+          <Icon name="grip" size={18} />
+        </span>
+        <div className={styles.titleBlock}>
+          <div className={styles.titleRow}>
+            <h2 className={styles.heading}>{exercise.name}</h2>
+            <input
+              type="text"
+              className={
+                supersetColor
+                  ? `${styles.supersetInput} ${styles.supersetInputActive}`
+                  : styles.supersetInput
+              }
+              aria-label={t("log.supersetLabel")}
+              title={t("log.supersetHint")}
+              placeholder={t("log.supersetPlaceholder")}
+              value={supersetDraft ?? exercise.supersetGroup ?? ""}
+              maxLength={8}
+              onChange={(event) => setSupersetDraft(event.target.value)}
+              onBlur={(event) => updateSupersetGroup(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") event.target.blur();
+              }}
+            />
+          </div>
+          {lastWorkingSets.length > 0 && (
+            <div className={styles.lastSession}>
+              <span className={styles.lastSessionLabel}>
+                {t("log.lastTime", { date: formatDayMonth(lastSession.date) })}
+              </span>
+              {lastWorkingSets.map((previousSet) => (
+                <button
+                  type="button"
+                  key={previousSet.id}
+                  className={styles.lastSessionChip}
+                  title={t("log.useLastSet")}
+                  onClick={() => setSet(formFromSet(previousSet))}
+                >
+                  {formatSetShort(previousSet)}
+                </button>
+              ))}
+              <button type="button" className={styles.copyAllButton} onClick={copyLastSession}>
+                {t("log.copyAllSets")}
+              </button>
+              {lastSession.notes && (
+                <span className={styles.lastSessionNotes}>“{lastSession.notes}”</span>
+              )}
+            </div>
+          )}
         </div>
         <div className={styles.menuWrapper} ref={menuRef}>
-          <button className={styles.menuButton} onClick={() => setShowMenu((prev) => !prev)}>
-            ⋮
+          <button
+            type="button"
+            className={styles.menuButton}
+            aria-label={t("log.exerciseOptions", { name: exercise.name })}
+            aria-expanded={showMenu}
+            onClick={() => setShowMenu((prev) => !prev)}
+          >
+            <Icon name="more" />
           </button>
           {showMenu && (
             <div className={styles.menuDropdown}>
               {!showNotes && (
                 <button
+                  type="button"
                   className={styles.menuItem}
                   onClick={() => {
                     setShowNotes(true);
@@ -261,40 +466,18 @@ function Exercise({
                   {t("log.addNote")}
                 </button>
               )}
-              <button className={styles.menuItem} onClick={deleteExercise}>
+              <button type="button" className={styles.menuItem} onClick={deleteExercise}>
                 {t("log.deleteExercise")}
               </button>
             </div>
           )}
         </div>
       </div>
-      {lastWorkingSets.length > 0 && (
-        <div className={styles.lastSession}>
-          <span className={styles.lastSessionLabel}>
-            {t("log.lastTime", { date: formatDayMonth(lastSession.date) })}
-          </span>
-          {lastWorkingSets.map((previousSet) => (
-            <button
-              type="button"
-              key={previousSet.id}
-              className={styles.lastSessionChip}
-              title={t("log.useLastSet")}
-              onClick={() => fillFromLastSet(previousSet)}
-            >
-              {formatSetShort(previousSet)}
-            </button>
-          ))}
-          <button type="button" className={styles.copyAllButton} onClick={copyLastSession}>
-            {t("log.copyAllSets")}
-          </button>
-          {lastSession.notes && (
-            <span className={styles.lastSessionNotes}>“{lastSession.notes}”</span>
-          )}
-        </div>
-      )}
+
       {showNotes && (
         <textarea
           className={styles.notesInput}
+          aria-label={t("log.exerciseNotesPlaceholder")}
           placeholder={t("log.exerciseNotesPlaceholder")}
           rows={2}
           autoFocus={!exercise.notes}
@@ -302,128 +485,27 @@ function Exercise({
           onBlur={(event) => updateNotes(event.target.value)}
         />
       )}
-      <div className={styles.inputRow}>
-        <WeightInput
-          value={set.weight}
-          onChange={(weight) => setSet((prev) => ({ ...prev, weight }))}
-        />
-        <input
-          type="text"
-          className={styles.repsInput}
-          placeholder={t("log.repsPlaceholder")}
-          value={set.reps}
-          onChange={(event) => setSet((prev) => ({ ...prev, reps: event.target.value }))}
-        />
-        <input
-          type="text"
-          className={styles.setInput}
-          placeholder={t("log.rpePlaceholder")}
-          value={set.rpe}
-          onChange={(event) => setSet((prev) => ({ ...prev, rpe: event.target.value }))}
-        />
+
+      {setRows.length > 0 && <ol className={styles.setList}>{setRows}</ol>}
+
+      <form
+        className={styles.addSet}
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (isComplete(set) && !isAdding) addSet();
+        }}
+      >
+        <SetFields values={set} onChange={setSet} />
         <button
+          type="submit"
+          data-action="add-set"
           className={styles.addSetButton}
-          disabled={!set.weight.trim() || !set.reps.trim()}
-          onClick={addSet}
+          disabled={!isComplete(set) || isAdding}
         >
-          {t("log.addSet")}
+          {t("log.addSetNumber", { number: workingSetCount + 1 })}
         </button>
-      </div>
-      <div className={styles.setList}>
-        {exercise.sets.map((workoutSet) =>
-          editingSetId === workoutSet.id ? (
-            <div key={workoutSet.id} className={styles.setRowEditing}>
-              <WeightInput
-                value={editSet.weight}
-                onChange={(weight) => setEditSet((prev) => ({ ...prev, weight }))}
-              />
-              <input
-                type="text"
-                className={styles.repsInput}
-                placeholder={t("log.repsPlaceholder")}
-                value={editSet.reps}
-                onChange={(event) => setEditSet((prev) => ({ ...prev, reps: event.target.value }))}
-              />
-              <input
-                type="text"
-                className={styles.setInput}
-                placeholder={t("log.rpePlaceholder")}
-                value={editSet.rpe}
-                onChange={(event) => setEditSet((prev) => ({ ...prev, rpe: event.target.value }))}
-              />
-              <button
-                className={styles.saveSetButton}
-                disabled={!editSet.weight.trim() || !editSet.reps.trim()}
-                onClick={() => saveEditingSet(workoutSet.id)}
-              >
-                {t("common.save")}
-              </button>
-              <button className={styles.cancelSetButton} onClick={() => setEditingSetId(null)}>
-                {t("common.cancel")}
-              </button>
-            </div>
-          ) : (
-            <div
-              key={workoutSet.id}
-              className={[
-                styles.setRow,
-                workoutSet.isWarmup && styles.setRowWarmup,
-                setDrag.isDragging(workoutSet.id) && styles.setRowDragging,
-                setDrag.dropPosition(workoutSet.id) === "before" && styles.setRowDropBefore,
-                setDrag.dropPosition(workoutSet.id) === "after" && styles.setRowDropAfter,
-              ]
-                .filter(Boolean)
-                .join(" ")}
-              {...setDrag.getItemProps(workoutSet.id)}
-            >
-              <span className={styles.dragHandle} {...setDrag.getHandleProps(workoutSet.id)}>
-                ⠿
-              </span>
-              <span className={styles.setText} onClick={() => startEditingSet(workoutSet)}>
-                {Number.isFinite(workoutSet.rpe)
-                  ? t("log.setSummary", {
-                      weight: workoutSet.weight,
-                      reps: workoutSet.reps,
-                      rpe: workoutSet.rpe,
-                    })
-                  : t("log.setSummaryNoRpe", { weight: workoutSet.weight, reps: workoutSet.reps })}
-                {showE1rm && Number.isFinite(workoutSet.rpe) && (
-                  <SetE1rm workoutSet={workoutSet} formula={e1rmFormula} />
-                )}
-              </span>
-              <div className={styles.setRowActions}>
-                <button
-                  className={styles.duplicateSet}
-                  onClick={() => duplicateSet(workoutSet)}
-                  aria-label={t("log.duplicateSet")}
-                  title={t("log.duplicateSet")}
-                >
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <rect x="9" y="9" width="13" height="13" rx="2" />
-                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                  </svg>
-                </button>
-                <button
-                  className={styles.deleteSet}
-                  onClick={() => actions.deleteSet(workoutSet.id)}
-                >
-                  X
-                </button>
-              </div>
-            </div>
-          ),
-        )}
-      </div>
-    </div>
+      </form>
+    </section>
   );
 }
 

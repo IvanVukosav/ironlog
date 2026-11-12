@@ -49,6 +49,13 @@
   cursor: not-allowed;
 }
 
+/* Composed together with `button`, and after it, so these three win. */
+:where(.buttonSecondary) {
+  background: var(--button-secondary-bg);
+  color: var(--button-secondary-color);
+  border: var(--button-secondary-border);
+}
+
 :where(.input) {
   background: var(--input-bg);
   border: var(--input-border);

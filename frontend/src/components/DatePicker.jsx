@@ -6,7 +6,9 @@ import styles from "./DatePicker.module.css";
 const SUNDAY_INDEX = 0;
 const DAYS_PER_WEEK = 7;
 
-function DatePicker({ value, onChange }) {
+// variant "input" looks like a text box and shows dd/mm/yyyy; "text" is plain text that shows
+// its children instead (the Log page's date line).
+function DatePicker({ value, onChange, variant = "input", children }) {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const selectedDate = new Date(value);
@@ -75,9 +77,20 @@ function DatePicker({ value, onChange }) {
 
   return (
     <div className={styles.container} ref={containerRef}>
-      <button type="button" className={styles.trigger} onClick={openPicker}>
-        {String(selectedDate.getUTCDate()).padStart(2, "0")}/
-        {String(selectedDate.getUTCMonth() + 1).padStart(2, "0")}/{selectedDate.getUTCFullYear()}
+      <button
+        type="button"
+        className={variant === "text" ? styles.triggerText : styles.trigger}
+        aria-expanded={isOpen}
+        aria-haspopup="dialog"
+        onClick={() => (isOpen ? setIsOpen(false) : openPicker())}
+      >
+        {children ?? (
+          <>
+            {String(selectedDate.getUTCDate()).padStart(2, "0")}/
+            {String(selectedDate.getUTCMonth() + 1).padStart(2, "0")}/
+            {selectedDate.getUTCFullYear()}
+          </>
+        )}
       </button>
       {isOpen && (
         <div className={styles.dropdown}>
