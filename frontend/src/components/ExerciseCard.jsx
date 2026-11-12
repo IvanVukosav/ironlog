@@ -9,12 +9,13 @@ import {
 import { useToast } from "../context/useToast";
 import { formatDayMonth } from "../utils/dates";
 import { useDragReorder } from "../hooks/useDragReorder";
-import { useReportError } from "../hooks/useReportError";
 import styles from "./ExerciseCard.module.css";
 
 const WEIGHT_STEP_KG = 1;
 const MINIMUM_WEIGHT_KG = 0;
 const E1RM_DECIMAL_PLACES = 1;
+// The set form's fields hold what was typed, so they are strings.
+const EMPTY_SET = { weight: "", reps: "", rpe: "", isWarmup: false };
 
 function formatSetShort(workoutSet) {
   const base = `${workoutSet.weight}×${workoutSet.reps}`;
@@ -78,14 +79,11 @@ function SetE1rm({ workoutSet, formula }) {
   );
 }
 
+// `actions` are the workout's own (useWorkout): they save a change and resolve to what was saved,
+// or to null when saving failed and the failure has already been reported.
 function Exercise({
   exercise,
-  onAddSet,
-  onDeleteSet,
-  onDeleteExercise,
-  onUpdateSet,
-  onUpdateExercise,
-  onReorderSets,
+  actions,
   showE1rm,
   e1rmFormula,
   supersetColor,
@@ -96,11 +94,10 @@ function Exercise({
 }) {
   const { t } = useTranslation();
   const { showSuccess } = useToast();
-  const reportError = useReportError();
-  const [set, setSet] = useState({ weight: "", reps: "", rpe: "", isWarmup: false });
+  const [set, setSet] = useState(EMPTY_SET);
   const [showMenu, setShowMenu] = useState(false);
   const [editingSetId, setEditingSetId] = useState(null);
-  const [editSet, setEditSet] = useState({ weight: "", reps: "", rpe: "", isWarmup: false });
+  const [editSet, setEditSet] = useState(EMPTY_SET);
   // What is being typed into the superset box; null when not editing, so the saved group shows.
   const [supersetDraft, setSupersetDraft] = useState(null);
   const [lastSession, setLastSession] = useState(null);
@@ -127,32 +124,15 @@ function Exercise({
   };
 
   const copyLastSession = async () => {
-    try {
-      // Sequential so the copied sets keep their original order.
-      for (const previousSet of lastWorkingSets) {
-        const data = await fetchJson(`/api/workouts/exercises/${exercise.id}/sets`, {
-          method: "POST",
-          json: {
-            weight: previousSet.weight,
-            reps: previousSet.reps,
-            rpe: previousSet.rpe,
-            isWarmup: false,
-          },
-        });
-        onAddSet(data);
-      }
-    } catch (err) {
-      reportError(err);
+    // One after another so the copied sets keep their order; the first failure ends the copy.
+    for (const { weight, reps, rpe } of lastWorkingSets) {
+      if (!(await actions.addSet(exercise.id, { weight, reps, rpe, isWarmup: false }))) return;
     }
   };
 
-  const setDrag = useDragReorder(exercise.sets || [], (newSets) => {
-    onReorderSets(newSets);
-    fetchJson(`/api/workouts/exercises/${exercise.id}/sets/reorder`, {
-      method: "PATCH",
-      json: { setIds: newSets.map((workoutSet) => workoutSet.id) },
-    }).catch(reportError);
-  });
+  const setDrag = useDragReorder(exercise.sets, (newSets) =>
+    actions.reorderSets(exercise.id, newSets),
+  );
 
   useEffect(() => {
     if (!showMenu) return undefined;
@@ -165,74 +145,42 @@ function Exercise({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showMenu]);
 
-  const addSet = (exerciseId) => {
-    fetchJson(`/api/stats/exercise/${encodeURIComponent(exercise.name)}/history`)
-      .then((historyEntries) => {
-        const previousSets = historyEntries.flatMap((entry) => entry.sets);
-        const previousBest =
-          previousSets.length > 0 ? findBestSetByE1rm(previousSets, e1rmFormula) : null;
+  const addSet = async () => {
+    // Asked for before saving, so the new set is not among the ones it has to beat. The set is
+    // saved even when this fails; it just can't be called a PR then.
+    const previousSets = await fetchJson(
+      `/api/stats/exercise/${encodeURIComponent(exercise.name)}/history`,
+    ).then(
+      (sessions) => sessions.flatMap((session) => session.sets),
+      (err) => {
+        console.error(err);
+        return null;
+      },
+    );
 
-        return fetchJson(`/api/workouts/exercises/${exerciseId}/sets`, {
-          method: "POST",
-          json: set,
-        }).then((data) => {
-          onAddSet(data);
-          setSet({ weight: "", reps: "", rpe: "", isWarmup: false });
+    const saved = await actions.addSet(exercise.id, set);
+    if (!saved) return;
+    setSet(EMPTY_SET);
+    if (!previousSets || saved.isWarmup) return;
 
-          const newSetE1rm = calculateEstimatedOneRepMax(
-            data.weight,
-            data.reps,
-            data.rpe,
-            e1rmFormula,
-          );
-          if (
-            !set.isWarmup &&
-            newSetE1rm !== null &&
-            (!previousBest || newSetE1rm > previousBest.e1rm)
-          ) {
-            showSuccess(
-              t("log.newPrToast", {
-                name: exercise.name,
-                value: newSetE1rm.toFixed(E1RM_DECIMAL_PLACES),
-              }),
-            );
-          }
-        });
-      })
-      .catch(reportError);
-  };
-
-  const deleteSet = (setId) => {
-    fetchJson(`/api/workouts/sets/${setId}`, {
-      method: "DELETE",
-    })
-      .then(() => onDeleteSet(setId))
-      .catch(reportError);
+    const e1rm = calculateEstimatedOneRepMax(saved.weight, saved.reps, saved.rpe, e1rmFormula);
+    const previousBest = findBestSetByE1rm(previousSets, e1rmFormula);
+    if (e1rm !== null && (!previousBest || e1rm > previousBest.e1rm)) {
+      showSuccess(
+        t("log.newPrToast", { name: exercise.name, value: e1rm.toFixed(E1RM_DECIMAL_PLACES) }),
+      );
+    }
   };
 
   const deleteExercise = () => {
     setShowMenu(false);
-    if (!window.confirm(t("log.confirmDeleteExercise", { name: exercise.name }))) {
-      return;
+    if (window.confirm(t("log.confirmDeleteExercise", { name: exercise.name }))) {
+      actions.deleteExercise(exercise.id);
     }
-    fetchJson(`/api/workouts/exercises/${exercise.id}`, { method: "DELETE" })
-      .then(() => onDeleteExercise(exercise.id))
-      .catch(reportError);
   };
 
-  const duplicateSet = (workoutSet) => {
-    fetchJson(`/api/workouts/exercises/${exercise.id}/sets`, {
-      method: "POST",
-      json: {
-        weight: workoutSet.weight,
-        reps: workoutSet.reps,
-        rpe: workoutSet.rpe,
-        isWarmup: workoutSet.isWarmup,
-      },
-    })
-      .then((data) => onAddSet(data))
-      .catch(reportError);
-  };
+  const duplicateSet = ({ weight, reps, rpe, isWarmup }) =>
+    actions.addSet(exercise.id, { weight, reps, rpe, isWarmup });
 
   const startEditingSet = (workoutSet) => {
     setEditingSetId(workoutSet.id);
@@ -244,38 +192,19 @@ function Exercise({
     });
   };
 
-  const updateSupersetGroup = (value) => {
-    fetchJson(`/api/workouts/exercises/${exercise.id}`, {
-      method: "PATCH",
-      json: { supersetGroup: value },
-    })
-      .then((data) => onUpdateExercise(data))
-      .catch(reportError)
-      // Show the saved group again (or the old one if saving failed), unless the box was
-      // already edited further while the request was in flight.
-      .finally(() => setSupersetDraft((draft) => (draft === value ? null : draft)));
+  const updateSupersetGroup = async (value) => {
+    await actions.updateExercise(exercise.id, { supersetGroup: value });
+    // Show the saved group again (or the old one if saving failed), unless the box was
+    // already edited further while the request was in flight.
+    setSupersetDraft((draft) => (draft === value ? null : draft));
   };
 
   const updateNotes = (notes) => {
-    if (notes.trim() === (exercise.notes || "")) return;
-    fetchJson(`/api/workouts/exercises/${exercise.id}`, {
-      method: "PATCH",
-      json: { notes },
-    })
-      .then((data) => onUpdateExercise(data))
-      .catch(reportError);
+    if (notes.trim() !== (exercise.notes || "")) actions.updateExercise(exercise.id, { notes });
   };
 
-  const saveEditingSet = (setId) => {
-    fetchJson(`/api/workouts/sets/${setId}`, {
-      method: "PATCH",
-      json: editSet,
-    })
-      .then((data) => {
-        onUpdateSet(data);
-        setEditingSetId(null);
-      })
-      .catch(reportError);
+  const saveEditingSet = async (setId) => {
+    if (await actions.updateSet(setId, editSet)) setEditingSetId(null);
   };
 
   return (
@@ -395,13 +324,13 @@ function Exercise({
         <button
           className={styles.addSetButton}
           disabled={!set.weight.trim() || !set.reps.trim()}
-          onClick={() => addSet(exercise.id)}
+          onClick={addSet}
         >
           {t("log.addSet")}
         </button>
       </div>
       <div className={styles.setList}>
-        {exercise.sets?.map((workoutSet) =>
+        {exercise.sets.map((workoutSet) =>
           editingSetId === workoutSet.id ? (
             <div key={workoutSet.id} className={styles.setRowEditing}>
               <WeightInput
@@ -483,7 +412,10 @@ function Exercise({
                     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                   </svg>
                 </button>
-                <button className={styles.deleteSet} onClick={() => deleteSet(workoutSet.id)}>
+                <button
+                  className={styles.deleteSet}
+                  onClick={() => actions.deleteSet(workoutSet.id)}
+                >
                   X
                 </button>
               </div>

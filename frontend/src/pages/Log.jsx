@@ -9,6 +9,7 @@ import { useToast } from "../context/useToast";
 import { useSettings } from "../context/useSettings";
 import { useDragReorder } from "../hooks/useDragReorder";
 import { useReportError } from "../hooks/useReportError";
+import { useWorkout } from "../hooks/useWorkout";
 import { DEFAULT_E1RM_FORMULA } from "../utils/oneRepMax";
 import { todayKey } from "../utils/dates";
 import styles from "./Log.module.css";
@@ -32,7 +33,7 @@ function Log() {
   const reportError = useReportError();
   const [searchParams] = useSearchParams();
   const [date, setDate] = useState(searchParams.get("date") || todayKey());
-  const [workout, setWorkout] = useState(null);
+  const { workout, isLoading, ...actions } = useWorkout(date);
   const [exerciseName, setExerciseName] = useState("");
   const [exerciseTemplates, setExerciseTemplates] = useState([]);
   const [showExercisePicker, setShowExercisePicker] = useState(false);
@@ -49,25 +50,11 @@ function Log() {
   const templatePickerRef = useRef(null);
   const pickerMode = settings?.exercisePickerMode ?? "chips";
 
-  const exerciseDrag = useDragReorder(workout?.exercises || [], (newExercises) => {
-    setWorkout((prev) => ({ ...prev, exercises: newExercises }));
-    fetchJson(`/api/workouts/${workout.id}/exercises/reorder`, {
-      method: "PATCH",
-      json: { exerciseIds: newExercises.map((exercise) => exercise.id) },
-    }).catch(reportError);
-  });
+  const exerciseDrag = useDragReorder(workout?.exercises || [], actions.reorderExercises);
 
   useEffect(() => {
-    fetchJson(`/api/workouts?date=${date}`)
-      .then((data) => setWorkout(data[0] || null))
-      .catch(reportError);
-
     fetchJson("/api/exercise-templates").then(setExerciseTemplates).catch(reportError);
-  }, [date, reportError]);
-
-  useEffect(() => {
     fetchJson("/api/workout-templates").then(setWorkoutTemplates).catch(reportError);
-
     fetchJson("/api/programs").then(setPrograms).catch(reportError);
   }, [reportError]);
 
@@ -84,76 +71,34 @@ function Log() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const createWorkout = () => {
-    fetchJson("/api/workouts", {
-      method: "POST",
-      json: { date },
-    })
-      .then(setWorkout)
-      .catch(reportError);
-  };
-
   const cancelWorkout = () => {
-    if (!workout) return;
-    if (!window.confirm(t("log.confirmCancelWorkout"))) {
-      return;
-    }
-    fetchJson(`/api/workouts/${workout.id}`, { method: "DELETE" })
-      .then(() => setWorkout(null))
-      .catch(reportError);
+    if (window.confirm(t("log.confirmCancelWorkout"))) actions.deleteWorkout();
   };
 
-  const addExercise = () => {
-    if (!exerciseName.trim()) return;
+  const addExercise = async () => {
+    const name = exerciseName.trim();
+    if (!name) return;
 
-    const isKnown = exerciseTemplates.some(
-      (template) => template.name.toLowerCase() === exerciseName.trim().toLowerCase(),
-    );
-    if (!isKnown) {
-      setSavePromptName(exerciseName.trim());
-    }
-
-    const alreadyInWorkout = workout.exercises?.some(
-      (exercise) => exercise.name.toLowerCase() === exerciseName.trim().toLowerCase(),
-    );
-    if (alreadyInWorkout) {
-      showError(t("log.exerciseAlreadyAdded", { name: exerciseName.trim() }));
+    const isSameName = (other) => other.name.toLowerCase() === name.toLowerCase();
+    if (workout.exercises.some(isSameName)) {
+      showError(t("log.exerciseAlreadyAdded", { name }));
       return;
     }
 
-    fetchJson(`/api/workouts/${workout.id}/exercises`, {
-      method: "POST",
-      json: { name: exerciseName },
-    })
-      .then((data) => {
-        setWorkout((prev) => ({
-          ...prev,
-          exercises: [...(prev.exercises || []), { ...data, sets: [] }],
-        }));
-        setExerciseName("");
-        setShowExercisePicker(false);
-      })
-      .catch(reportError);
+    if (!(await actions.addExercise(name))) return;
+    setExerciseName("");
+    setShowExercisePicker(false);
+    // Only an exercise that made it into the workout is worth offering for the list.
+    if (!exerciseTemplates.some(isSameName)) setSavePromptName(name);
   };
 
+  // Saved when the box is left, and only if it says something new.
   const updateWorkoutName = (name) => {
-    if (!workout || name.trim() === (workout.name || "")) return;
-    fetchJson(`/api/workouts/${workout.id}`, {
-      method: "PATCH",
-      json: { name },
-    })
-      .then((data) => setWorkout((prev) => ({ ...prev, name: data.name })))
-      .catch(reportError);
+    if (name.trim() !== (workout.name || "")) actions.updateWorkout({ name });
   };
 
   const updateWorkoutNotes = (notes) => {
-    if (!workout || notes.trim() === (workout.notes || "")) return;
-    fetchJson(`/api/workouts/${workout.id}`, {
-      method: "PATCH",
-      json: { notes },
-    })
-      .then((data) => setWorkout((prev) => ({ ...prev, notes: data.notes })))
-      .catch(reportError);
+    if (notes.trim() !== (workout.notes || "")) actions.updateWorkout({ notes });
   };
 
   const saveExerciseTemplate = (name, muscleGroup) => {
@@ -201,19 +146,12 @@ function Log() {
       .catch(reportError);
   };
 
-  const applyWorkoutTemplate = (templateId) => {
-    fetchJson(`/api/workout-templates/${templateId}/apply`, {
-      method: "POST",
-      json: { workoutId: workout.id },
-    })
-      .then((createdExercises) => {
-        setWorkout((prev) => ({
-          ...prev,
-          exercises: [...(prev.exercises || []), ...createdExercises],
-        }));
-        setShowTemplatePicker(false);
-      })
-      .catch(reportError);
+  const applyWorkoutTemplate = async (templateId) => {
+    if (await actions.applyTemplate(templateId)) setShowTemplatePicker(false);
+  };
+
+  const loadProgramDay = async (program, exercises) => {
+    if (await actions.loadProgramDay(program, exercises)) setShowProgramLoader(false);
   };
 
   const deleteWorkoutTemplate = (templateId) => {
@@ -273,7 +211,7 @@ function Log() {
             <button className={styles.cancelButton} onClick={cancelWorkout}>
               {t("common.cancel")}
             </button>
-            {workout.exercises?.length > 0 && (
+            {workout.exercises.length > 0 && (
               <button className={styles.cancelButton} onClick={() => setSaveTemplateName("")}>
                 {t("log.saveAsTemplate")}
               </button>
@@ -332,8 +270,9 @@ function Log() {
         </Fragment>
       )}
 
-      {!workout && (
-        <button className={styles.startButton} onClick={createWorkout}>
+      {/* Not offered until the day has answered: it may turn out to have a workout already. */}
+      {!workout && !isLoading && (
+        <button className={styles.startButton} onClick={actions.createWorkout}>
           {t("log.startWorkout")}
         </button>
       )}
@@ -531,22 +470,19 @@ function Log() {
 
           {showProgramLoader && (
             <ProgramLoader
-              workout={workout}
               programs={programs}
               formula={settings?.e1rmFormula ?? DEFAULT_E1RM_FORMULA}
-              onLoaded={(updatedWorkout) => {
-                setWorkout(updatedWorkout);
-                setShowProgramLoader(false);
-              }}
+              onLoad={loadProgramDay}
               onClose={() => setShowProgramLoader(false)}
             />
           )}
 
           <div className={styles.cardList}>
-            {workout.exercises?.map((exercise) => (
+            {workout.exercises.map((exercise) => (
               <ExerciseCard
                 key={exercise.id}
                 exercise={exercise}
+                actions={actions}
                 showE1rm={settings?.showE1rm ?? true}
                 e1rmFormula={settings?.e1rmFormula ?? DEFAULT_E1RM_FORMULA}
                 supersetColor={
@@ -556,81 +492,6 @@ function Log() {
                 dropPosition={exerciseDrag.dropPosition(exercise.id)}
                 dragItemProps={exerciseDrag.getItemProps(exercise.id)}
                 dragHandleProps={exerciseDrag.getHandleProps(exercise.id)}
-                onDeleteSet={(setId) =>
-                  setWorkout((prev) => ({
-                    ...prev,
-                    exercises: prev.exercises.map((currentExercise) =>
-                      currentExercise.id === exercise.id
-                        ? {
-                            ...currentExercise,
-                            sets: currentExercise.sets.filter(
-                              (currentSet) => currentSet.id !== setId,
-                            ),
-                          }
-                        : currentExercise,
-                    ),
-                  }))
-                }
-                onAddSet={(data) =>
-                  setWorkout((prev) => ({
-                    ...prev,
-                    exercises: prev.exercises.map((currentExercise) =>
-                      currentExercise.id === exercise.id
-                        ? {
-                            ...currentExercise,
-                            sets: [...(currentExercise.sets || []), data],
-                          }
-                        : currentExercise,
-                    ),
-                  }))
-                }
-                onUpdateSet={(updatedSet) =>
-                  setWorkout((prev) => ({
-                    ...prev,
-                    exercises: prev.exercises.map((currentExercise) =>
-                      currentExercise.id === exercise.id
-                        ? {
-                            ...currentExercise,
-                            sets: currentExercise.sets.map((currentSet) =>
-                              currentSet.id === updatedSet.id ? updatedSet : currentSet,
-                            ),
-                          }
-                        : currentExercise,
-                    ),
-                  }))
-                }
-                onUpdateExercise={(updatedExercise) =>
-                  setWorkout((prev) => ({
-                    ...prev,
-                    exercises: prev.exercises.map((currentExercise) =>
-                      currentExercise.id === updatedExercise.id
-                        ? {
-                            ...currentExercise,
-                            supersetGroup: updatedExercise.supersetGroup,
-                            notes: updatedExercise.notes,
-                          }
-                        : currentExercise,
-                    ),
-                  }))
-                }
-                onDeleteExercise={(exerciseId) =>
-                  setWorkout((prev) => ({
-                    ...prev,
-                    exercises: prev.exercises.filter(
-                      (currentExercise) => currentExercise.id !== exerciseId,
-                    ),
-                  }))
-                }
-                onReorderSets={(newSets) =>
-                  setWorkout((prev) => ({
-                    ...prev,
-                    exercises: prev.exercises.map((currentExercise) =>
-                      currentExercise.id === exercise.id
-                        ? { ...currentExercise, sets: newSets }
-                        : currentExercise,
-                    ),
-                  }))
-                }
               />
             ))}
           </div>

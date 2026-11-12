@@ -26,7 +26,9 @@ function summarizeSets(sets) {
     .join(", ");
 }
 
-function ProgramLoader({ workout, programs, formula, onLoaded, onClose }) {
+// `onLoad(program, exercises)` puts the chosen day's sets into the workout; `program` is
+// { id, week, day }.
+function ProgramLoader({ programs, formula, onLoad, onClose }) {
   const { t } = useTranslation();
   const reportError = useReportError();
   const [programId, setProgramId] = useState(programs[0]?.id ?? null);
@@ -71,17 +73,11 @@ function ProgramLoader({ workout, programs, formula, onLoaded, onClose }) {
     })
     .filter((exercise) => exercise.sets.length > 0);
 
-  const load = () => {
-    fetchJson(`/api/workouts/${workout.id}/exercises/bulk`, {
-      method: "POST",
-      json: {
-        program: { id: programId, week, day },
-        exercises: plannedExercises.map(({ name, sets }) => ({ name, sets })),
-      },
-    })
-      .then((updatedWorkout) => onLoaded(updatedWorkout))
-      .catch(reportError);
-  };
+  const load = () =>
+    onLoad(
+      { id: programId, week, day },
+      plannedExercises.map(({ name, sets }) => ({ name, sets })),
+    );
 
   if (!program) return null;
 
