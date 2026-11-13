@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const prisma = require("../prisma/client");
-const { parseId, parseDateKey, parseDateRangeQuery } = require("../utils/validate");
+const { parseId, parseDateKey, parseDateRangeQuery, toNumber } = require("../utils/validate");
 
 router.get("/", async (req, res) => {
   const entries = await prisma.bodyweight.findMany({
@@ -13,7 +13,7 @@ router.get("/", async (req, res) => {
 
 router.post("/", async (req, res) => {
   const date = new Date(parseDateKey(req.body?.date));
-  const weight = parseFloat(req.body?.weight);
+  const weight = toNumber(req.body?.weight);
   if (!(weight > 0)) {
     return res.status(400).json({ error: "weight must be a number above 0" });
   }

@@ -6,9 +6,19 @@ const {
   parseYearMonth,
   parseDateKey,
   parseDateRangeQuery,
+  toNumber,
   parseSet,
   parseMacros,
 } = require("./validate");
+
+test("toNumber reads a decimal comma, keeps numbers, and gives NaN for anything else", () => {
+  assert.equal(toNumber("90,6"), 90.6);
+  assert.equal(toNumber(" 85.5 "), 85.5);
+  assert.equal(toNumber(92), 92);
+  for (const bad of ["", "  ", "90kg", "abc", undefined, null, {}]) {
+    assert.ok(Number.isNaN(toNumber(bad)), `read ${JSON.stringify(bad)} as a number`);
+  }
+});
 
 const isBadRequest = (err) => err instanceof HttpError && err.status === 400;
 

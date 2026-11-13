@@ -93,6 +93,7 @@ module.exports = {
   parseYearMonth,
   parseDateKey,
   parseDateRangeQuery,
+  toNumber,
   parseSet,
   parseMacros,
 };
