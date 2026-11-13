@@ -80,7 +80,7 @@ function parseSet(body) {
 function parseMacros(body) {
   const name = typeof body?.name === "string" ? body.name.trim() : "";
   if (!name) throw new HttpError(400, "Name is required");
-  const macros = Object.fromEntries(MACRO_FIELDS.map((field) => [field, parseFloat(body[field])]));
+  const macros = Object.fromEntries(MACRO_FIELDS.map((field) => [field, toNumber(body[field])]));
   if (Object.values(macros).some(Number.isNaN)) {
     throw new HttpError(400, "Kcal, protein, carbs and fat must be valid numbers");
   }

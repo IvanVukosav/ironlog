@@ -121,3 +121,18 @@ test("parseMacros trims the name and wants four numbers", () => {
   );
   assert.throws(() => parseMacros({ name: "Rice", kcal: 1, protein: 1, carbs: 1 }), isBadRequest);
 });
+
+test("parseMacros reads a decimal comma and refuses what it used to cut short", () => {
+  assert.deepEqual(
+    parseMacros({ name: "Jaja", kcal: "155", protein: "12,6", carbs: "1,1", fat: "10,6" }),
+    { name: "Jaja", kcal: 155, protein: 12.6, carbs: 1.1, fat: 10.6 },
+  );
+  assert.throws(
+    () => parseMacros({ name: "Rice", kcal: "130kcal", protein: 2, carbs: 28, fat: 0 }),
+    isBadRequest,
+  );
+  assert.throws(
+    () => parseMacros({ name: "Rice", kcal: "", protein: 2, carbs: 28, fat: 0 }),
+    isBadRequest,
+  );
+});
