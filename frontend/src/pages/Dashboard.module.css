@@ -1,345 +1,452 @@
 .page {
   padding: 1.5rem;
+  max-width: calc(880px + 3rem);
 }
 
-.heading {
-  font-family: var(--font-body);
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--color-text);
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   margin-bottom: 1rem;
 }
 
+.date {
+  color: var(--color-text-dim);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.heading {
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 1.75rem;
+  font-weight: var(--heading-weight);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+/* Today's workout across the top, then the cards in two columns, each card under the one before
+   it (a grid's rows would leave a hole beside every short card). One column on a phone. */
 .grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+  column-count: 2;
+  column-gap: 12px;
+}
+
+.wide {
+  column-span: all;
+}
+
+@media (max-width: 640px) {
+  .grid {
+    column-count: 1;
+  }
 }
 
 .card {
   composes: card from "../styles/shared.module.css";
-}
-
-.label {
-  composes: label from "../styles/shared.module.css";
-}
-
-.value {
-  composes: value from "../styles/shared.module.css";
-}
-
-.fullWidth {
-  grid-column: span 2;
-}
-
-.clickableCard {
-  cursor: pointer;
-}
-
-.clickableCard:hover {
-  background-color: var(--color-bg-hover);
-}
-
-.chips {
   display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  margin-bottom: 12px;
+  break-inside: avoid;
+}
+
+.cardTitle {
+  color: var(--color-text-dim);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.titleLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 24px;
+  color: inherit;
+}
+
+.titleLink:hover {
+  color: var(--color-text);
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 0.6rem;
+  gap: 8px;
+}
+
+.dim {
+  color: var(--color-text-dim);
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+}
+
+.bigNumber {
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+.bigUnit {
+  color: var(--color-text-dim);
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.numberRow {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 10px;
 }
 
 .chip {
-  position: relative;
-  border: 1px solid var(--color-border);
+  padding: 2px 8px;
+  border-radius: var(--badge-radius);
+  background: var(--input-bg);
   color: var(--color-text-dim);
   font-family: var(--font-body);
-  font-size: 0.72rem;
-  padding: 3px 9px;
-}
-
-.chip:hover {
-  color: var(--color-text);
-  border-color: var(--color-accent);
-}
-
-.chipTooltip {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  margin-top: 6px;
-  background-color: var(--color-bg-elevated);
-  border: 1px solid var(--color-border);
-  color: var(--color-text);
-  font-size: 0.72rem;
-  font-weight: 400;
-  text-transform: none;
-  letter-spacing: normal;
-  padding: 6px 10px;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.15s ease;
-  z-index: 30;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-}
-
-.chipTooltipRow {
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
-.chipTooltipRow + .chipTooltipRow {
-  margin-top: 3px;
+.progressTrack {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--color-border-subtle);
+  overflow: hidden;
 }
 
-.chip:hover .chipTooltip {
-  opacity: 1;
+.progressFill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-accent);
+}
+
+/* Today's workout. */
+
+.todayHeading {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.todayName {
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 1.35rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.exerciseList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.exerciseRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-top: 1px solid var(--color-border-subtle);
+  font-family: var(--font-body);
+}
+
+.exerciseName {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-text);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.exerciseDetail {
+  flex-shrink: 0;
+  color: var(--color-text-dim);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.primaryButton {
+  composes: button from "../styles/shared.module.css";
+  align-self: flex-start;
+  min-height: 44px;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+/* A link that looks like the main button; its colour has to beat the page's `a { color }`. */
+.primaryLink {
+  composes: button from "../styles/shared.module.css";
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding-left: 20px;
+  padding-right: 20px;
+  color: var(--button-color);
+}
+
+.textButton {
+  align-self: flex-start;
+  min-height: 32px;
+  margin-left: -8px;
+  padding: 0 8px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: var(--color-accent);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.textButton:hover {
+  background: var(--color-bg-hover);
+}
+
+.goalInput {
+  composes: input from "../styles/shared.module.css";
+  align-self: flex-start;
+  width: 12rem;
+  min-height: 40px;
 }
 
 .macroRow {
   display: flex;
   align-items: center;
   gap: 1rem;
-  margin-top: 0.75rem;
 }
 
-.kcalInlineInput {
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid var(--color-border);
-  color: var(--color-text);
-  font-family: var(--font-body);
-  font-size: 1.2rem;
-  font-weight: 700;
-  padding: 0 2px;
-  outline: none;
-  width: 60px;
+/* This week: a dot per day, filled when trained, ringed today. */
+
+.weekStrip {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 2px;
 }
 
-.kcalInlineInput:focus {
-  border-bottom-color: var(--color-accent);
-}
-
-.kcalSetButton {
-  composes: button from "../styles/shared.module.css";
-  font-size: 1.2rem;
-  padding: 0;
-}
-
-.streakLongest {
-  color: var(--color-text-dim);
-  font-size: 0.8rem;
-  margin-top: 0.25rem;
-}
-
-.prHeader {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-}
-
-.prDate {
-  color: var(--color-text-dim);
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.prName {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--color-text);
-  margin-top: 0.25rem;
-}
-
-.bwChartHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.75rem;
-}
-
-.rangeTabs {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.rangeTab {
-  border-radius: var(--input-radius);
-  background: transparent;
-  border: 1px solid var(--color-border);
-  color: var(--color-text-dim);
-  font-family: var(--font-body);
-  font-size: 0.7rem;
-  padding: 3px 8px;
-  cursor: pointer;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.rangeTabActive {
-  border-radius: var(--input-radius);
-  background: var(--color-accent);
-  border: 1px solid var(--color-accent);
-  color: var(--color-bg);
-  font-family: var(--font-body);
-  font-size: 0.7rem;
-  padding: 3px 8px;
-  cursor: pointer;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.weeklyProgressHeader {
-  margin-bottom: 0.75rem;
-}
-
-.progressTrack {
-  margin-top: 0.5rem;
-  height: 6px;
-  background: var(--color-border-subtle);
-}
-
-.progressFill {
-  height: 100%;
-  background: var(--color-accent);
-}
-
-.weekDayList {
+.dayLink {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-height: 60px;
+  padding: 4px 0;
+  border-radius: 10px;
+  color: inherit;
 }
 
-.weekDayRow {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 6px 0;
-  border-bottom: 1px solid var(--color-border-subtle);
+.dayLink:hover {
+  background: var(--color-bg-hover);
+}
+
+/* Croatian writes weekdays in lower case; as column heads they take capitals. */
+.dayLetter {
+  color: var(--color-text-dim);
   font-family: var(--font-body);
-  font-size: 1.15rem;
-  cursor: pointer;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
 }
 
-.weekDayRow:hover {
-  background-color: var(--color-bg-hover);
-}
-
-.weekDayRow:last-child {
-  border-bottom: none;
-}
-
-.weekDayName {
-  color: var(--color-text-dim);
-}
-
-.weekDayNameToday {
-  color: var(--color-accent);
-  font-weight: 700;
-}
-
-.weekDayStatus {
+.dayDot {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-}
-
-.weekDayWorkoutName {
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: var(--input-bg);
   color: var(--color-text-dim);
-  font-size: 0.85rem;
-}
-
-.weekDayDot {
-  color: var(--color-border);
-}
-
-.weekDayDotTrained {
-  color: var(--color-accent);
-}
-
-.recentWorkoutList {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.recentWorkoutRow {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 6px 0;
-  border-bottom: 1px solid var(--color-border-subtle);
   font-family: var(--font-body);
-  font-size: 0.85rem;
-  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
-.recentWorkoutRow:hover {
-  background-color: var(--color-bg-hover);
+.dayDotTrained {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
 }
 
-.recentWorkoutRow:last-child {
-  border-bottom: none;
+.dayDotToday {
+  box-shadow:
+    0 0 0 2px var(--color-bg-card),
+    0 0 0 4px var(--color-accent);
 }
 
-.recentWorkoutDate {
-  color: var(--color-text);
-}
-
-.recentWorkoutExercises {
-  color: var(--color-text-dim);
-  font-size: 0.8rem;
-}
-
-.bwTrendSummary {
+.streak {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
   color: var(--color-text);
   font-family: var(--font-body);
   font-size: 0.85rem;
-  font-weight: 700;
-  margin-bottom: 0.5rem;
+  font-weight: 600;
 }
 
-.bwTrendChange {
-  color: var(--color-text-dim);
+.streakIcon {
+  display: flex;
+  color: var(--color-streak);
+}
+
+.streak .dim {
   font-weight: 400;
-  margin-left: 0.5rem;
 }
 
-.bwLegend {
+/* The latest record. */
+
+.recordRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-body);
+}
+
+.recordIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: var(--badge-radius);
+  background: rgba(var(--color-accent-rgb), 0.14);
+  color: var(--color-accent);
+}
+
+.recordMain {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.recordName {
+  overflow: hidden;
+  color: var(--color-text);
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recordSide {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.recordValue {
+  color: var(--color-text);
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Bodyweight chart legend. */
+
+.legend {
   display: flex;
   gap: 1rem;
   color: var(--color-text-dim);
   font-family: var(--font-body);
   font-size: 0.7rem;
-  margin-top: 0.25rem;
 }
 
-.bwLegendItem {
+.legendItem {
   display: flex;
   align-items: center;
   gap: 5px;
 }
 
-.bwLegendDot {
+.legendDot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
   background-color: var(--color-text-dim);
 }
 
-.bwLegendLine {
+.legendLine {
   width: 12px;
   height: 2px;
   background-color: var(--color-accent);
 }
 
-@media (max-width: 640px) {
-  .page {
-    padding: 1rem;
-  }
+/* Recent workouts: rows that run to the card's edges. */
 
-  .grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
+.list {
+  list-style: none;
+  margin: 0 calc(-1 * var(--card-padding));
+}
 
-  .fullWidth {
-    grid-column: auto;
-  }
+.list li + li {
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.listRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  padding: 6px var(--card-padding);
+  color: inherit;
+  font-family: var(--font-body);
+}
+
+.listRow:hover {
+  background: var(--color-bg-hover);
+}
+
+.listMain {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.listName {
+  overflow: hidden;
+  color: var(--color-text);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.listSide {
+  flex-shrink: 0;
+  color: var(--color-text-dim);
+  font-size: 0.8rem;
+}
+
+.chevron {
+  display: flex;
+  flex-shrink: 0;
+  color: var(--color-text-dim);
 }

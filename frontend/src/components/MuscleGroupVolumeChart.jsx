@@ -4,6 +4,7 @@ import { fetchJson } from "../api";
 import { useReportError } from "../hooks/useReportError";
 import { todayKey } from "../utils/dates";
 import { formatVolume } from "../utils/numbers";
+import SegmentedControl from "./SegmentedControl";
 import styles from "./MuscleGroupVolumeChart.module.css";
 
 const MINIMUM_MAX_VOLUME = 1;
@@ -14,9 +15,9 @@ function MuscleGroupVolumeChart() {
   const [range, setRange] = useState("week");
   const [volumeData, setVolumeData] = useState([]);
   const ranges = [
-    { label: t("common.week"), range: "week" },
-    { label: t("common.month"), range: "month" },
-    { label: t("common.year"), range: "year" },
+    { label: t("common.week"), value: "week" },
+    { label: t("common.month"), value: "month" },
+    { label: t("common.year"), value: "year" },
   ];
 
   useEffect(() => {
@@ -29,18 +30,14 @@ function MuscleGroupVolumeChart() {
   const maxVolume = Math.max(...volumeData.map((entry) => entry.volume), MINIMUM_MAX_VOLUME);
 
   return (
-    <div>
-      <div className={styles.rangeTabs}>
-        {ranges.map(({ label, range: rangeValue }) => (
-          <button
-            key={rangeValue}
-            className={range === rangeValue ? styles.rangeTabActive : styles.rangeTab}
-            onClick={() => setRange(rangeValue)}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+    <div className={styles.chart}>
+      <SegmentedControl
+        compact
+        label={t("stats.periodLabel")}
+        options={ranges}
+        value={range}
+        onChange={setRange}
+      />
       {volumeData.length > 0 ? (
         <div className={styles.barList}>
           {volumeData.map((entry) => (

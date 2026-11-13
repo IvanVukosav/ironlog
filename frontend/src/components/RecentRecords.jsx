@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { formatShortDate } from "../utils/dates";
+import { useDayLabel } from "../hooks/useDayLabel";
 import { formatNumber, formatSet } from "../utils/numbers";
 import Icon from "./Icon";
 import styles from "./RecentRecords.module.css";
 
-const DAY_MS = 24 * 60 * 60 * 1000;
 const E1RM_DECIMAL_PLACES = 1;
 // More than this and the rest wait behind "Show all".
 const VISIBLE_RECORDS = 5;
@@ -14,17 +13,11 @@ const VISIBLE_RECORDS = 5;
  * The records of a period, newest first (summarizePeriod's `records`): the exercise, the set that
  * did it, its e1RM and when. A click on a record calls onSelect(name).
  */
-function RecentRecords({ records, periodSpan, todayStart, onSelect }) {
+function RecentRecords({ records, periodSpan, onSelect }) {
   const { t, i18n } = useTranslation();
+  const dayText = useDayLabel();
   const [showAll, setShowAll] = useState(false);
   const shown = showAll ? records : records.slice(0, VISIBLE_RECORDS);
-
-  const dayText = (date) => {
-    const daysAgo = Math.round((todayStart - date) / DAY_MS);
-    if (daysAgo === 0) return t("stats.today");
-    if (daysAgo === 1) return t("stats.yesterday");
-    return formatShortDate(date, i18n.language);
-  };
 
   return (
     <section className={styles.section}>

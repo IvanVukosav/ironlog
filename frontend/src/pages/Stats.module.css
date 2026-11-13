@@ -35,37 +35,6 @@
   color: var(--color-text);
 }
 
-.periods {
-  display: flex;
-  padding: 3px;
-  border-radius: 12px;
-  background: var(--color-bg-card);
-  box-shadow: var(--card-shadow);
-}
-
-.periodButton {
-  min-width: 52px;
-  min-height: 38px;
-  padding: 0 12px;
-  background: transparent;
-  border: none;
-  border-radius: 9px;
-  color: var(--color-text-dim);
-  font-family: var(--font-body);
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.periodButton:hover {
-  color: var(--color-text);
-}
-
-.periodButton[aria-pressed="true"] {
-  background: var(--color-accent);
-  color: var(--color-on-accent);
-}
-
 .sections {
   display: flex;
   flex-direction: column;

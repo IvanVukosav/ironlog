@@ -18,6 +18,8 @@
   --color-carbs: #d99a5c;
   --color-fat: #d9c25c;
   --color-success: #4ade80;
+  /* The training streak's flame; at least 3:1 on the theme's cards. */
+  --color-streak: #f5a524;
   /* Main-lift chart series, validated as a categorical set on the dark surfaces. */
   --color-lift-squat: #3987e5;
   --color-lift-bench: #d95926;
@@ -96,6 +98,7 @@
   --color-border: #e4e6eb;
   --color-border-subtle: #eef0f3;
   --color-success: #067647;
+  --color-streak: #c2410c;
   --color-lift-squat: #2a78d6;
   --color-lift-bench: #eb6834;
   --color-lift-deadlift: #1baf7a;
@@ -120,6 +123,7 @@
     --color-border: #e4e6eb;
     --color-border-subtle: #eef0f3;
     --color-success: #067647;
+    --color-streak: #c2410c;
     --color-lift-squat: #2a78d6;
     --color-lift-bench: #eb6834;
     --color-lift-deadlift: #1baf7a;
@@ -164,6 +168,7 @@
   --color-text-placeholder: #999999;
   --color-border: #d8d5cf;
   --color-border-subtle: #e8e6e0;
+  --color-streak: #c2410c;
   --color-lift-squat: #2a78d6;
   --color-lift-bench: #eb6834;
   --color-lift-deadlift: #1baf7a;

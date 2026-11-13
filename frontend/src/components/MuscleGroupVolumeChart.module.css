@@ -1,46 +1,22 @@
-.rangeTabs {
+.chart {
   display: flex;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
-}
-
-.rangeTab {
-  border-radius: var(--input-radius);
-  background: transparent;
-  border: 1px solid var(--color-border);
-  color: var(--color-text-dim);
-  font-family: var(--font-body);
-  font-size: 0.7rem;
-  padding: 3px 8px;
-  cursor: pointer;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.rangeTabActive {
-  border-radius: var(--input-radius);
-  background: var(--color-accent);
-  border: 1px solid var(--color-accent);
-  color: var(--color-bg);
-  font-family: var(--font-body);
-  font-size: 0.7rem;
-  padding: 3px 8px;
-  cursor: pointer;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
 }
 
 .barList {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.6rem;
+  width: 100%;
 }
 
 .barRow {
   display: grid;
-  grid-template-columns: 90px 1fr 70px;
+  grid-template-columns: minmax(0, 7rem) minmax(0, 1fr) auto;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.75rem;
   font-family: var(--font-body);
   font-size: 0.8rem;
 }
@@ -53,18 +29,24 @@
 }
 
 .barTrack {
-  height: 10px;
+  height: 8px;
+  border-radius: 999px;
   background: var(--color-border-subtle);
+  overflow: hidden;
 }
 
 .barFill {
   height: 100%;
+  border-radius: inherit;
   background: var(--color-accent);
 }
 
 .barValue {
+  min-width: 3.5rem;
   color: var(--color-text);
+  font-variant-numeric: tabular-nums;
   text-align: right;
+  white-space: nowrap;
 }
 
 .emptyState {

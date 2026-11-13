@@ -21,6 +21,11 @@ const ICONS = {
     </>
   ),
   chevronDown: <path d="m6 9 6 6 6-6" />,
+  chevronRight: <path d="m9 6 6 6-6 6" />,
+  check: <path d="m5 12.5 4.5 4.5L19 7.5" />,
+  flame: (
+    <path d="M12 21a6 6 0 0 0 6-6c0-3-2-5.5-3.5-7.5-.3 1.8-1.2 3-2.5 3.5.3-2.8-.7-5.5-3-8 .2 3-1.4 5-2.6 6.8A7.6 7.6 0 0 0 6 15a6 6 0 0 0 6 6z" />
+  ),
   copy: (
     <>
       <rect x="9" y="9" width="12" height="12" rx="2" />

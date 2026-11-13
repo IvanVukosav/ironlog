@@ -33,6 +33,7 @@ import MuscleGroupVolumeChart from "../components/MuscleGroupVolumeChart";
 import MainLiftsChart from "../components/MainLiftsChart";
 import FeaturedExercises from "../components/FeaturedExercises";
 import RecentRecords from "../components/RecentRecords";
+import SegmentedControl from "../components/SegmentedControl";
 import VolumeBars from "../components/VolumeBars";
 import styles from "./Stats.module.css";
 
@@ -236,19 +237,15 @@ function Stats() {
     <div className={styles.page}>
       <header className={styles.header}>
         <h1 className={styles.heading}>{t("nav.stats")}</h1>
-        <div className={styles.periods} role="group" aria-label={t("stats.periodLabel")}>
-          {Object.keys(STATS_PERIODS).map((key) => (
-            <button
-              key={key}
-              type="button"
-              className={styles.periodButton}
-              aria-pressed={period === key}
-              onClick={() => setPeriod(key)}
-            >
-              {t(`stats.periods.${key}`)}
-            </button>
-          ))}
-        </div>
+        <SegmentedControl
+          label={t("stats.periodLabel")}
+          options={Object.keys(STATS_PERIODS).map((key) => ({
+            value: key,
+            label: t(`stats.periods.${key}`),
+          }))}
+          value={period}
+          onChange={setPeriod}
+        />
       </header>
 
       <div className={styles.sections}>
@@ -285,7 +282,6 @@ function Stats() {
         <RecentRecords
           records={summary.records}
           periodSpan={periodSpan}
-          todayStart={todayStart}
           onSelect={showProgressFor}
         />
 
