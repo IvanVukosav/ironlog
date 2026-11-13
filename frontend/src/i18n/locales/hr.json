@@ -332,12 +332,19 @@
     "noWorkouts": "Još nema treninga."
   },
   "calendar": {
-    "weekdays": ["Nedjelja", "Ponedjeljak", "Utorak", "Srijeda", "Četvrtak", "Petak", "Subota"],
+    "previousMonth": "Prethodni mjesec",
+    "nextMonth": "Sljedeći mjesec",
+    "goToToday": "Danas",
     "workoutOption": "Trening",
+    "noWorkout": "Bez treninga",
+    "open": "Otvori",
     "bodyweightOption": "Tjelesna težina",
-    "bodyweightModalTitle": "Tjelesna težina {{date}}",
+    "noBodyweight": "Nije upisana",
+    "weightLabel": "Težina (kg)",
     "measurementsOption": "Mjere tijela",
-    "measurementsModalTitle": "Mjere tijela {{date}}",
+    "noMeasurements": "Nisu upisane",
+    "log": "Upiši",
+    "edit": "Uredi",
     "measurementFields": {
       "waist": "Struk",
       "chest": "Prsa",

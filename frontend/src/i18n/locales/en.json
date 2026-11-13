@@ -328,12 +328,19 @@
     "noWorkouts": "No workouts yet."
   },
   "calendar": {
-    "weekdays": ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+    "previousMonth": "Previous month",
+    "nextMonth": "Next month",
+    "goToToday": "Today",
     "workoutOption": "Workout",
+    "noWorkout": "No workout",
+    "open": "Open",
     "bodyweightOption": "Bodyweight",
-    "bodyweightModalTitle": "Bodyweight {{date}}",
+    "noBodyweight": "Not logged",
+    "weightLabel": "Weight (kg)",
     "measurementsOption": "Body measurements",
-    "measurementsModalTitle": "Body measurements {{date}}",
+    "noMeasurements": "Not logged",
+    "log": "Log",
+    "edit": "Edit",
     "measurementFields": {
       "waist": "Waist",
       "chest": "Chest",

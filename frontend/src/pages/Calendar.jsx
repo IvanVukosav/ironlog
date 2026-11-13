@@ -1,36 +1,53 @@
-import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useId } from "react";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { fetchJson } from "../api";
+import Icon from "../components/Icon";
 import { useReportError } from "../hooks/useReportError";
-import { toDateKey, todayParts } from "../utils/dates";
+import { dateKeyOf, formatWeekdayDate, toDateKey, todayKey, todayParts } from "../utils/dates";
+import { formatNumber, parseDecimal, toDecimalText, toInputText } from "../utils/numbers";
 import styles from "./Calendar.module.css";
 
-const EMPTY_MEASUREMENTS = { waist: "", chest: "", arms: "", thighs: "", hips: "" };
 const MEASUREMENT_FIELDS = ["waist", "chest", "arms", "thighs", "hips"];
+const EMPTY_MEASUREMENTS = Object.fromEntries(MEASUREMENT_FIELDS.map((field) => [field, ""]));
+const DAYS_PER_WEEK = 7;
+// 1 January 2024 was a Monday: the week the weekday letters are taken from.
+const A_MONDAY = Date.UTC(2024, 0, 1);
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+// The month's days in weeks from Monday; null where the grid has no day of this month.
+function monthCells(year, month) {
+  const firstWeekday = (new Date(Date.UTC(year, month - 1, 1)).getUTCDay() + 6) % DAYS_PER_WEEK;
+  const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  const cells = Array.from({ length: firstWeekday }, () => null);
+  for (let day = 1; day <= daysInMonth; day++) cells.push(day);
+  while (cells.length % DAYS_PER_WEEK !== 0) cells.push(null);
+  return cells;
+}
+
+// Entries by their day ("2026-11-13"), the way the grid looks them up.
+const byDay = (entries) =>
+  new Map(entries.map((entry) => [dateKeyOf(new Date(entry.date)), entry]));
 
 function Calendar() {
-  const { t } = useTranslation();
-  const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
+  const language = i18n.language;
   const reportError = useReportError();
-  const { year: todayYear, month: todayMonth, day: todayDay } = todayParts();
-  const [currentYear, setCurrentYear] = useState(todayYear);
-  const [currentMonth, setCurrentMonth] = useState(todayMonth);
-  const [workoutDates, setWorkoutDates] = useState([]);
-  const [monthBwEntries, setMonthBwEntries] = useState([]);
-  const [activeDropdown, setActiveDropdown] = useState(null);
-  const [bwModalDate, setBwModalDate] = useState(null);
-  const [bwWeight, setBwWeight] = useState("");
-  const [bwEntryId, setBwEntryId] = useState(null);
-  const [monthMeasurements, setMonthMeasurements] = useState([]);
-  const [measurementsModalDate, setMeasurementsModalDate] = useState(null);
+  const fieldId = useId();
+  const { year: todayYear, month: todayMonth } = todayParts();
+  const [today] = useState(todayKey);
+  const [view, setView] = useState({ year: todayYear, month: todayMonth });
+  const [selected, setSelected] = useState(today);
+  const [workouts, setWorkouts] = useState([]);
+  const [bodyweights, setBodyweights] = useState([]);
+  const [measurements, setMeasurements] = useState([]);
+  // Which of the selected day's entries is being edited: "bodyweight", "measurements" or null.
+  const [editing, setEditing] = useState(null);
+  const [weightInput, setWeightInput] = useState("");
   const [measurementsForm, setMeasurementsForm] = useState(EMPTY_MEASUREMENTS);
-  const [measurementsEntryId, setMeasurementsEntryId] = useState(null);
-  const dropdownRef = useRef(null);
 
-  // Everything below only shows entries of the current month, so the previous month's data can
-  // stay until the new data arrives. A response for a month already left behind is dropped, so
-  // a slow one can't overwrite the month on screen.
+  // The previous month's entries can stay until the new ones arrive: the grid only looks up its
+  // own days. An answer for a month already left behind is dropped.
   useEffect(() => {
     let isStale = false;
     const load = (path, setData) =>
@@ -40,377 +57,395 @@ function Calendar() {
         })
         .catch(reportError);
 
-    const query = `year=${currentYear}&month=${currentMonth}`;
-    load(`/api/workouts/month?${query}`, setWorkoutDates);
-    load(`/api/bodyweight?${query}`, setMonthBwEntries);
-    load(`/api/body-measurements?${query}`, setMonthMeasurements);
+    const query = `year=${view.year}&month=${view.month}`;
+    load(`/api/workouts/month?${query}`, setWorkouts);
+    load(`/api/bodyweight?${query}`, setBodyweights);
+    load(`/api/body-measurements?${query}`, setMeasurements);
     return () => {
       isStale = true;
     };
-  }, [currentYear, currentMonth, reportError]);
+  }, [view, reportError]);
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setActiveDropdown(null);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  const workoutByDay = byDay(workouts);
+  const weightByDay = byDay(bodyweights);
+  const measurementsByDay = byDay(measurements);
 
-  const firstDay = new Date(Date.UTC(currentYear, currentMonth - 1, 1)).getUTCDay();
-  const daysInMonth = new Date(Date.UTC(currentYear, currentMonth, 0)).getUTCDate();
-  const matchesCurrentMonthDay = (dateString, day) => {
-    const date = new Date(dateString);
-    return (
-      date.getUTCFullYear() === currentYear &&
-      date.getUTCMonth() + 1 === currentMonth &&
-      date.getUTCDate() === day
-    );
+  const showMonth = (year, month) => {
+    setView({ year, month });
+    // Today when the month holds it, else the month's first day.
+    setSelected(year === todayYear && month === todayMonth ? today : toDateKey(year, month, 1));
+    setEditing(null);
   };
 
-  const workoutDayNumbers = workoutDates
-    .filter((entry) => {
-      const date = new Date(entry.date);
-      return date.getUTCFullYear() === currentYear && date.getUTCMonth() + 1 === currentMonth;
-    })
-    .map((entry) => new Date(entry.date).getUTCDate());
-
-  const getWorkoutName = (day) => {
-    const entry = workoutDates.find((workoutEntry) =>
-      matchesCurrentMonthDay(workoutEntry.date, day),
-    );
-    return entry ? entry.name : null;
+  const changeMonth = (step) => {
+    const first = new Date(Date.UTC(view.year, view.month - 1 + step, 1));
+    showMonth(first.getUTCFullYear(), first.getUTCMonth() + 1);
   };
 
-  const getBwEntry = (day) => {
-    return monthBwEntries.find((bwEntry) => matchesCurrentMonthDay(bwEntry.date, day)) || null;
+  const selectDay = (key) => {
+    setSelected(key);
+    setEditing(null);
   };
 
-  const getBwWeight = (day) => {
-    const entry = getBwEntry(day);
-    return entry ? entry.weight : null;
+  const selectedWorkout = workoutByDay.get(selected);
+  const selectedWeight = weightByDay.get(selected);
+  const selectedMeasurements = measurementsByDay.get(selected);
+
+  const kg = (value) => `${formatNumber(value, language, { maxDecimals: 1 })} kg`;
+  const cm = (value) => `${formatNumber(value, language, { maxDecimals: 1 })} cm`;
+  const workoutName = (workout) => workout.name || t("dashboard.workoutFallbackName");
+  const measurementsSummary = (entry) =>
+    MEASUREMENT_FIELDS.filter((field) => entry[field] !== null && entry[field] !== undefined)
+      .map((field) => `${t(`calendar.measurementFields.${field}`)} ${cm(entry[field])}`)
+      .join(" · ");
+
+  // The entry saved for a day replaces whatever the list had for that day.
+  const replaceDay = (entries, saved) => [
+    ...entries.filter((entry) => dateKeyOf(new Date(entry.date)) !== selected),
+    saved,
+  ];
+
+  const editWeight = () => {
+    setWeightInput(toInputText(selectedWeight?.weight, language));
+    setEditing("bodyweight");
   };
 
-  const getMeasurementsEntry = (day) => {
-    return monthMeasurements.find((entry) => matchesCurrentMonthDay(entry.date, day)) || null;
-  };
-
-  const isToday = (day) =>
-    day !== null && currentYear === todayYear && currentMonth === todayMonth && day === todayDay;
-
-  const prevMonth = () => {
-    if (currentMonth === 1) {
-      setCurrentMonth(12);
-      setCurrentYear(currentYear - 1);
-    } else {
-      setCurrentMonth(currentMonth - 1);
-    }
-  };
-
-  const nextMonth = () => {
-    if (currentMonth === 12) {
-      setCurrentMonth(1);
-      setCurrentYear(currentYear + 1);
-    } else {
-      setCurrentMonth(currentMonth + 1);
-    }
-  };
-
-  const handleDayClick = (day) => {
-    if (!day) return;
-    setActiveDropdown(activeDropdown === day ? null : day);
-  };
-
-  const handleWorkoutClick = (day) => {
-    const dateString = toDateKey(currentYear, currentMonth, day);
-    setActiveDropdown(null);
-    navigate(`/log?date=${dateString}`);
-  };
-
-  const handleBwClick = (day) => {
-    const dateString = toDateKey(currentYear, currentMonth, day);
-    setActiveDropdown(null);
-    setBwModalDate(dateString);
-    const existingEntry = getBwEntry(day);
-    setBwWeight(existingEntry ? String(existingEntry.weight) : "");
-    setBwEntryId(existingEntry ? existingEntry.id : null);
-  };
-
-  const saveBw = () => {
-    const parsed = parseFloat(bwWeight);
-    if (!bwWeight || isNaN(parsed) || parsed <= 0) return;
+  const saveWeight = () => {
+    if (!(parseDecimal(weightInput) > 0)) return;
     fetchJson("/api/bodyweight", {
       method: "POST",
-      json: { date: bwModalDate, weight: parsed },
+      json: { date: selected, weight: toDecimalText(weightInput) },
     })
-      .then((data) => {
-        setBwModalDate(null);
-        setMonthBwEntries((prev) => {
-          const savedDate = new Date(data.date);
-          const filtered = prev.filter((entry) => {
-            const entryDate = new Date(entry.date);
-            return !(
-              entryDate.getUTCFullYear() === savedDate.getUTCFullYear() &&
-              entryDate.getUTCMonth() === savedDate.getUTCMonth() &&
-              entryDate.getUTCDate() === savedDate.getUTCDate()
-            );
-          });
-          return [...filtered, data];
-        });
+      .then((saved) => {
+        setBodyweights((prev) => replaceDay(prev, saved));
+        setEditing(null);
       })
       .catch(reportError);
   };
 
-  const deleteBw = () => {
-    if (bwEntryId === null) return;
-    fetchJson(`/api/bodyweight/${bwEntryId}`, { method: "DELETE" })
+  const deleteWeight = () => {
+    const { id } = selectedWeight;
+    fetchJson(`/api/bodyweight/${id}`, { method: "DELETE" })
       .then(() => {
-        setBwModalDate(null);
-        setMonthBwEntries((prev) => prev.filter((entry) => entry.id !== bwEntryId));
+        setBodyweights((prev) => prev.filter((entry) => entry.id !== id));
+        setEditing(null);
       })
       .catch(reportError);
   };
 
-  const handleMeasurementsClick = (day) => {
-    const dateString = toDateKey(currentYear, currentMonth, day);
-    setActiveDropdown(null);
-    setMeasurementsModalDate(dateString);
-    const existingEntry = getMeasurementsEntry(day);
+  const editMeasurements = () => {
     setMeasurementsForm(
-      existingEntry
-        ? {
-            waist: existingEntry.waist ?? "",
-            chest: existingEntry.chest ?? "",
-            arms: existingEntry.arms ?? "",
-            thighs: existingEntry.thighs ?? "",
-            hips: existingEntry.hips ?? "",
-          }
-        : EMPTY_MEASUREMENTS,
+      Object.fromEntries(
+        MEASUREMENT_FIELDS.map((field) => [
+          field,
+          toInputText(selectedMeasurements?.[field], language),
+        ]),
+      ),
     );
-    setMeasurementsEntryId(existingEntry ? existingEntry.id : null);
+    setEditing("measurements");
   };
+
+  const hasAnyMeasurement = MEASUREMENT_FIELDS.some(
+    (field) => measurementsForm[field].trim() !== "",
+  );
 
   const saveMeasurements = () => {
-    const hasAnyValue = MEASUREMENT_FIELDS.some((field) => measurementsForm[field] !== "");
-    if (!hasAnyValue) return;
-    fetchJson("/api/body-measurements", {
-      method: "POST",
-      json: { date: measurementsModalDate, ...measurementsForm },
-    })
-      .then((data) => {
-        setMeasurementsModalDate(null);
-        setMonthMeasurements((prev) => {
-          const savedDate = new Date(data.date);
-          const filtered = prev.filter((entry) => {
-            const entryDate = new Date(entry.date);
-            return !(
-              entryDate.getUTCFullYear() === savedDate.getUTCFullYear() &&
-              entryDate.getUTCMonth() === savedDate.getUTCMonth() &&
-              entryDate.getUTCDate() === savedDate.getUTCDate()
-            );
-          });
-          return [...filtered, data];
-        });
+    if (!hasAnyMeasurement) return;
+    const values = Object.fromEntries(
+      MEASUREMENT_FIELDS.map((field) => [field, toDecimalText(measurementsForm[field])]),
+    );
+    fetchJson("/api/body-measurements", { method: "POST", json: { date: selected, ...values } })
+      .then((saved) => {
+        setMeasurements((prev) => replaceDay(prev, saved));
+        setEditing(null);
       })
       .catch(reportError);
   };
 
   const deleteMeasurements = () => {
-    if (measurementsEntryId === null) return;
-    fetchJson(`/api/body-measurements/${measurementsEntryId}`, { method: "DELETE" })
+    const { id } = selectedMeasurements;
+    fetchJson(`/api/body-measurements/${id}`, { method: "DELETE" })
       .then(() => {
-        setMeasurementsModalDate(null);
-        setMonthMeasurements((prev) => prev.filter((entry) => entry.id !== measurementsEntryId));
+        setMeasurements((prev) => prev.filter((entry) => entry.id !== id));
+        setEditing(null);
       })
       .catch(reportError);
   };
 
-  const prevMonthDays = new Date(Date.UTC(currentYear, currentMonth - 1, 0)).getUTCDate();
-  const cells = [];
-  for (let i = firstDay - 1; i >= 0; i--) {
-    cells.push({ day: prevMonthDays - i, overflow: true });
-  }
-  for (let day = 1; day <= daysInMonth; day++) {
-    cells.push({ day, overflow: false });
-  }
-  const remaining = (7 - (cells.length % 7)) % 7;
-  for (let i = 1; i <= remaining; i++) {
-    cells.push({ day: i, overflow: true });
-  }
+  const weekdayLetter = new Intl.DateTimeFormat(language, { weekday: "narrow", timeZone: "UTC" });
+  const monthName = t("common.months", { returnObjects: true })[view.month - 1];
+  const isThisMonth = view.year === todayYear && view.month === todayMonth;
+
+  // Escape leaves an edit without saving.
+  const cancelOnEscape = (event) => {
+    if (event.key === "Escape") setEditing(null);
+  };
 
   return (
     <div className={styles.page}>
-      <div className={styles.monthNav}>
-        <button className={styles.navButton} onClick={prevMonth}>
-          &lt;
-        </button>
-        <h1 className={styles.monthHeading}>
-          {t("common.months", { returnObjects: true })[currentMonth - 1]} {currentYear}
-        </h1>
-        <button className={styles.navButton} onClick={nextMonth}>
-          &gt;
-        </button>
-      </div>
+      <h1 className={styles.heading}>{t("nav.calendar")}</h1>
 
-      <div className={styles.calendarGrid}>
-        {t("calendar.weekdays", { returnObjects: true }).map((day) => (
-          <div key={day} className={styles.dayHeader}>
-            <span className={styles.dayHeaderFull}>{day}</span>
-            <span className={styles.dayHeaderShort}>{day.slice(0, 3)}</span>
-          </div>
-        ))}
-        {cells.map((cell, index) => (
-          <div
-            key={index}
-            className={[
-              styles.dayCell,
-              cell.overflow ? styles.dayCellOverflow : "",
-              !cell.overflow && isToday(cell.day) ? styles.dayCellToday : "",
-            ]
-              .filter(Boolean)
-              .join(" ")}
-            onClick={() => !cell.overflow && handleDayClick(cell.day)}
+      <div className={styles.monthBar}>
+        <button
+          type="button"
+          className={styles.iconButton}
+          aria-label={t("calendar.previousMonth")}
+          onClick={() => changeMonth(-1)}
+        >
+          <Icon name="chevronLeft" size={20} />
+        </button>
+        <h2 className={styles.monthHeading} aria-live="polite">
+          {`${monthName} ${view.year}`}
+        </h2>
+        <button
+          type="button"
+          className={styles.iconButton}
+          aria-label={t("calendar.nextMonth")}
+          onClick={() => changeMonth(1)}
+        >
+          <Icon name="chevronRight" size={20} />
+        </button>
+        {!isThisMonth && (
+          <button
+            type="button"
+            className={styles.todayButton}
+            onClick={() => showMonth(todayYear, todayMonth)}
           >
-            <span className={cell.overflow ? styles.dayNumberOverflow : styles.dayNumber}>
-              {cell.day}
-            </span>
-            {!cell.overflow && workoutDayNumbers.includes(cell.day) && (
-              <div className={styles.cellWorkout}>
-                <span>🏋</span>
-                {getWorkoutName(cell.day) && (
-                  <span className={styles.cellWorkoutName}>{getWorkoutName(cell.day)}</span>
-                )}
-              </div>
-            )}
-            {!cell.overflow && getBwWeight(cell.day) !== null && (
-              <div className={styles.cellBw}>
-                <span>⚖</span>
-                <span className={styles.cellBwWeight}>{getBwWeight(cell.day)} kg</span>
-              </div>
-            )}
-            {!cell.overflow && activeDropdown === cell.day && (
-              <div className={styles.dropdown} ref={dropdownRef}>
-                <button
-                  className={styles.dropdownItem}
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    handleWorkoutClick(cell.day);
-                  }}
-                >
-                  {t("calendar.workoutOption")}
-                </button>
-                <button
-                  className={styles.dropdownItem}
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    handleBwClick(cell.day);
-                  }}
-                >
-                  {t("calendar.bodyweightOption")}
-                </button>
-                <button
-                  className={styles.dropdownItem}
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    handleMeasurementsClick(cell.day);
-                  }}
-                >
-                  {t("calendar.measurementsOption")}
-                </button>
-              </div>
-            )}
-          </div>
-        ))}
+            {t("calendar.goToToday")}
+          </button>
+        )}
       </div>
 
-      {bwModalDate && (
-        <div className={styles.bwOverlay} onClick={() => setBwModalDate(null)}>
-          <div className={styles.bwModal} onClick={(event) => event.stopPropagation()}>
-            <div className={styles.bwModalHeader}>
-              <span className={styles.bwModalTitle}>
-                {t("calendar.bodyweightModalTitle", { date: bwModalDate })}
-              </span>
-              <button className={styles.bwModalClose} onClick={() => setBwModalDate(null)}>
-                X
-              </button>
-            </div>
-            <input
-              className={styles.bwInput}
-              type="number"
-              placeholder="kg"
-              autoFocus
-              value={bwWeight}
-              onChange={(event) => setBwWeight(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") saveBw();
-                if (event.key === "Escape") setBwModalDate(null);
-              }}
-            />
-            <div className={styles.bwModalFooter}>
-              {bwEntryId !== null && (
-                <button className={styles.bwDeleteButton} onClick={deleteBw}>
-                  {t("common.delete")}
-                </button>
-              )}
-              <button className={styles.bwSaveButton} onClick={saveBw}>
-                {t("common.save")}
-              </button>
-            </div>
+      <div className={styles.columns}>
+        <section className={styles.monthCard}>
+          <div className={styles.weekdays} aria-hidden="true">
+            {Array.from({ length: DAYS_PER_WEEK }, (_, index) => (
+              <span key={index}>{weekdayLetter.format(A_MONDAY + index * MS_PER_DAY)}</span>
+            ))}
           </div>
-        </div>
-      )}
+          <div className={styles.grid}>
+            {monthCells(view.year, view.month).map((day, index) => {
+              if (day === null) return <span key={`blank-${index}`} className={styles.blank} />;
+              const key = toDateKey(view.year, view.month, day);
+              const workout = workoutByDay.get(key);
+              const weight = weightByDay.get(key);
+              const measured = measurementsByDay.has(key);
+              const label = [
+                formatWeekdayDate(key, language),
+                workout && `${t("calendar.workoutOption")}: ${workoutName(workout)}`,
+                weight && kg(weight.weight),
+                measured && t("calendar.measurementsOption"),
+              ]
+                .filter(Boolean)
+                .join(", ");
+              return (
+                <button
+                  type="button"
+                  key={key}
+                  className={[
+                    styles.day,
+                    key === selected && styles.daySelected,
+                    key === today && styles.dayToday,
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                  aria-label={label}
+                  aria-pressed={key === selected}
+                  aria-current={key === today ? "date" : undefined}
+                  onClick={() => selectDay(key)}
+                >
+                  <span className={styles.dayNumber}>{day}</span>
+                  <span className={styles.markers} aria-hidden="true">
+                    {workout && <span className={`${styles.marker} ${styles.markerWorkout}`} />}
+                    {weight && <span className={`${styles.marker} ${styles.markerWeight}`} />}
+                    {measured && <span className={`${styles.marker} ${styles.markerMeasured}`} />}
+                  </span>
+                  {/* Wide screens have room to say what the dots mean for the day. */}
+                  {workout && (
+                    <span className={styles.note} aria-hidden="true">
+                      {workoutName(workout)}
+                    </span>
+                  )}
+                  {weight && (
+                    <span className={styles.note} aria-hidden="true">
+                      {kg(weight.weight)}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+          <div className={styles.legend} aria-hidden="true">
+            <span className={styles.legendItem}>
+              <span className={`${styles.marker} ${styles.markerWorkout}`} />
+              {t("calendar.workoutOption")}
+            </span>
+            <span className={styles.legendItem}>
+              <span className={`${styles.marker} ${styles.markerWeight}`} />
+              {t("calendar.bodyweightOption")}
+            </span>
+            <span className={styles.legendItem}>
+              <span className={`${styles.marker} ${styles.markerMeasured}`} />
+              {t("calendar.measurementsOption")}
+            </span>
+          </div>
+        </section>
 
-      {measurementsModalDate && (
-        <div className={styles.bwOverlay} onClick={() => setMeasurementsModalDate(null)}>
-          <div className={styles.bwModal} onClick={(event) => event.stopPropagation()}>
-            <div className={styles.bwModalHeader}>
-              <span className={styles.bwModalTitle}>
-                {t("calendar.measurementsModalTitle", { date: measurementsModalDate })}
+        <section className={styles.dayPanel}>
+          <h2 className={styles.dayTitle}>{formatWeekdayDate(selected, language)}</h2>
+          <ul className={styles.rows}>
+            <li className={styles.row}>
+              <span className={`${styles.marker} ${styles.markerWorkout}`} aria-hidden="true" />
+              <span className={styles.rowMain}>
+                <span className={styles.rowTitle}>{t("calendar.workoutOption")}</span>
+                <span className={styles.rowValue}>
+                  {selectedWorkout ? workoutName(selectedWorkout) : t("calendar.noWorkout")}
+                </span>
               </span>
-              <button
-                className={styles.bwModalClose}
-                onClick={() => setMeasurementsModalDate(null)}
-              >
-                X
-              </button>
-            </div>
-            <div className={styles.measurementsGrid}>
-              {MEASUREMENT_FIELDS.map((field) => (
-                <div key={field} className={styles.measurementField}>
-                  <label className={styles.measurementLabel}>
-                    {t(`calendar.measurementFields.${field}`)}
-                  </label>
-                  <input
-                    className={styles.measurementInput}
-                    type="number"
-                    placeholder="cm"
-                    value={measurementsForm[field]}
-                    onChange={(event) =>
-                      setMeasurementsForm((prev) => ({ ...prev, [field]: event.target.value }))
-                    }
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter") saveMeasurements();
-                      if (event.key === "Escape") setMeasurementsModalDate(null);
-                    }}
-                  />
-                </div>
-              ))}
-            </div>
-            <div className={styles.bwModalFooter}>
-              {measurementsEntryId !== null && (
-                <button className={styles.bwDeleteButton} onClick={deleteMeasurements}>
-                  {t("common.delete")}
+              <Link to={`/log?date=${selected}`} className={styles.rowAction}>
+                {selectedWorkout ? t("calendar.open") : t("calendar.log")}
+              </Link>
+            </li>
+
+            <li className={styles.row}>
+              <span className={`${styles.marker} ${styles.markerWeight}`} aria-hidden="true" />
+              <span className={styles.rowMain}>
+                <span className={styles.rowTitle}>{t("calendar.bodyweightOption")}</span>
+                <span className={styles.rowValue}>
+                  {selectedWeight ? kg(selectedWeight.weight) : t("calendar.noBodyweight")}
+                </span>
+              </span>
+              {editing !== "bodyweight" && (
+                <button type="button" className={styles.rowAction} onClick={editWeight}>
+                  {selectedWeight ? t("calendar.edit") : t("calendar.log")}
                 </button>
               )}
-              <button className={styles.bwSaveButton} onClick={saveMeasurements}>
-                {t("common.save")}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+              {editing === "bodyweight" && (
+                <form
+                  className={styles.editForm}
+                  onKeyDown={cancelOnEscape}
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    saveWeight();
+                  }}
+                >
+                  <div className={styles.field}>
+                    <label className={styles.fieldLabel} htmlFor={`${fieldId}weight`}>
+                      {t("calendar.weightLabel")}
+                    </label>
+                    <input
+                      id={`${fieldId}weight`}
+                      className={styles.fieldInput}
+                      inputMode="decimal"
+                      autoComplete="off"
+                      autoFocus
+                      value={weightInput}
+                      onChange={(event) => setWeightInput(event.target.value)}
+                    />
+                  </div>
+                  <div className={styles.formActions}>
+                    <button
+                      type="submit"
+                      className={styles.saveButton}
+                      disabled={!(parseDecimal(weightInput) > 0)}
+                    >
+                      {t("common.save")}
+                    </button>
+                    {selectedWeight && (
+                      <button type="button" className={styles.textButton} onClick={deleteWeight}>
+                        {t("common.delete")}
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className={styles.textButton}
+                      onClick={() => setEditing(null)}
+                    >
+                      {t("common.cancel")}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </li>
+
+            <li className={styles.row}>
+              <span className={`${styles.marker} ${styles.markerMeasured}`} aria-hidden="true" />
+              <span className={styles.rowMain}>
+                <span className={styles.rowTitle}>{t("calendar.measurementsOption")}</span>
+                <span className={styles.rowValue}>
+                  {selectedMeasurements
+                    ? measurementsSummary(selectedMeasurements)
+                    : t("calendar.noMeasurements")}
+                </span>
+              </span>
+              {editing !== "measurements" && (
+                <button type="button" className={styles.rowAction} onClick={editMeasurements}>
+                  {selectedMeasurements ? t("calendar.edit") : t("calendar.log")}
+                </button>
+              )}
+              {editing === "measurements" && (
+                <form
+                  className={styles.editForm}
+                  onKeyDown={cancelOnEscape}
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    saveMeasurements();
+                  }}
+                >
+                  <div className={styles.measurementGrid}>
+                    {MEASUREMENT_FIELDS.map((field, index) => (
+                      <div key={field} className={styles.field}>
+                        <label className={styles.fieldLabel} htmlFor={`${fieldId}${field}`}>
+                          {`${t(`calendar.measurementFields.${field}`)} (cm)`}
+                        </label>
+                        <input
+                          id={`${fieldId}${field}`}
+                          className={styles.fieldInput}
+                          inputMode="decimal"
+                          autoComplete="off"
+                          autoFocus={index === 0}
+                          value={measurementsForm[field]}
+                          onChange={(event) =>
+                            setMeasurementsForm((prev) => ({
+                              ...prev,
+                              [field]: event.target.value,
+                            }))
+                          }
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <div className={styles.formActions}>
+                    <button
+                      type="submit"
+                      className={styles.saveButton}
+                      disabled={!hasAnyMeasurement}
+                    >
+                      {t("common.save")}
+                    </button>
+                    {selectedMeasurements && (
+                      <button
+                        type="button"
+                        className={styles.textButton}
+                        onClick={deleteMeasurements}
+                      >
+                        {t("common.delete")}
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className={styles.textButton}
+                      onClick={() => setEditing(null)}
+                    >
+                      {t("common.cancel")}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </li>
+          </ul>
+        </section>
+      </div>
     </div>
   );
 }
