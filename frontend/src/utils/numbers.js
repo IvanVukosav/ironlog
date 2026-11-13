@@ -14,6 +14,17 @@ export function parseDecimal(text) {
   return parseFloat(toDecimalText(text));
 }
 
+// A saved number put back in a field to be changed: "90,6" in Croatian, "90.6" in English, and
+// never a thousands separator, so toDecimalText reads it back as the same number. Nothing saved
+// gives an empty field.
+export function toInputText(value, language) {
+  if (value === null || value === undefined) return "";
+  const decimalMark = new Intl.NumberFormat(language)
+    .formatToParts(0.5)
+    .find((part) => part.type === "decimal").value;
+  return String(value).replace(".", decimalMark);
+}
+
 // A number written the way the language writes it: "180,0" in Croatian, "180.0" in English.
 // `decimals` fixes the decimal places; without it, up to `maxDecimals` (2) show, none if whole.
 export function formatNumber(value, language, { decimals, maxDecimals = 2 } = {}) {

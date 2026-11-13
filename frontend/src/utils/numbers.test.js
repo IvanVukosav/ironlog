@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { formatNumber, formatSet, formatVolume, parseDecimal, toDecimalText } from "./numbers";
+import {
+  formatNumber,
+  formatSet,
+  formatVolume,
+  parseDecimal,
+  toDecimalText,
+  toInputText,
+} from "./numbers";
 
 describe("formatSet", () => {
   it("writes weight, reps and RPE in the language's numbers", () => {
@@ -68,5 +75,24 @@ describe("parseDecimal", () => {
   it("is NaN for text without a number", () => {
     expect(parseDecimal("")).toBeNaN();
     expect(parseDecimal("pet")).toBeNaN();
+  });
+});
+
+describe("toInputText", () => {
+  it("writes a saved number with the language's decimal mark", () => {
+    expect(toInputText(90.6, "hr")).toBe("90,6");
+    expect(toInputText(90.6, "en")).toBe("90.6");
+    expect(toInputText(100, "hr")).toBe("100");
+    expect(toInputText(0, "hr")).toBe("0");
+  });
+
+  it("leaves out thousands separators, so the field reads back as the same number", () => {
+    expect(toInputText(1234.5, "hr")).toBe("1234,5");
+    expect(parseDecimal(toInputText(1234.5, "hr"))).toBe(1234.5);
+  });
+
+  it("gives an empty field when nothing was saved", () => {
+    expect(toInputText(null, "hr")).toBe("");
+    expect(toInputText(undefined, "en")).toBe("");
   });
 });

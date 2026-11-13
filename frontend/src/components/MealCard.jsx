@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { formatNumber } from "../utils/numbers";
+import { formatNumber, toInputText } from "../utils/numbers";
 import { sumMacros } from "../utils/nutritionState";
 import Icon from "./Icon";
 import styles from "./MealCard.module.css";
@@ -14,13 +14,14 @@ const MACRO_FIELDS = [
   { key: "fat", labelKey: "nutrition.fatLabel" },
 ];
 
-function formFromFood(food) {
+// A saved food in the form, its numbers written the way the language writes them ("12,5").
+function formFromFood(food, language) {
   return {
     name: food.name,
-    kcal: String(food.kcal),
-    protein: String(food.protein),
-    carbs: String(food.carbs),
-    fat: String(food.fat),
+    kcal: toInputText(food.kcal, language),
+    protein: toInputText(food.protein, language),
+    carbs: toInputText(food.carbs, language),
+    fat: toInputText(food.fat, language),
   };
 }
 
@@ -199,7 +200,7 @@ function MealCard({ meal, actions, foodItemTemplates, onSaveTemplate }) {
                   title={t("nutrition.editItem")}
                   onClick={() => {
                     setEditingItemId(item.id);
-                    setEditFood(formFromFood(item));
+                    setEditFood(formFromFood(item, language));
                   }}
                 >
                   <span className={styles.itemName}>{item.name}</span>
@@ -287,7 +288,7 @@ function MealCard({ meal, actions, foodItemTemplates, onSaveTemplate }) {
                   key={template.id}
                   className={styles.pickerOption}
                   onClick={() => {
-                    setFood(formFromFood(template));
+                    setFood(formFromFood(template, language));
                     setShowPicker(false);
                   }}
                 >
