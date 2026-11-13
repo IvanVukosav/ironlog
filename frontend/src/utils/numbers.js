@@ -34,6 +34,14 @@ export function formatNumber(value, language, { decimals, maxDecimals = 2 } = {}
   }).format(value);
 }
 
+// A percentage the way the language writes it: "97,5 %" in Croatian, "97.5%" in English. `value`
+// is the number of percent (97.5), not a fraction.
+export function formatPercent(value, language) {
+  return new Intl.NumberFormat(language, { style: "percent", maximumFractionDigits: 1 }).format(
+    value / 100,
+  );
+}
+
 // A set as one line: "102,5 kg × 5 @ 8", without the "@" part when it has no RPE.
 export function formatSet({ weight, reps, rpe }, language) {
   const base = `${formatNumber(weight, language)} kg × ${reps}`;

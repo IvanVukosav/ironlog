@@ -1,106 +1,37 @@
-.inputRow {
+.target {
+  max-width: 12rem;
+}
+
+/* The loaded bar, drawn to scale by plate, then the plates for one side in words. */
+
+.result {
   display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 0.75rem;
-  flex-wrap: wrap;
-}
-
-.input {
-  composes: input from "../styles/shared.module.css";
-  width: 120px;
-}
-
-.input::placeholder {
-  color: var(--color-text-placeholder);
-}
-
-.inlineField {
-  display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 6px;
-  color: var(--color-text-dim);
-  font-family: var(--font-body);
-  font-size: 0.8rem;
-  cursor: pointer;
-}
-
-.inlineField input[type="checkbox"] {
-  accent-color: var(--color-accent);
-}
-
-.select {
-  border-radius: var(--input-radius);
-  background: var(--color-bg-card);
-  border: none;
-  border-bottom: 1px solid var(--color-border);
-  color: var(--color-text);
-  font-family: var(--font-body);
-  font-size: 0.85rem;
-  padding: 2px;
-  outline: none;
-  cursor: pointer;
-}
-
-.plateToggles {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 1rem;
-}
-
-.label {
-  color: var(--color-text-dim);
-  font-family: var(--font-body);
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-right: 4px;
-}
-
-.plateToggle {
-  border-radius: var(--input-radius);
-  background: transparent;
-  border: 1px solid var(--color-border-subtle);
-  color: var(--color-text-dim);
-  font-family: var(--font-body);
-  font-size: 0.75rem;
-  padding: 2px 6px;
-  cursor: pointer;
-  text-decoration: line-through;
-}
-
-.plateToggleActive {
-  border-color: var(--color-border);
-  color: var(--color-text);
-  text-decoration: none;
-}
-
-.plateToggle:hover {
-  border-color: var(--color-accent);
 }
 
 .barbell {
   display: flex;
   align-items: center;
+  justify-content: safe center;
   gap: 2px;
-  height: 90px;
+  height: 96px;
   max-width: 100%;
   overflow-x: auto;
-  margin: 0.5rem 0 0.75rem;
+  padding: 4px 0;
 }
 
 .plate {
   flex-shrink: 0;
   border: 1px solid var(--color-border);
-  border-radius: 2px;
+  border-radius: 3px;
 }
 
 .sleeve {
   flex-shrink: 0;
   width: 14px;
   height: 10px;
+  border-radius: 2px;
   background: var(--color-text-dim);
 }
 
@@ -108,6 +39,7 @@
   flex-shrink: 0;
   width: 5px;
   height: 22px;
+  border-radius: 2px;
   background: var(--color-text-dim);
 }
 
@@ -118,16 +50,101 @@
   background: var(--color-text-dim);
 }
 
-.result {
+.perSide {
   color: var(--color-text);
   font-family: var(--font-body);
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
 }
 
-.warning {
-  color: var(--color-accent);
+.note {
+  color: var(--color-text-dim);
   font-family: var(--font-body);
   font-size: 0.8rem;
-  margin-top: 0.4rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+/* What there is to load with: bar, collars and the plates in the gym. A chip is filled when the
+   thing is there and only outlined, dashed, when it is not. */
+
+.setup {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.setupRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.setupLabel {
+  flex: 0 0 4rem;
+  display: flex;
+  align-items: center;
+  min-height: 34px;
+  color: var(--color-text-dim);
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* Options that wrap line up under each other, not under the label. */
+.setupOptions {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 10px;
+  background: transparent;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--badge-radius);
+  color: var(--color-text-dim);
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+.chip:hover {
+  border-color: var(--color-accent);
+}
+
+.chip[aria-pressed="true"] {
+  background: var(--input-bg);
+  border-style: solid;
+  border-color: var(--input-bg);
+  color: var(--color-text);
+}
+
+.chip[aria-pressed="true"]:hover {
+  border-color: var(--color-accent);
+}
+
+.swatch {
+  width: 10px;
+  height: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  opacity: 0.35;
+}
+
+.chip[aria-pressed="true"] .swatch {
+  opacity: 1;
 }

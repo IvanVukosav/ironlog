@@ -1,16 +1,27 @@
 import { useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { calculateOneRepMax, DEFAULT_E1RM_FORMULA, E1RM_FORMULAS } from "../utils/oneRepMax";
+import {
+  calculateEstimatedOneRepMax,
+  DEFAULT_E1RM_FORMULA,
+  E1RM_FORMULAS,
+  MAX_E1RM_REPS_TO_FAILURE,
+} from "../utils/oneRepMax";
 import { BAR_WEIGHTS_KG, DEFAULT_PLATE_SETUP, STANDARD_PLATES_KG } from "../utils/plates";
+import { formatNumber, formatPercent, parseDecimal, toInputText } from "../utils/numbers";
 import { useSettings } from "../context/useSettings";
+import LoadList from "../components/LoadList";
+import NumberField from "../components/NumberField";
 import PlateCalculator from "../components/PlateCalculator";
+import SegmentedControl from "../components/SegmentedControl";
 import WarmupGenerator from "../components/WarmupGenerator";
 import styles from "./Calculator.module.css";
 
-const MIN_PERCENTAGE = 0;
-const MAX_PERCENTAGE = 100;
-const MIN_STEP = 1;
-const RESULT_DECIMAL_PLACES = 2;
+const PERCENT_STEPS = [2.5, 5, 10];
+const PERCENT_FLOORS = [50, 60, 70];
+const DEFAULT_PERCENT_STEP = 5;
+const DEFAULT_PERCENT_FLOOR = 70;
+const MIN_RPE = 1;
+const MAX_RPE = 10;
 const PLATE_SETUP_STORAGE_KEY = "ironlog-plate-setup";
 
 function loadPlateSetup() {
@@ -31,19 +42,39 @@ function loadPlateSetup() {
   }
 }
 
+// The e1RM for what was typed, worked out the way a set in Trening gets its own: the RPE adds the
+// reps left in reserve, and past MAX_E1RM_REPS_TO_FAILURE reps to failure there is none (e1rm
+// null). Null until there is a weight, a whole number of reps, and an RPE from 1 to 10 or none.
+function estimateFromText(weightText, repsText, rpeText, formula) {
+  const weight = parseDecimal(weightText);
+  const reps = parseDecimal(repsText);
+  const rpe = rpeText.trim() === "" ? null : parseDecimal(rpeText);
+  if (!(weight > 0) || !Number.isInteger(reps) || reps < 1) return null;
+  if (rpe !== null && !(rpe >= MIN_RPE && rpe <= MAX_RPE)) return null;
+  return { e1rm: calculateEstimatedOneRepMax(weight, reps, rpe, formula) };
+}
+
+// 100 % down to the floor, a step at a time.
+const percentagesDownTo = (floor, step) =>
+  Array.from({ length: Math.floor((100 - floor) / step) + 1 }, (_, index) => 100 - index * step);
+
 function Calculator() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const language = i18n.language;
   const { settings } = useSettings();
   const [weight, setWeight] = useState("");
   const [reps, setReps] = useState("");
-  const [oneRM, setOneRM] = useState(null);
-  const [step, setStep] = useState(5);
-  const [minPct, setMinPct] = useState(70);
-  const [error, setError] = useState(null);
+  const [rpe, setRpe] = useState("");
+  const [percentStep, setPercentStep] = useState(DEFAULT_PERCENT_STEP);
+  const [percentFloor, setPercentFloor] = useState(DEFAULT_PERCENT_FLOOR);
   const [plateTarget, setPlateTarget] = useState("");
   const [plateSetup, setPlateSetup] = useState(loadPlateSetup);
   const plateSectionRef = useRef(null);
   const formula = settings?.e1rmFormula ?? DEFAULT_E1RM_FORMULA;
+  const formulaLabel = (E1RM_FORMULAS[formula] ?? E1RM_FORMULAS[DEFAULT_E1RM_FORMULA]).label;
+  const estimate = estimateFromText(weight, reps, rpe, formula);
+  const e1rm = estimate?.e1rm ?? null;
+  const kg = (value) => formatNumber(value, language, { maxDecimals: 1 });
 
   const changePlateSetup = (nextSetup) => {
     setPlateSetup(nextSetup);
@@ -54,111 +85,105 @@ function Calculator() {
     }
   };
 
+  // A weight from a list goes into the plate calculator, as the list shows it (to 0.1 kg).
   const loadIntoPlateCalculator = (weightKg) => {
-    setPlateTarget(String(weightKg));
+    setPlateTarget(toInputText(Math.round(weightKg * 10) / 10, language));
     plateSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  const calculate = () => {
-    if (!weight || !reps) return;
+  const percentRows =
+    e1rm === null
+      ? []
+      : percentagesDownTo(percentFloor, percentStep).map((percent) => {
+          const percentWeight = (e1rm * percent) / 100;
+          return {
+            key: percent,
+            label: formatPercent(percent, language),
+            value: `${kg(percentWeight)} kg`,
+            weight: percentWeight,
+          };
+        });
 
-    if (weight <= 0 || reps <= 0) {
-      setError(t("calculator.errorWeightRepsPositive"));
-      return;
-    }
-    if (step < MIN_STEP) {
-      setError(t("calculator.errorStepMin", { min: MIN_STEP }));
-      return;
-    }
-    if (minPct < MIN_PERCENTAGE || minPct > MAX_PERCENTAGE) {
-      setError(t("calculator.errorPercentageRange", { min: MIN_PERCENTAGE, max: MAX_PERCENTAGE }));
-      return;
-    }
-    const { label, maxReps } = E1RM_FORMULAS[formula] ?? E1RM_FORMULAS[DEFAULT_E1RM_FORMULA];
-    if (maxReps && reps > maxReps) {
-      setError(t("calculator.errorFormulaMaxReps", { formula: label, max: maxReps }));
-      return;
-    }
-    setError(null);
-
-    const result = calculateOneRepMax(parseFloat(weight), parseFloat(reps), formula);
-    setOneRM(parseFloat(result.toFixed(RESULT_DECIMAL_PLACES)));
-  };
-
-  const percentages = [];
-  for (let pct = 100; pct >= minPct; pct -= step) {
-    percentages.push(pct);
-  }
+  const percentOptions = (values) =>
+    values.map((value) => ({ value, label: formatPercent(value, language) }));
 
   return (
     <div className={styles.page}>
       <h1 className={styles.heading}>{t("nav.calculator")}</h1>
 
-      <div className={styles.inputRow}>
-        <input
-          type="number"
-          min="0"
-          className={styles.input}
-          placeholder={t("calculator.weightPlaceholder")}
-          value={weight}
-          onChange={(event) => setWeight(event.target.value)}
-        />
-        <input
-          type="number"
-          min="0"
-          className={styles.input}
-          placeholder={t("calculator.repsPlaceholder")}
-          value={reps}
-          onChange={(event) => setReps(event.target.value)}
-        />
-        <button className={styles.calculateButton} onClick={calculate} disabled={!weight || !reps}>
-          {t("calculator.calculate")}
-        </button>
-      </div>
+      <section className={styles.card}>
+        <h2 className={styles.cardTitle}>{t("calculator.oneRepMaxTitle")}</h2>
+        <div className={styles.fields}>
+          <NumberField label={t("calculator.weightLabel")} value={weight} onChange={setWeight} />
+          <NumberField
+            label={t("calculator.repsLabel")}
+            value={reps}
+            onChange={setReps}
+            inputMode="numeric"
+          />
+          <NumberField label={t("calculator.rpeLabel")} value={rpe} onChange={setRpe} />
+        </div>
+        <div className={styles.result} aria-live="polite">
+          <p
+            className={
+              e1rm === null ? `${styles.bigNumber} ${styles.bigNumberEmpty}` : styles.bigNumber
+            }
+          >
+            {e1rm === null ? (
+              "—"
+            ) : (
+              <>
+                {kg(e1rm)} <span className={styles.bigUnit}>kg</span>
+              </>
+            )}
+          </p>
+          <p className={styles.detail}>
+            {estimate && e1rm === null
+              ? t("calculator.tooManyReps", { max: MAX_E1RM_REPS_TO_FAILURE })
+              : t("calculator.formulaNote", { formula: formulaLabel })}
+          </p>
+        </div>
+      </section>
 
-      {error && <p className={styles.error}>{error}</p>}
-      {oneRM && <p className={styles.result}>e1RM: {oneRM} kg</p>}
-
-      <div className={styles.optionsRow}>
-        <input
-          type="number"
-          min={MIN_STEP}
-          className={styles.input}
-          placeholder={t("calculator.stepPlaceholder")}
-          value={step}
-          onChange={(event) => setStep(parseFloat(event.target.value))}
-        />
-        <input
-          type="number"
-          min={MIN_PERCENTAGE}
-          max={MAX_PERCENTAGE}
-          className={styles.input}
-          placeholder={t("calculator.minPercentagePlaceholder")}
-          value={minPct}
-          onChange={(event) => setMinPct(parseFloat(event.target.value))}
-        />
-      </div>
-
-      {oneRM && (
-        <table className={styles.table}>
-          <tbody>
-            {percentages.map((pct) => (
-              <tr
-                key={pct}
-                className={styles.clickableRow}
-                title={t("calculator.loadIntoPlates")}
-                onClick={() => loadIntoPlateCalculator(((oneRM * pct) / 100).toFixed(2))}
-              >
-                <td>{pct}%</td>
-                <td>{((oneRM * pct) / 100).toFixed(2)} kg</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {e1rm !== null && (
+        <section className={styles.card}>
+          <h2 className={styles.cardTitle}>{t("calculator.percentagesTitle")}</h2>
+          <div className={styles.controls}>
+            <div className={styles.control}>
+              <span className={styles.controlLabel} aria-hidden="true">
+                {t("calculator.step")}
+              </span>
+              <SegmentedControl
+                compact
+                label={t("calculator.step")}
+                options={percentOptions(PERCENT_STEPS)}
+                value={percentStep}
+                onChange={setPercentStep}
+              />
+            </div>
+            <div className={styles.control}>
+              <span className={styles.controlLabel} aria-hidden="true">
+                {t("calculator.downTo")}
+              </span>
+              <SegmentedControl
+                compact
+                label={t("calculator.downTo")}
+                options={percentOptions(PERCENT_FLOORS)}
+                value={percentFloor}
+                onChange={setPercentFloor}
+              />
+            </div>
+          </div>
+          <LoadList
+            rows={percentRows}
+            action={t("calculator.loadIntoPlates")}
+            onSelect={loadIntoPlateCalculator}
+          />
+        </section>
       )}
 
-      <section ref={plateSectionRef} className={styles.section}>
-        <h2 className={styles.sectionHeading}>{t("calculator.platesHeading")}</h2>
+      <section ref={plateSectionRef} className={styles.card}>
+        <h2 className={styles.cardTitle}>{t("calculator.platesHeading")}</h2>
         <PlateCalculator
           target={plateTarget}
           onTargetChange={setPlateTarget}
@@ -167,8 +192,8 @@ function Calculator() {
         />
       </section>
 
-      <section className={styles.section}>
-        <h2 className={styles.sectionHeading}>{t("calculator.warmupHeading")}</h2>
+      <section className={styles.card}>
+        <h2 className={styles.cardTitle}>{t("calculator.warmupHeading")}</h2>
         <WarmupGenerator setup={plateSetup} onSelectWeight={loadIntoPlateCalculator} />
       </section>
     </div>

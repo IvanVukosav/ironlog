@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   formatNumber,
+  formatPercent,
   formatSet,
   formatVolume,
   parseDecimal,
@@ -31,6 +32,14 @@ describe("formatNumber", () => {
     expect(formatNumber(100, "hr")).toBe("100");
     expect(formatNumber(92.25, "en")).toBe("92.25");
     expect(formatNumber(1 / 3, "en")).toBe("0.33");
+  });
+});
+
+describe("formatPercent", () => {
+  it("writes a percentage the way the language does", () => {
+    expect(formatPercent(97.5, "hr")).toBe("97,5 %");
+    expect(formatPercent(97.5, "en")).toBe("97.5%");
+    expect(formatPercent(100, "hr")).toBe("100 %");
   });
 });
 

@@ -6,6 +6,9 @@ import {
   STANDARD_PLATES_KG,
   calculatePlates,
 } from "../utils/plates";
+import { formatNumber, parseDecimal } from "../utils/numbers";
+import NumberField from "./NumberField";
+import SegmentedControl from "./SegmentedControl";
 import styles from "./PlateCalculator.module.css";
 
 function Barbell({ plates }) {
@@ -18,7 +21,6 @@ function Barbell({ plates }) {
         height: `${PLATE_STYLES[plate].height}%`,
         width: PLATE_STYLES[plate].width,
       }}
-      title={`${plate} kg`}
     />
   );
 
@@ -36,10 +38,14 @@ function Barbell({ plates }) {
   );
 }
 
+// A total to load: the plates for each side, drawn and listed, and below them the bar, collars
+// and plates there are to load it with (kept by the page).
 function PlateCalculator({ target, onTargetChange, setup, onSetupChange }) {
-  const { t } = useTranslation();
-  const targetKg = parseFloat(target);
-  const result = Number.isFinite(targetKg) ? calculatePlates(targetKg, setup) : null;
+  const { t, i18n } = useTranslation();
+  const kg = (value) => formatNumber(value, i18n.language);
+  const targetKg = parseDecimal(target);
+  const hasTarget = Number.isFinite(targetKg);
+  const result = hasTarget ? calculatePlates(targetKg, setup) : null;
   const emptyBarKg = setup.barWeight + (setup.useCollars ? COLLAR_WEIGHT_KG * 2 : 0);
 
   const togglePlate = (plate) => {
@@ -50,89 +56,92 @@ function PlateCalculator({ target, onTargetChange, setup, onSetupChange }) {
   };
 
   return (
-    <div>
-      <div className={styles.inputRow}>
-        <input
-          type="number"
-          min="0"
-          step="0.5"
-          className={styles.input}
-          placeholder={t("calculator.targetWeightPlaceholder")}
+    <>
+      <div className={styles.target}>
+        <NumberField
+          label={t("calculator.targetWeightLabel")}
           value={target}
-          onChange={(event) => onTargetChange(event.target.value)}
+          onChange={onTargetChange}
         />
-        <label className={styles.inlineField}>
-          {t("calculator.bar")}
-          <select
-            className={styles.select}
-            value={setup.barWeight}
-            onChange={(event) =>
-              onSetupChange({ ...setup, barWeight: parseFloat(event.target.value) })
-            }
-          >
-            {BAR_WEIGHTS_KG.map((barWeight) => (
-              <option key={barWeight} value={barWeight}>
-                {barWeight} kg
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className={styles.inlineField}>
-          <input
-            type="checkbox"
-            checked={setup.useCollars}
-            onChange={(event) => onSetupChange({ ...setup, useCollars: event.target.checked })}
-          />
-          {t("calculator.collars", { weight: COLLAR_WEIGHT_KG })}
-        </label>
       </div>
 
-      <div className={styles.plateToggles}>
-        <span className={styles.label}>{t("calculator.availablePlates")}</span>
-        {STANDARD_PLATES_KG.map((plate) => {
-          const isAvailable = setup.availablePlates.includes(plate);
-          return (
+      {result && (
+        <div className={styles.result}>
+          <Barbell plates={result.platesPerSide} />
+          <p className={styles.perSide}>
+            {result.platesPerSide.length > 0
+              ? t("calculator.perSide", { plates: result.platesPerSide.map(kg).join(" + ") })
+              : t("calculator.emptyBar")}
+          </p>
+          {result.remainderKg > 0 && (
+            <p className={styles.note}>
+              {t("calculator.closestLoad", {
+                loaded: kg(result.loadedKg),
+                missing: kg(result.remainderKg),
+              })}
+            </p>
+          )}
+        </div>
+      )}
+      {hasTarget && !result && targetKg < emptyBarKg && (
+        <p className={styles.note}>{t("calculator.belowBar", { weight: kg(emptyBarKg) })}</p>
+      )}
+
+      <div className={styles.setup}>
+        <div className={styles.setupRow}>
+          <span className={styles.setupLabel} aria-hidden="true">
+            {t("calculator.bar")}
+          </span>
+          <div className={styles.setupOptions}>
+            <SegmentedControl
+              compact
+              label={t("calculator.bar")}
+              options={BAR_WEIGHTS_KG.map((barWeight) => ({
+                value: barWeight,
+                label: `${kg(barWeight)} kg`,
+              }))}
+              value={setup.barWeight}
+              onChange={(barWeight) => onSetupChange({ ...setup, barWeight })}
+            />
             <button
               type="button"
-              key={plate}
-              className={
-                isAvailable
-                  ? `${styles.plateToggle} ${styles.plateToggleActive}`
-                  : styles.plateToggle
-              }
-              aria-pressed={isAvailable}
-              onClick={() => togglePlate(plate)}
+              className={styles.chip}
+              aria-pressed={setup.useCollars}
+              onClick={() => onSetupChange({ ...setup, useCollars: !setup.useCollars })}
             >
-              {plate}
+              {t("calculator.collars", { weight: kg(COLLAR_WEIGHT_KG) })}
             </button>
-          );
-        })}
+          </div>
+        </div>
+        <div className={styles.setupRow}>
+          <span className={styles.setupLabel} aria-hidden="true">
+            {t("calculator.availablePlates")}
+          </span>
+          <div
+            className={styles.setupOptions}
+            role="group"
+            aria-label={t("calculator.availablePlates")}
+          >
+            {STANDARD_PLATES_KG.map((plate) => (
+              <button
+                type="button"
+                key={plate}
+                className={styles.chip}
+                aria-pressed={setup.availablePlates.includes(plate)}
+                onClick={() => togglePlate(plate)}
+              >
+                <span
+                  className={styles.swatch}
+                  style={{ backgroundColor: PLATE_STYLES[plate].color }}
+                  aria-hidden="true"
+                />
+                {kg(plate)}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
-
-      {Number.isFinite(targetKg) &&
-        (result ? (
-          <>
-            <Barbell plates={result.platesPerSide} />
-            <p className={styles.result}>
-              {result.platesPerSide.length > 0
-                ? t("calculator.perSide", { plates: result.platesPerSide.join(" + ") })
-                : t("calculator.emptyBar")}
-            </p>
-            {result.remainderKg > 0 && (
-              <p className={styles.warning}>
-                {t("calculator.closestLoad", {
-                  loaded: result.loadedKg,
-                  missing: result.remainderKg,
-                })}
-              </p>
-            )}
-          </>
-        ) : (
-          targetKg < emptyBarKg && (
-            <p className={styles.warning}>{t("calculator.belowBar", { weight: emptyBarKg })}</p>
-          )
-        ))}
-    </div>
+    </>
   );
 }
 
