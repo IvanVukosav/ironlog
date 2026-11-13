@@ -8,7 +8,7 @@ import {
 } from "../utils/oneRepMax";
 import { useToast } from "../context/useToast";
 import { formatDayMonth } from "../utils/dates";
-import { parseDecimal, toDecimalText } from "../utils/numbers";
+import { formatNumber, parseDecimal, toDecimalText, toInputText } from "../utils/numbers";
 import { useDragReorder } from "../hooks/useDragReorder";
 import Icon from "./Icon";
 import styles from "./ExerciseCard.module.css";
@@ -19,16 +19,20 @@ const E1RM_DECIMAL_PLACES = 1;
 // The set forms hold what was typed, so their fields are strings.
 const EMPTY_SET = { weight: "", reps: "", rpe: "", isWarmup: false };
 
-function formatSetShort(workoutSet) {
-  const base = `${workoutSet.weight}×${workoutSet.reps}`;
-  return Number.isFinite(workoutSet.rpe) ? `${base} @${workoutSet.rpe}` : base;
+// A set as a short chip: "102,5×5 @8" in Croatian.
+function formatSetShort(workoutSet, language) {
+  const base = `${formatNumber(workoutSet.weight, language)}×${workoutSet.reps}`;
+  return Number.isFinite(workoutSet.rpe)
+    ? `${base} @${formatNumber(workoutSet.rpe, language)}`
+    : base;
 }
 
-function formFromSet(workoutSet) {
+// A saved set in the form, its numbers written the way the language writes them.
+function formFromSet(workoutSet, language) {
   return {
-    weight: String(workoutSet.weight),
+    weight: toInputText(workoutSet.weight, language),
     reps: String(workoutSet.reps),
-    rpe: Number.isFinite(workoutSet.rpe) ? String(workoutSet.rpe) : "",
+    rpe: toInputText(workoutSet.rpe, language),
     isWarmup: Boolean(workoutSet.isWarmup),
   };
 }
@@ -127,7 +131,7 @@ function SetFields({ values, onChange }) {
 
 // e1RM after a logged set, or "—" when it has too many reps to failure to estimate one.
 function SetE1rm({ workoutSet, formula }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const e1rm = calculateEstimatedOneRepMax(
     workoutSet.weight,
     workoutSet.reps,
@@ -147,7 +151,9 @@ function SetE1rm({ workoutSet, formula }) {
   }
   return (
     <span className={styles.e1rmText}>
-      {t("log.e1rmSuffix", { value: e1rm.toFixed(E1RM_DECIMAL_PLACES) })}
+      {t("log.e1rmSuffix", {
+        value: formatNumber(e1rm, i18n.language, { decimals: E1RM_DECIMAL_PLACES }),
+      })}
     </span>
   );
 }
@@ -165,7 +171,8 @@ function Exercise({
   dragItemProps,
   dragHandleProps,
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const language = i18n.language;
   const { showSuccess } = useToast();
   const [set, setSet] = useState(EMPTY_SET);
   const [isAdding, setIsAdding] = useState(false);
@@ -234,7 +241,10 @@ function Exercise({
     const previousBest = findBestSetByE1rm(previousSets, e1rmFormula);
     if (e1rm !== null && (!previousBest || e1rm > previousBest.e1rm)) {
       showSuccess(
-        t("log.newPrToast", { name: exercise.name, value: e1rm.toFixed(E1RM_DECIMAL_PLACES) }),
+        t("log.newPrToast", {
+          name: exercise.name,
+          value: formatNumber(e1rm, language, { decimals: E1RM_DECIMAL_PLACES }),
+        }),
       );
     }
   };
@@ -251,7 +261,7 @@ function Exercise({
 
   const startEditingSet = (workoutSet) => {
     setEditingSetId(workoutSet.id);
-    setEditSet(formFromSet(workoutSet));
+    setEditSet(formFromSet(workoutSet, language));
   };
 
   const updateSupersetGroup = async (value) => {
@@ -346,10 +356,15 @@ function Exercise({
           onClick={() => startEditingSet(workoutSet)}
         >
           <span className={styles.setMain}>
-            {t("log.setWeightReps", { weight: workoutSet.weight, reps: workoutSet.reps })}
+            {t("log.setWeightReps", {
+              weight: formatNumber(workoutSet.weight, language),
+              reps: workoutSet.reps,
+            })}
           </span>
           {hasRpe && (
-            <span className={styles.setRpe}>{t("log.setRpe", { rpe: workoutSet.rpe })}</span>
+            <span className={styles.setRpe}>
+              {t("log.setRpe", { rpe: formatNumber(workoutSet.rpe, language) })}
+            </span>
           )}
           {showE1rm && hasRpe && <SetE1rm workoutSet={workoutSet} formula={e1rmFormula} />}
         </button>
@@ -428,9 +443,9 @@ function Exercise({
                   key={previousSet.id}
                   className={styles.lastSessionChip}
                   title={t("log.useLastSet")}
-                  onClick={() => setSet(formFromSet(previousSet))}
+                  onClick={() => setSet(formFromSet(previousSet, language))}
                 >
-                  {formatSetShort(previousSet)}
+                  {formatSetShort(previousSet, language)}
                 </button>
               ))}
               <button type="button" className={styles.copyAllButton} onClick={copyLastSession}>
