@@ -1,188 +1,213 @@
 .editor {
-  composes: card from "../styles/shared.module.css";
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
-.metaRow {
+.card {
+  composes: card from "../styles/shared.module.css";
   display: flex;
-  flex-wrap: wrap;
-  gap: 1.25rem;
+  flex-direction: column;
+  gap: 10px;
 }
+
+/* Fields: a small dim label over each box. */
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 4px;
+  min-width: 0;
 }
 
 .fieldLabel {
+  overflow: hidden;
   color: var(--color-text-dim);
   font-family: var(--font-body);
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.nameInput {
-  composes: input from "../styles/shared.module.css";
-  width: 240px;
+/* The name across the card, weeks and training max side by side under it on a phone. */
+.metaFields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
 }
 
-.numberInput {
+.nameField {
+  grid-column: 1 / -1;
+}
+
+@media (min-width: 641px) {
+  .metaFields {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .nameField {
+    grid-column: auto;
+  }
+}
+
+.textInput,
+.exerciseInput,
+.schemeInput {
   composes: input from "../styles/shared.module.css";
-  width: 90px;
+  width: 100%;
+  min-height: 44px;
+}
+
+.textInput::placeholder,
+.exerciseInput::placeholder,
+.schemeInput::placeholder {
+  color: var(--color-text-placeholder);
+}
+
+.exerciseInput {
+  font-weight: 600;
+}
+
+/* Room for a scheme with a few groups ("1x5@65, 1x5@75, 1x5@85"); the rest scrolls in the box. */
+.schemeInput {
+  padding-left: 10px;
+  padding-right: 10px;
+  font-variant-numeric: tabular-nums;
 }
 
 .invalid,
 .invalid:focus {
   border-color: var(--color-accent);
-  border-bottom-color: var(--color-accent);
-  box-shadow: inset 0 -2px 0 var(--color-accent);
+  box-shadow: 0 0 0 1px var(--color-accent);
 }
 
-.day {
-  border-top: 1px solid var(--color-border-subtle);
-  padding-top: 0.75rem;
-}
+/* A day: its number and name, then its exercises, each with a scheme per week. */
 
 .dayHeader {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-bottom: 0.5rem;
+  justify-content: space-between;
+  gap: 8px;
 }
 
-.dayNumber {
+.dayTitle {
   color: var(--color-text);
   font-family: var(--font-body);
-  font-size: 0.9rem;
+  font-size: 1.05rem;
   font-weight: var(--heading-weight);
 }
 
-.dayNameInput {
-  composes: input from "../styles/shared.module.css";
-  width: 200px;
+.exercises {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
 }
 
-.tableWrapper {
-  max-width: 100%;
-  overflow-x: auto;
+.exercise {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 0;
+  border-top: 1px solid var(--color-border-subtle);
 }
 
-.table {
-  border-collapse: collapse;
-  font-family: var(--font-body);
-  font-size: 0.8rem;
+.exercise:last-child {
+  padding-bottom: 4px;
 }
 
-.table th {
-  color: var(--color-text-dim);
-  font-size: 0.7rem;
-  font-weight: 400;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  text-align: left;
-  padding: 0.25rem 0.5rem 0.25rem 0;
-  white-space: nowrap;
+.exerciseHeader {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
-.table td {
-  padding: 0.25rem 0.5rem 0.25rem 0;
+.exerciseHeader .exerciseInput {
+  flex: 1;
+  min-width: 0;
+  margin-right: 4px;
 }
 
-.exerciseInput {
-  composes: input from "../styles/shared.module.css";
-  width: 170px;
-}
-
-.schemeInput {
-  composes: input from "../styles/shared.module.css";
-  width: 120px;
-}
-
-.schemeInput::placeholder,
-.exerciseInput::placeholder,
-.dayNameInput::placeholder {
-  color: var(--color-text-placeholder);
-}
-
-.rowActions {
-  white-space: nowrap;
+/* Weeks line up in columns from one exercise to the next (every exercise has as many), and a
+   few weeks share the whole width. */
+.weekGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr));
+  gap: 8px;
 }
 
 .iconButton {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
   background: transparent;
   border: none;
+  border-radius: 10px;
   color: var(--color-text-dim);
-  font-size: 0.85rem;
-  padding: 0 4px;
   cursor: pointer;
 }
 
 .iconButton:hover {
-  color: var(--color-accent);
+  background: var(--color-bg-hover);
+  color: var(--color-text);
 }
 
-.textButton {
+.addButton,
+.addDayButton {
+  composes: button buttonSecondary from "../styles/shared.module.css";
+  display: inline-flex;
+  align-items: center;
   align-self: flex-start;
-  background: transparent;
-  border: none;
-  color: var(--color-accent);
-  font-family: var(--font-body);
-  font-size: 0.8rem;
-  padding: 0.25rem 0;
-  cursor: pointer;
+  gap: 6px;
+  min-height: 40px;
 }
 
-.removeButton {
+.addDayButton {
+  min-height: 44px;
+}
+
+.quietButton {
+  min-height: 40px;
+  padding: 0 10px;
   background: transparent;
   border: none;
+  border-radius: 8px;
   color: var(--color-text-dim);
   font-family: var(--font-body);
-  font-size: 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 600;
   cursor: pointer;
 }
 
-.removeButton:hover {
-  color: var(--color-accent);
+.quietButton:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text);
 }
 
 .help {
   color: var(--color-text-dim);
   font-family: var(--font-body);
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   line-height: 1.5;
-  max-width: 640px;
 }
 
 .error {
   color: var(--color-accent);
   font-family: var(--font-body);
-  font-size: 0.8rem;
+  font-size: 0.85rem;
+  font-weight: 600;
 }
 
 .actions {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 8px;
 }
 
 .saveButton {
   composes: button from "../styles/shared.module.css";
-}
-
-.cancelButton {
-  background: transparent;
-  border: none;
-  color: var(--color-text-dim);
-  font-family: var(--font-body);
-  font-size: 0.85rem;
-  cursor: pointer;
-}
-
-.cancelButton:hover {
-  color: var(--color-accent);
+  min-height: 44px;
 }

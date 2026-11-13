@@ -1,13 +1,14 @@
-import { useState, useEffect } from "react";
+import { useId, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { fetchJson } from "../api";
 import { findBestSetByE1rm } from "../utils/oneRepMax";
 import { buildProgramSets, parseScheme } from "../utils/programScheme";
+import { formatNumber } from "../utils/numbers";
 import { useReportError } from "../hooks/useReportError";
 import styles from "./ProgramLoader.module.css";
 
-// "1×162.5 kg, 3×135 kg" from consecutive identical sets.
-function summarizeSets(sets) {
+// "1×1 @ 162,5 kg, 3×5 @ 135 kg" from consecutive identical sets.
+function summarizeSets(sets, language) {
   const runs = [];
   for (const set of sets) {
     const last = runs.at(-1);
@@ -19,8 +20,8 @@ function summarizeSets(sets) {
   }
   return runs
     .map((run) => {
-      const load = run.weight ? ` @ ${run.weight} kg` : "";
-      const rpe = run.rpe !== null ? ` RPE ${run.rpe}` : "";
+      const load = run.weight ? ` @ ${formatNumber(run.weight, language)} kg` : "";
+      const rpe = run.rpe !== null ? ` RPE ${formatNumber(run.rpe, language)}` : "";
       return `${run.count}×${run.reps}${load}${rpe}`;
     })
     .join(", ");
@@ -29,7 +30,8 @@ function summarizeSets(sets) {
 // `onLoad(program, exercises)` puts the chosen day's sets into the workout; `program` is
 // { id, week, day }.
 function ProgramLoader({ programs, formula, onLoad, onClose }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const id = useId();
   const reportError = useReportError();
   const [programId, setProgramId] = useState(programs[0]?.id ?? null);
   const [week, setWeek] = useState(1);
@@ -82,41 +84,59 @@ function ProgramLoader({ programs, formula, onLoad, onClose }) {
   if (!program) return null;
 
   return (
-    <div className={styles.panel}>
+    <section className={styles.panel}>
       <div className={styles.selectors}>
-        <select
-          className={styles.select}
-          value={programId}
-          onChange={(event) => setProgramId(parseInt(event.target.value))}
-        >
-          {programs.map((candidate) => (
-            <option key={candidate.id} value={candidate.id}>
-              {candidate.name}
-            </option>
-          ))}
-        </select>
-        <select
-          className={styles.select}
-          value={week}
-          onChange={(event) => setWeek(parseInt(event.target.value))}
-        >
-          {Array.from({ length: program.weeks }, (_, index) => (
-            <option key={index + 1} value={index + 1}>
-              {t("programs.weekLong", { number: index + 1 })}
-            </option>
-          ))}
-        </select>
-        <select
-          className={styles.select}
-          value={day}
-          onChange={(event) => setDay(parseInt(event.target.value))}
-        >
-          {program.days.map((candidate) => (
-            <option key={candidate.dayNumber} value={candidate.dayNumber}>
-              {candidate.name || t("programs.dayNumber", { number: candidate.dayNumber })}
-            </option>
-          ))}
-        </select>
+        <div className={`${styles.field} ${styles.programField}`}>
+          <label className={styles.fieldLabel} htmlFor={`${id}program`}>
+            {t("programs.programLabel")}
+          </label>
+          <select
+            id={`${id}program`}
+            className={styles.select}
+            value={programId}
+            onChange={(event) => setProgramId(parseInt(event.target.value))}
+          >
+            {programs.map((candidate) => (
+              <option key={candidate.id} value={candidate.id}>
+                {candidate.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className={styles.field}>
+          <label className={styles.fieldLabel} htmlFor={`${id}week`}>
+            {t("programs.weekLabel")}
+          </label>
+          <select
+            id={`${id}week`}
+            className={styles.select}
+            value={week}
+            onChange={(event) => setWeek(parseInt(event.target.value))}
+          >
+            {Array.from({ length: program.weeks }, (_, index) => (
+              <option key={index + 1} value={index + 1}>
+                {index + 1}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className={styles.field}>
+          <label className={styles.fieldLabel} htmlFor={`${id}day`}>
+            {t("programs.dayLabel")}
+          </label>
+          <select
+            id={`${id}day`}
+            className={styles.select}
+            value={day}
+            onChange={(event) => setDay(parseInt(event.target.value))}
+          >
+            {program.days.map((candidate) => (
+              <option key={candidate.dayNumber} value={candidate.dayNumber}>
+                {candidate.name || t("programs.dayNumber", { number: candidate.dayNumber })}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {isProgramFinished && <p className={styles.hint}>{t("programs.finished")}</p>}
@@ -124,9 +144,11 @@ function ProgramLoader({ programs, formula, onLoad, onClose }) {
       {plannedExercises.length > 0 ? (
         <ul className={styles.preview}>
           {plannedExercises.map((exercise) => (
-            <li key={exercise.name}>
+            <li key={exercise.name} className={styles.previewRow}>
               <span className={styles.previewName}>{exercise.name}</span>
-              <span className={styles.previewSets}>{summarizeSets(exercise.sets)}</span>
+              <span className={styles.previewSets}>
+                {summarizeSets(exercise.sets, i18n.language)}
+              </span>
               {exercise.missingE1rm && (
                 <span className={styles.warning}>{t("programs.missingE1rm")}</span>
               )}
@@ -150,7 +172,7 @@ function ProgramLoader({ programs, formula, onLoad, onClose }) {
           {t("common.cancel")}
         </button>
       </div>
-    </div>
+    </section>
   );
 }
 

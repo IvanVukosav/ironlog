@@ -1,11 +1,15 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { isValidScheme } from "../utils/programScheme";
+import { parseDecimal, toInputText } from "../utils/numbers";
+import Icon from "./Icon";
+import NumberField from "./NumberField";
 import styles from "./ProgramEditor.module.css";
 
 const MIN_WEEKS = 1;
 const MAX_WEEKS = 52;
 const DEFAULT_WEEKS = 4;
+const DEFAULT_TRAINING_MAX_PERCENT = 100;
 
 let nextKey = 0;
 const makeKey = () => ++nextKey;
@@ -18,14 +22,20 @@ function emptyDay() {
   return { key: makeKey(), name: "", exercises: [emptyExercise()] };
 }
 
-function toDraft(program) {
+// The program as the form holds it: numbers as text, written the way the language writes them.
+function toDraft(program, language) {
   if (!program) {
-    return { name: "", weeks: DEFAULT_WEEKS, trainingMaxPercent: 100, days: [emptyDay()] };
+    return {
+      name: "",
+      weeks: String(DEFAULT_WEEKS),
+      trainingMaxPercent: String(DEFAULT_TRAINING_MAX_PERCENT),
+      days: [emptyDay()],
+    };
   }
   return {
     name: program.name,
-    weeks: program.weeks,
-    trainingMaxPercent: program.trainingMaxPercent,
+    weeks: String(program.weeks),
+    trainingMaxPercent: toInputText(program.trainingMaxPercent, language),
     days: program.days.map((day) => ({
       key: makeKey(),
       name: day.name || "",
@@ -38,12 +48,17 @@ function toDraft(program) {
   };
 }
 
+const withInvalid = (className, isInvalid) =>
+  isInvalid ? `${className} ${styles.invalid}` : className;
+
 function ProgramEditor({ program, exerciseNames, onSave, onCancel }) {
-  const { t } = useTranslation();
-  const [draft, setDraft] = useState(() => toDraft(program));
+  const { t, i18n } = useTranslation();
+  const id = useId();
+  const [draft, setDraft] = useState(() => toDraft(program, i18n.language));
   const [showErrors, setShowErrors] = useState(false);
   const weeks = Math.min(Math.max(parseInt(draft.weeks) || MIN_WEEKS, MIN_WEEKS), MAX_WEEKS);
   const weekNumbers = Array.from({ length: weeks }, (_, index) => index + 1);
+  const exerciseListId = `${id}exercises`;
 
   const updateDay = (dayKey, update) => {
     setDraft((prev) => ({
@@ -74,6 +89,12 @@ function ProgramEditor({ program, exerciseNames, onSave, onCancel }) {
     }));
   };
 
+  const removeExercise = (dayKey, exerciseKey) => {
+    updateDay(dayKey, (day) => ({
+      exercises: day.exercises.filter((exercise) => exercise.key !== exerciseKey),
+    }));
+  };
+
   const hasErrors =
     !draft.name.trim() ||
     draft.days.some((day) =>
@@ -92,7 +113,7 @@ function ProgramEditor({ program, exerciseNames, onSave, onCancel }) {
     onSave({
       name: draft.name.trim(),
       weeks,
-      trainingMaxPercent: parseFloat(draft.trainingMaxPercent) || 100,
+      trainingMaxPercent: parseDecimal(draft.trainingMaxPercent) || DEFAULT_TRAINING_MAX_PERCENT,
       days: draft.days.map((day) => ({
         name: day.name,
         exercises: day.exercises.map((exercise) => ({
@@ -105,69 +126,49 @@ function ProgramEditor({ program, exerciseNames, onSave, onCancel }) {
 
   return (
     <div className={styles.editor}>
-      <div className={styles.metaRow}>
-        <label className={styles.field}>
-          <span className={styles.fieldLabel}>{t("programs.name")}</span>
-          <input
-            type="text"
-            className={
-              showErrors && !draft.name.trim()
-                ? `${styles.nameInput} ${styles.invalid}`
-                : styles.nameInput
-            }
-            value={draft.name}
-            onChange={(event) => setDraft((prev) => ({ ...prev, name: event.target.value }))}
-          />
-        </label>
-        <label className={styles.field}>
-          <span className={styles.fieldLabel}>{t("programs.weeks")}</span>
-          <input
-            type="number"
-            min={MIN_WEEKS}
-            max={MAX_WEEKS}
-            className={styles.numberInput}
+      <section className={styles.card}>
+        <div className={styles.metaFields}>
+          <div className={`${styles.field} ${styles.nameField}`}>
+            <label className={styles.fieldLabel} htmlFor={`${id}name`}>
+              {t("programs.name")}
+            </label>
+            <input
+              id={`${id}name`}
+              type="text"
+              className={withInvalid(styles.textInput, showErrors && !draft.name.trim())}
+              autoComplete="off"
+              value={draft.name}
+              onChange={(event) => setDraft((prev) => ({ ...prev, name: event.target.value }))}
+            />
+          </div>
+          <NumberField
+            label={t("programs.weeks")}
+            inputMode="numeric"
             value={draft.weeks}
-            onChange={(event) => setDraft((prev) => ({ ...prev, weeks: event.target.value }))}
+            onChange={(value) => setDraft((prev) => ({ ...prev, weeks: value }))}
           />
-        </label>
-        <label className={styles.field}>
-          <span className={styles.fieldLabel}>{t("programs.trainingMax")}</span>
-          <input
-            type="number"
-            min="1"
-            max="100"
-            className={styles.numberInput}
+          <NumberField
+            label={t("programs.trainingMax")}
             value={draft.trainingMaxPercent}
-            onChange={(event) =>
-              setDraft((prev) => ({ ...prev, trainingMaxPercent: event.target.value }))
-            }
+            onChange={(value) => setDraft((prev) => ({ ...prev, trainingMaxPercent: value }))}
           />
-        </label>
-      </div>
+        </div>
+      </section>
 
-      <datalist id="program-exercise-names">
+      <datalist id={exerciseListId}>
         {exerciseNames.map((name) => (
           <option key={name} value={name} />
         ))}
       </datalist>
 
       {draft.days.map((day, dayIndex) => (
-        <div key={day.key} className={styles.day}>
+        <section key={day.key} className={styles.card}>
           <div className={styles.dayHeader}>
-            <span className={styles.dayNumber}>
-              {t("programs.dayNumber", { number: dayIndex + 1 })}
-            </span>
-            <input
-              type="text"
-              className={styles.dayNameInput}
-              placeholder={t("programs.dayNamePlaceholder")}
-              value={day.name}
-              onChange={(event) => updateDay(day.key, () => ({ name: event.target.value }))}
-            />
+            <h2 className={styles.dayTitle}>{t("programs.dayNumber", { number: dayIndex + 1 })}</h2>
             {draft.days.length > 1 && (
               <button
                 type="button"
-                className={styles.removeButton}
+                className={styles.quietButton}
                 onClick={() =>
                   setDraft((prev) => ({
                     ...prev,
@@ -179,120 +180,126 @@ function ProgramEditor({ program, exerciseNames, onSave, onCancel }) {
               </button>
             )}
           </div>
-
-          <div className={styles.tableWrapper}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>{t("programs.exercise")}</th>
-                  {weekNumbers.map((week) => (
-                    <th key={week}>{t("programs.weekShort", { number: week })}</th>
-                  ))}
-                  <th />
-                </tr>
-              </thead>
-              <tbody>
-                {day.exercises.map((exercise) => (
-                  <tr key={exercise.key}>
-                    <td>
-                      <input
-                        type="text"
-                        list="program-exercise-names"
-                        className={
-                          showErrors && !exercise.name.trim()
-                            ? `${styles.exerciseInput} ${styles.invalid}`
-                            : styles.exerciseInput
-                        }
-                        value={exercise.name}
-                        onChange={(event) =>
-                          updateExercise(day.key, exercise.key, () => ({
-                            name: event.target.value,
-                          }))
-                        }
-                      />
-                    </td>
-                    {weekNumbers.map((week) => {
-                      const scheme = exercise.weekSchemes[week - 1] ?? "";
-                      return (
-                        <td key={week}>
-                          <input
-                            type="text"
-                            className={
-                              isValidScheme(scheme)
-                                ? styles.schemeInput
-                                : `${styles.schemeInput} ${styles.invalid}`
-                            }
-                            placeholder="5x5@75"
-                            value={scheme}
-                            onChange={(event) =>
-                              setScheme(day.key, exercise.key, week - 1, event.target.value)
-                            }
-                          />
-                        </td>
-                      );
-                    })}
-                    <td className={styles.rowActions}>
-                      {weeks > 1 && (
-                        <button
-                          type="button"
-                          className={styles.iconButton}
-                          title={t("programs.fillAllWeeks")}
-                          onClick={() => fillAllWeeks(day.key, exercise.key)}
-                        >
-                          ⇉
-                        </button>
-                      )}
-                      <button
-                        type="button"
-                        className={styles.iconButton}
-                        title={t("programs.removeExercise")}
-                        onClick={() =>
-                          updateDay(day.key, (current) => ({
-                            exercises: current.exercises.filter(
-                              (other) => other.key !== exercise.key,
-                            ),
-                          }))
-                        }
-                      >
-                        ✕
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className={styles.field}>
+            <label className={styles.fieldLabel} htmlFor={`${id}day${day.key}`}>
+              {t("programs.dayNameLabel")}
+            </label>
+            <input
+              id={`${id}day${day.key}`}
+              type="text"
+              className={styles.textInput}
+              placeholder={t("programs.dayNamePlaceholder")}
+              autoComplete="off"
+              value={day.name}
+              onChange={(event) => updateDay(day.key, () => ({ name: event.target.value }))}
+            />
           </div>
+
+          <ol className={styles.exercises}>
+            {day.exercises.map((exercise) => (
+              <li key={exercise.key} className={styles.exercise}>
+                <div className={styles.exerciseHeader}>
+                  <input
+                    type="text"
+                    list={exerciseListId}
+                    className={withInvalid(
+                      styles.exerciseInput,
+                      showErrors && !exercise.name.trim(),
+                    )}
+                    aria-label={t("programs.exercise")}
+                    placeholder={t("programs.exercise")}
+                    autoComplete="off"
+                    value={exercise.name}
+                    onChange={(event) =>
+                      updateExercise(day.key, exercise.key, () => ({ name: event.target.value }))
+                    }
+                  />
+                  {weeks > 1 && (
+                    <button
+                      type="button"
+                      className={styles.iconButton}
+                      aria-label={t("programs.fillAllWeeks")}
+                      title={t("programs.fillAllWeeks")}
+                      onClick={() => fillAllWeeks(day.key, exercise.key)}
+                    >
+                      <Icon name="copy" size={18} />
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className={styles.iconButton}
+                    aria-label={t("programs.removeExercise")}
+                    title={t("programs.removeExercise")}
+                    onClick={() => removeExercise(day.key, exercise.key)}
+                  >
+                    <Icon name="close" size={18} />
+                  </button>
+                </div>
+                <div className={styles.weekGrid}>
+                  {weekNumbers.map((week) => {
+                    const scheme = exercise.weekSchemes[week - 1] ?? "";
+                    const schemeId = `${id}${exercise.key}-${week}`;
+                    return (
+                      <div key={week} className={styles.field}>
+                        <label className={styles.fieldLabel} htmlFor={schemeId}>
+                          {t("programs.weekLong", { number: week })}
+                        </label>
+                        <input
+                          id={schemeId}
+                          type="text"
+                          className={withInvalid(styles.schemeInput, !isValidScheme(scheme))}
+                          placeholder="5x5@75"
+                          title={scheme || undefined}
+                          autoComplete="off"
+                          value={scheme}
+                          onChange={(event) =>
+                            setScheme(day.key, exercise.key, week - 1, event.target.value)
+                          }
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </li>
+            ))}
+          </ol>
 
           <button
             type="button"
-            className={styles.textButton}
+            className={styles.addButton}
             onClick={() =>
               updateDay(day.key, (current) => ({
                 exercises: [...current.exercises, emptyExercise()],
               }))
             }
           >
+            <Icon name="plus" size={16} />
             {t("programs.addExercise")}
           </button>
-        </div>
+        </section>
       ))}
 
       <button
         type="button"
-        className={styles.textButton}
+        className={styles.addDayButton}
         onClick={() => setDraft((prev) => ({ ...prev, days: [...prev.days, emptyDay()] }))}
       >
+        <Icon name="plus" size={18} />
         {t("programs.addDay")}
       </button>
 
       <p className={styles.help}>{t("programs.schemeHelp")}</p>
-      {showErrors && hasErrors && <p className={styles.error}>{t("programs.fixErrors")}</p>}
+      {showErrors && hasErrors && (
+        <p className={styles.error} role="alert">
+          {t("programs.fixErrors")}
+        </p>
+      )}
 
       <div className={styles.actions}>
         <button type="button" className={styles.saveButton} onClick={save}>
           {t("common.save")}
         </button>
-        <button type="button" className={styles.cancelButton} onClick={onCancel}>
+        <button type="button" className={styles.quietButton} onClick={onCancel}>
           {t("common.cancel")}
         </button>
       </div>
