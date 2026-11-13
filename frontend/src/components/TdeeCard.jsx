@@ -4,6 +4,7 @@ import { fetchJson } from "../api";
 import { useToast } from "../context/useToast";
 import { useSettings } from "../context/useSettings";
 import { useReportError } from "../hooks/useReportError";
+import { formatNumber } from "../utils/numbers";
 import styles from "./TdeeCard.module.css";
 
 const KCAL_PER_KG_BODYWEIGHT = 7700;
@@ -21,9 +22,10 @@ function weeklyChangeForKcal(tdee, kcal) {
   return ((kcal - tdee) * DAYS_PER_WEEK) / KCAL_PER_KG_BODYWEIGHT;
 }
 
-function formatSignedKg(kg) {
+// "+0,25" or "-0,5": a weekly change in kg, signed, in the language's numbers.
+function formatSignedKg(kg, language) {
   const rounded = Math.round(kg * 100) / 100;
-  return `${rounded > 0 ? "+" : ""}${rounded}`;
+  return `${rounded > 0 ? "+" : ""}${formatNumber(rounded, language)}`;
 }
 
 function TdeeCard({ today }) {
@@ -46,12 +48,14 @@ function TdeeCard({ today }) {
 
   if (!estimate) return null;
 
-  const formatKcal = (kcal) => kcal.toLocaleString(i18n.language);
+  const language = i18n.language;
+  const formatKcal = (kcal) => formatNumber(kcal, language, { maxDecimals: 0 });
+  const signedKg = (kg) => formatSignedKg(kg, language);
 
   if (!estimate.enoughData) {
     return (
-      <div className={styles.card}>
-        <span className={styles.label}>{t("tdee.title")}</span>
+      <section className={styles.card}>
+        <h2 className={styles.label}>{t("tdee.title")}</h2>
         <p className={styles.detail}>
           {t("tdee.notEnoughData", {
             minIntakeDays: estimate.minIntakeDays,
@@ -61,20 +65,20 @@ function TdeeCard({ today }) {
             weighIns: estimate.weighIns,
           })}
         </p>
-      </div>
+      </section>
     );
   }
 
   return (
-    <div className={styles.card}>
-      <span className={styles.label}>{t("tdee.title")}</span>
-      <span className={styles.value}>{t("tdee.perDay", { kcal: formatKcal(estimate.tdee) })}</span>
+    <section className={styles.card}>
+      <h2 className={styles.label}>{t("tdee.title")}</h2>
+      <p className={styles.value}>{t("tdee.perDay", { kcal: formatKcal(estimate.tdee) })}</p>
       <p className={styles.detail}>
         {t("tdee.basis", {
           days: estimate.windowDays,
           intake: formatKcal(estimate.averageIntake),
           intakeDays: estimate.intakeDays,
-          change: formatSignedKg(estimate.weightChangePerWeek),
+          change: signedKg(estimate.weightChangePerWeek),
           weighIns: estimate.weighIns,
         })}
       </p>
@@ -82,7 +86,7 @@ function TdeeCard({ today }) {
         <p className={styles.detail}>
           {t("tdee.goalProjection", {
             kcal: formatKcal(kcalGoal),
-            change: formatSignedKg(weeklyChangeForKcal(estimate.tdee, kcalGoal)),
+            change: signedKg(weeklyChangeForKcal(estimate.tdee, kcalGoal)),
           })}
         </p>
       )}
@@ -93,19 +97,18 @@ function TdeeCard({ today }) {
             <button
               type="button"
               key={kgPerWeek}
-              className={
-                kcal === kcalGoal ? `${styles.preset} ${styles.presetActive}` : styles.preset
-              }
+              className={styles.preset}
+              aria-pressed={kcal === kcalGoal}
               onClick={() => setGoal(kcal)}
             >
               {kgPerWeek === 0
                 ? t("tdee.maintenance", { kcal: formatKcal(kcal) })
-                : t("tdee.preset", { change: formatSignedKg(kgPerWeek), kcal: formatKcal(kcal) })}
+                : t("tdee.preset", { change: signedKg(kgPerWeek), kcal: formatKcal(kcal) })}
             </button>
           );
         })}
       </div>
-    </div>
+    </section>
   );
 }
 

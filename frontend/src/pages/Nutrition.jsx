@@ -1,44 +1,48 @@
 import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { fetchJson } from "../api";
+import DatePicker from "../components/DatePicker";
+import Icon from "../components/Icon";
 import MacroDonut from "../components/MacroDonut";
 import MealCard from "../components/MealCard";
 import TdeeCard from "../components/TdeeCard";
-import { useToast } from "../context/useToast";
 import { useSettings } from "../context/useSettings";
+import { useNutritionDay } from "../hooks/useNutritionDay";
 import { useReportError } from "../hooks/useReportError";
-import { todayKey } from "../utils/dates";
+import { formatWeekdayDate, todayKey } from "../utils/dates";
+import { formatNumber } from "../utils/numbers";
+import { sumMacros } from "../utils/nutritionState";
 import styles from "./Nutrition.module.css";
 
-const DEFAULT_MEAL_NAME = "Ostalo";
-const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const RECENT_ITEMS_LIMIT = 8;
+const MAX_PERCENT = 100;
+const MACROS = [
+  { key: "protein", labelKey: "nutrition.macroProtein", goalKey: "proteinGoal" },
+  { key: "carbs", labelKey: "nutrition.macroCarbs", goalKey: "carbsGoal" },
+  { key: "fat", labelKey: "nutrition.macroFat", goalKey: "fatGoal" },
+];
 
-function previousDateString(dateString) {
-  return new Date(new Date(dateString).getTime() - MS_PER_DAY).toISOString().split("T")[0];
-}
-
+// How much of the bar a value fills against its goal. Past the goal, the bar is the whole
+// value: the goal's share in the colour, the rest striped.
 function getBarSegments(value, goal) {
   if (!goal) return { normalPercent: 0, overPercent: 0 };
   if (value <= goal) {
-    return { normalPercent: Math.min(100, Math.round((value / goal) * 100)), overPercent: 0 };
+    return { normalPercent: Math.min(MAX_PERCENT, (value / goal) * MAX_PERCENT), overPercent: 0 };
   }
-  const normalPercent = Math.round((goal / value) * 100);
-  return { normalPercent, overPercent: 100 - normalPercent };
+  const normalPercent = (goal / value) * MAX_PERCENT;
+  return { normalPercent, overPercent: MAX_PERCENT - normalPercent };
 }
 
-function GoalBar({ value, goal, colorClass }) {
+function GoalBar({ value, goal, color }) {
   const { normalPercent, overPercent } = getBarSegments(value, goal);
   return (
-    <div className={styles.totalsBarTrack}>
-      <div
-        className={`${styles.totalsBarFill} ${colorClass}`}
-        style={{ width: `${normalPercent}%` }}
-      />
+    <div className={styles.barTrack}>
+      <div className={styles.barFill} style={{ width: `${normalPercent}%`, background: color }} />
       {overPercent > 0 && (
         <div
-          className={`${styles.totalsBarFill} ${colorClass} ${styles.totalsBarFillOverGoal}`}
-          style={{ width: `${overPercent}%` }}
+          className={`${styles.barFill} ${styles.barFillOver}`}
+          style={{ width: `${overPercent}%`, background: color }}
         />
       )}
     </div>
@@ -46,25 +50,27 @@ function GoalBar({ value, goal, colorClass }) {
 }
 
 function Nutrition() {
-  const { t } = useTranslation();
-  const { showError } = useToast();
+  const { t, i18n } = useTranslation();
+  const language = i18n.language;
   const reportError = useReportError();
+  const [searchParams] = useSearchParams();
   const [today] = useState(todayKey);
-  const [date, setDate] = useState(today);
-  const [day, setDay] = useState(null);
+  const [date, setDate] = useState(searchParams.get("date") || today);
+  const { day, isLoading, ...actions } = useNutritionDay(date);
+  const { settings } = useSettings();
   const [mealName, setMealName] = useState("");
   const [foodItemTemplates, setFoodItemTemplates] = useState([]);
   const [recentItems, setRecentItems] = useState([]);
-  const { settings } = useSettings();
   const [quickAddName, setQuickAddName] = useState("");
   const [showQuickPicker, setShowQuickPicker] = useState(false);
   const quickAddRef = useRef(null);
 
   useEffect(() => {
-    fetchJson(`/api/nutrition?date=${date}`)
-      .then((data) => setDay(data[0] || null))
+    fetchJson("/api/food-item-templates").then(setFoodItemTemplates).catch(reportError);
+    fetchJson(`/api/nutrition/recent-items?limit=${RECENT_ITEMS_LIMIT}`)
+      .then(setRecentItems)
       .catch(reportError);
-  }, [date, reportError]);
+  }, [reportError]);
 
   useEffect(() => {
     if (!showQuickPicker) return undefined;
@@ -77,110 +83,27 @@ function Nutrition() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showQuickPicker]);
 
-  useEffect(() => {
-    fetchJson("/api/food-item-templates").then(setFoodItemTemplates).catch(reportError);
-
-    fetchJson(`/api/nutrition/recent-items?limit=${RECENT_ITEMS_LIMIT}`)
-      .then(setRecentItems)
-      .catch(reportError);
-  }, [reportError]);
-
-  const createDay = () => {
-    fetchJson("/api/nutrition/days", {
-      method: "POST",
-      json: { date },
-    })
-      .then(setDay)
-      .catch(reportError);
+  const addMeal = async () => {
+    const name = mealName.trim();
+    if (name && (await actions.addMeal(name))) setMealName("");
   };
 
-  const copyPreviousDay = () => {
-    fetchJson("/api/nutrition/days/copy", {
-      method: "POST",
-      json: { fromDate: previousDateString(date), toDate: date },
-    })
-      .then(setDay)
-      .catch((err) => {
-        console.error(err);
-        showError(
-          err.message === "Nothing to copy from that day"
-            ? t("nutrition.nothingToCopy")
-            : err.message,
-        );
-      });
+  const quickAdd = async (food) => {
+    if (await actions.quickAdd(food)) {
+      setQuickAddName("");
+      setShowQuickPicker(false);
+    }
   };
 
-  const addMeal = () => {
-    fetchJson("/api/nutrition/meals", {
-      method: "POST",
-      json: { name: mealName, nutritionDayId: day.id },
-    })
-      .then((data) => {
-        setDay((prev) => ({ ...prev, meals: [...(prev.meals || []), data] }));
-        setMealName("");
-      })
-      .catch(reportError);
-  };
-
-  const quickAddItem = (template) => {
-    const addItemToMeal = (mealId) =>
-      fetchJson(`/api/nutrition/meals/${mealId}/items`, {
-        method: "POST",
-        json: {
-          name: template.name,
-          kcal: template.kcal,
-          protein: template.protein,
-          carbs: template.carbs,
-          fat: template.fat,
-        },
-      });
-
-    const applyItemToState = (mealId, item) => {
-      setDay((prev) => ({
-        ...prev,
-        meals: prev.meals.map((currentMeal) =>
-          currentMeal.id === mealId
-            ? { ...currentMeal, items: [...(currentMeal.items || []), item] }
-            : currentMeal,
-        ),
-      }));
-    };
-
-    const existingMeal = day.meals?.find((meal) => meal.name === DEFAULT_MEAL_NAME);
-
-    const run = existingMeal
-      ? addItemToMeal(existingMeal.id).then((item) => applyItemToState(existingMeal.id, item))
-      : fetchJson("/api/nutrition/meals", {
-          method: "POST",
-          json: { name: DEFAULT_MEAL_NAME, nutritionDayId: day.id },
-        }).then((newMeal) => {
-          setDay((prev) => ({
-            ...prev,
-            meals: [...(prev.meals || []), { ...newMeal, items: [] }],
-          }));
-          return addItemToMeal(newMeal.id).then((item) => applyItemToState(newMeal.id, item));
-        });
-
-    run
-      .then(() => {
-        setQuickAddName("");
-        setShowQuickPicker(false);
-      })
-      .catch(reportError);
-  };
-
-  const saveFoodItemTemplate = (item) => {
-    fetchJson("/api/food-item-templates", {
-      method: "POST",
-      json: item,
-    })
-      .then((data) => {
+  const saveFoodItemTemplate = (food) => {
+    fetchJson("/api/food-item-templates", { method: "POST", json: food })
+      .then((saved) =>
         setFoodItemTemplates((prev) =>
-          [...prev, data].sort((templateA, templateB) =>
+          [...prev, saved].sort((templateA, templateB) =>
             templateA.name.localeCompare(templateB.name),
           ),
-        );
-      })
+        ),
+      )
       .catch(reportError);
   };
 
@@ -192,224 +115,159 @@ function Nutrition() {
     item.name.toLowerCase().includes(quickAddQuery),
   );
 
-  const allItems = day?.meals?.flatMap((meal) => meal.items || []) || [];
-  const totals = allItems.reduce(
-    (sum, item) => ({
-      kcal: sum.kcal + item.kcal,
-      protein: sum.protein + item.protein,
-      carbs: sum.carbs + item.carbs,
-      fat: sum.fat + item.fat,
-    }),
-    { kcal: 0, protein: 0, carbs: 0, fat: 0 },
-  );
+  const meals = day?.meals ?? [];
+  const totals = sumMacros(meals.flatMap((meal) => meal.items));
+  const kcalGoal = settings?.kcalGoal;
+  const kcal = (value) => formatNumber(value, language, { maxDecimals: 0 });
+  const grams = (value) => formatNumber(value, language, { maxDecimals: 1 });
 
   return (
     <div className={styles.page}>
-      <h1 className={styles.heading}>{t("nav.nutrition")}</h1>
+      <header className={styles.header}>
+        <DatePicker value={date} onChange={setDate} variant="text">
+          {formatWeekdayDate(date, language)}
+          <Icon name="chevronDown" size={16} />
+        </DatePicker>
+        <h1 className={styles.heading}>{t("nav.nutrition")}</h1>
+      </header>
 
-      <div className={styles.topRow}>
-        <input
-          type="date"
-          className={styles.dateInput}
-          value={date}
-          onChange={(event) => setDate(event.target.value)}
+      <section className={styles.summary}>
+        <div className={styles.summaryMain}>
+          <h2 className={styles.cardTitle}>{t("nutrition.dayTotal")}</h2>
+          <p className={styles.bigNumber}>
+            {kcal(totals.kcal)}
+            <span className={styles.bigUnit}>
+              {kcalGoal ? ` / ${kcal(kcalGoal)} kcal` : " kcal"}
+            </span>
+          </p>
+          <GoalBar value={totals.kcal} goal={kcalGoal} color="var(--color-accent)" />
+          <div className={styles.macroGrid}>
+            {MACROS.map(({ key, labelKey, goalKey }) => {
+              const goal = settings?.[goalKey];
+              return (
+                <div key={key} className={styles.macro}>
+                  <span className={styles.macroLabel}>
+                    <span
+                      className={styles.macroDot}
+                      style={{ background: `var(--color-${key})` }}
+                    />
+                    {t(labelKey)}
+                  </span>
+                  <span className={styles.macroValue}>
+                    {goal ? `${grams(totals[key])} / ${grams(goal)} g` : `${grams(totals[key])} g`}
+                  </span>
+                  <GoalBar value={totals[key]} goal={goal} color={`var(--color-${key})`} />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        <MacroDonut
+          className={styles.donut}
+          protein={totals.protein}
+          carbs={totals.carbs}
+          fat={totals.fat}
         />
+      </section>
+
+      {!isLoading && meals.length === 0 && (
+        <p className={styles.empty}>{t("nutrition.noEntries")}</p>
+      )}
+
+      <div className={styles.addRow}>
+        <div className={styles.quickAdd} ref={quickAddRef}>
+          <input
+            type="text"
+            className={styles.searchInput}
+            aria-label={t("nutrition.quickAddPlaceholder")}
+            placeholder={t("nutrition.quickAddPlaceholder")}
+            autoComplete="off"
+            value={quickAddName}
+            onChange={(event) => {
+              setQuickAddName(event.target.value);
+              setShowQuickPicker(true);
+            }}
+            onFocus={() => setShowQuickPicker(true)}
+            onKeyDown={(event) => {
+              if (event.key === "Escape") setShowQuickPicker(false);
+            }}
+          />
+          {showQuickPicker &&
+            (filteredQuickTemplates.length > 0 || filteredRecentItems.length > 0) && (
+              <div className={styles.picker}>
+                {filteredRecentItems.length > 0 && (
+                  <>
+                    <div className={styles.pickerSection}>{t("nutrition.recentItems")}</div>
+                    {filteredRecentItems.map((item) => (
+                      <button
+                        type="button"
+                        key={`recent-${item.name}`}
+                        className={styles.pickerOption}
+                        onClick={() => quickAdd(item)}
+                      >
+                        {item.name}
+                        <span className={styles.pickerKcal}>{`${kcal(item.kcal)} kcal`}</span>
+                      </button>
+                    ))}
+                  </>
+                )}
+                {filteredQuickTemplates.length > 0 && filteredRecentItems.length > 0 && (
+                  <div className={styles.pickerSection}>{t("nutrition.savedItems")}</div>
+                )}
+                {filteredQuickTemplates.map((template) => (
+                  <button
+                    type="button"
+                    key={template.id}
+                    className={styles.pickerOption}
+                    onClick={() => quickAdd(template)}
+                  >
+                    {template.name}
+                    <span className={styles.pickerKcal}>{`${kcal(template.kcal)} kcal`}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+        </div>
+        <form
+          className={styles.addMeal}
+          onSubmit={(event) => {
+            event.preventDefault();
+            addMeal();
+          }}
+        >
+          <input
+            type="text"
+            className={styles.mealInput}
+            aria-label={t("nutrition.mealNamePlaceholder")}
+            placeholder={t("nutrition.mealNamePlaceholder")}
+            autoComplete="off"
+            value={mealName}
+            onChange={(event) => setMealName(event.target.value)}
+          />
+          <button type="submit" className={styles.addMealButton} disabled={!mealName.trim()}>
+            {t("nutrition.addMeal")}
+          </button>
+        </form>
+        <button type="button" className={styles.secondaryButton} onClick={actions.copyPreviousDay}>
+          {t("nutrition.copyPreviousDay")}
+        </button>
       </div>
 
+      {meals.length > 0 && (
+        <div className={styles.mealList}>
+          {meals.map((meal) => (
+            <MealCard
+              key={meal.id}
+              meal={meal}
+              actions={actions}
+              foodItemTemplates={foodItemTemplates}
+              onSaveTemplate={saveFoodItemTemplate}
+            />
+          ))}
+        </div>
+      )}
+
       <TdeeCard today={today} />
-
-      {!day && (
-        <div className={styles.startRow}>
-          <button className={styles.startButton} onClick={createDay}>
-            {t("nutrition.addDay")}
-          </button>
-          <button className={styles.copyDayButton} onClick={copyPreviousDay}>
-            {t("nutrition.copyPreviousDay")}
-          </button>
-        </div>
-      )}
-
-      {day && (
-        <div>
-          <div className={styles.totalsCard}>
-            <div className={styles.totalsRow}>
-              <MacroDonut
-                className={styles.macroChartBlock}
-                protein={totals.protein}
-                carbs={totals.carbs}
-                fat={totals.fat}
-              />
-
-              <div className={styles.totalsGrid}>
-                <div className={styles.totalsStat}>
-                  <span className={styles.totalsLabel}>Kcal</span>
-                  <span className={`${styles.totalsValue} ${styles.totalsValueKcal}`}>
-                    {totals.kcal} / {settings?.kcalGoal ?? "—"}
-                  </span>
-                  <GoalBar
-                    value={totals.kcal}
-                    goal={settings?.kcalGoal}
-                    colorClass={styles.totalsBarFillKcal}
-                  />
-                </div>
-                <div className={styles.totalsStat}>
-                  <span className={styles.totalsLabel}>{t("nutrition.macroProtein")}</span>
-                  <span className={`${styles.totalsValue} ${styles.totalsValueProtein}`}>
-                    {totals.protein}g / {settings?.proteinGoal ?? "—"}g
-                  </span>
-                  <GoalBar
-                    value={totals.protein}
-                    goal={settings?.proteinGoal}
-                    colorClass={styles.totalsBarFillProtein}
-                  />
-                </div>
-                <div className={styles.totalsStat}>
-                  <span className={styles.totalsLabel}>{t("nutrition.macroCarbs")}</span>
-                  <span className={`${styles.totalsValue} ${styles.totalsValueCarbs}`}>
-                    {totals.carbs}g / {settings?.carbsGoal ?? "—"}g
-                  </span>
-                  <GoalBar
-                    value={totals.carbs}
-                    goal={settings?.carbsGoal}
-                    colorClass={styles.totalsBarFillCarbs}
-                  />
-                </div>
-                <div className={styles.totalsStat}>
-                  <span className={styles.totalsLabel}>{t("nutrition.macroFat")}</span>
-                  <span className={`${styles.totalsValue} ${styles.totalsValueFat}`}>
-                    {totals.fat}g / {settings?.fatGoal ?? "—"}g
-                  </span>
-                  <GoalBar
-                    value={totals.fat}
-                    goal={settings?.fatGoal}
-                    colorClass={styles.totalsBarFillFat}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className={styles.quickAddRow} style={{ position: "relative" }} ref={quickAddRef}>
-            <input
-              type="text"
-              className={styles.mealInput}
-              placeholder={t("nutrition.quickAddPlaceholder")}
-              value={quickAddName}
-              onChange={(event) => {
-                setQuickAddName(event.target.value);
-                setShowQuickPicker(true);
-              }}
-              onFocus={() => setShowQuickPicker(true)}
-            />
-            {showQuickPicker &&
-              (filteredQuickTemplates.length > 0 || filteredRecentItems.length > 0) && (
-                <div className={styles.quickAddPicker}>
-                  {filteredRecentItems.length > 0 && (
-                    <>
-                      <div className={styles.quickAddSection}>{t("nutrition.recentItems")}</div>
-                      {filteredRecentItems.map((item) => (
-                        <button
-                          key={`recent-${item.name}`}
-                          className={styles.quickAddOption}
-                          onClick={() => quickAddItem(item)}
-                        >
-                          {item.name}
-                          <span className={styles.quickAddMacros}>{item.kcal} kcal</span>
-                        </button>
-                      ))}
-                    </>
-                  )}
-                  {filteredQuickTemplates.length > 0 && filteredRecentItems.length > 0 && (
-                    <div className={styles.quickAddSection}>{t("nutrition.savedItems")}</div>
-                  )}
-                  {filteredQuickTemplates.map((template) => (
-                    <button
-                      key={template.id}
-                      className={styles.quickAddOption}
-                      onClick={() => quickAddItem(template)}
-                    >
-                      {template.name}
-                      <span className={styles.quickAddMacros}>{template.kcal} kcal</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-          </div>
-
-          <div className={styles.addMealRow}>
-            <input
-              type="text"
-              className={styles.mealInput}
-              placeholder={t("nutrition.mealNamePlaceholder")}
-              value={mealName}
-              onChange={(event) => setMealName(event.target.value)}
-            />
-            <button className={styles.addMealButton} onClick={addMeal}>
-              {t("nutrition.addMeal")}
-            </button>
-            <button className={styles.copyDayButton} onClick={copyPreviousDay}>
-              {t("nutrition.copyPreviousDay")}
-            </button>
-          </div>
-
-          <div className={styles.mealList}>
-            {day.meals?.map((meal) => (
-              <MealCard
-                key={meal.id}
-                meal={meal}
-                foodItemTemplates={foodItemTemplates}
-                onSaveTemplate={saveFoodItemTemplate}
-                onAddItem={(data) =>
-                  setDay((prev) => ({
-                    ...prev,
-                    meals: prev.meals.map((currentMeal) =>
-                      currentMeal.id === meal.id
-                        ? { ...currentMeal, items: [...(currentMeal.items || []), data] }
-                        : currentMeal,
-                    ),
-                  }))
-                }
-                onUpdateItem={(updatedItem) =>
-                  setDay((prev) => ({
-                    ...prev,
-                    meals: prev.meals.map((currentMeal) =>
-                      currentMeal.id === meal.id
-                        ? {
-                            ...currentMeal,
-                            items: currentMeal.items.map((currentItem) =>
-                              currentItem.id === updatedItem.id ? updatedItem : currentItem,
-                            ),
-                          }
-                        : currentMeal,
-                    ),
-                  }))
-                }
-                onDeleteItem={(itemId) =>
-                  setDay((prev) => ({
-                    ...prev,
-                    meals: prev.meals.map((currentMeal) =>
-                      currentMeal.id === meal.id
-                        ? {
-                            ...currentMeal,
-                            items: currentMeal.items.filter(
-                              (currentItem) => currentItem.id !== itemId,
-                            ),
-                          }
-                        : currentMeal,
-                    ),
-                  }))
-                }
-                onDeleteMeal={(mealId) =>
-                  setDay((prev) => ({
-                    ...prev,
-                    meals: prev.meals.filter((currentMeal) => currentMeal.id !== mealId),
-                  }))
-                }
-              />
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

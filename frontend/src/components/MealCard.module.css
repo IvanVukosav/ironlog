@@ -1,151 +1,200 @@
 .card {
   composes: card from "../styles/shared.module.css";
-  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
+
+/* Header: the meal, its kcal, its options. */
 
 .cardHeader {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.75rem;
+  gap: 8px;
+  margin: -8px -8px -4px 0;
 }
 
 .heading {
-  font-size: 1rem;
-  font-weight: var(--heading-weight);
+  flex: 1;
+  min-width: 0;
   color: var(--color-text);
-  letter-spacing: 0.03em;
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  font-weight: var(--heading-weight);
+  overflow-wrap: anywhere;
+}
+
+.mealKcal {
+  flex-shrink: 0;
+  color: var(--color-text-dim);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
 .menuWrapper {
   position: relative;
+  flex-shrink: 0;
 }
 
 .menuButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
   background: transparent;
   border: none;
+  border-radius: 12px;
   color: var(--color-text-dim);
-  font-size: 1.1rem;
-  line-height: 1;
   cursor: pointer;
-  padding: 0 4px;
 }
 
-.menuButton:hover {
-  color: var(--color-accent);
+.menuButton:hover,
+.menuButton[aria-expanded="true"] {
+  background: var(--color-bg-hover);
+  color: var(--color-text);
 }
 
 .menuDropdown {
   composes: dropdown from "../styles/shared.module.css";
   position: absolute;
-  top: 100%;
+  top: calc(100% + 4px);
   right: 0;
   z-index: 20;
-  min-width: 160px;
+  min-width: 180px;
+  padding: 4px 0;
   overflow: hidden;
 }
 
 .menuItem {
-  display: block;
-  width: 100%;
-  background: transparent;
+  composes: dropdownItem from "../styles/shared.module.css";
+}
+
+/* Logged foods: a row each, a click edits it. */
+
+.itemList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--row-gap);
+}
+
+.itemRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 0 2px 0 12px;
+  background: var(--row-bg);
+  border-radius: var(--row-radius);
+  border-bottom: var(--row-divider);
+}
+
+.itemRow:last-child {
+  border-bottom: none;
+}
+
+.itemText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 0;
+  background: none;
   border: none;
   color: var(--color-text);
   font-family: var(--font-body);
-  font-size: 0.8rem;
-  padding: 10px 14px;
   text-align: left;
   cursor: pointer;
 }
 
-.menuItem:hover {
-  background-color: var(--color-bg-card);
+.itemName {
+  overflow: hidden;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.itemText:hover .itemName {
   color: var(--color-accent);
 }
 
-.itemInputRow {
+.itemDetail {
+  color: var(--color-text-dim);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.iconButton {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
-  flex-wrap: wrap;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  color: var(--color-text-dim);
+  cursor: pointer;
 }
 
-.itemInput {
-  composes: input from "../styles/shared.module.css";
-  width: 80px;
+.iconButton:hover {
+  color: var(--color-accent);
 }
 
-.itemInput::placeholder {
-  color: var(--color-text-placeholder);
+.itemEditing {
+  padding: 10px;
+  background: var(--row-bg);
+  border-radius: var(--row-radius);
+  border-bottom: var(--row-divider);
 }
 
-.itemNameInput {
-  composes: input from "../styles/shared.module.css";
-  width: 160px;
+.editActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
-.itemNameInput::placeholder {
-  color: var(--color-text-placeholder);
-}
-
-.addItemButton {
+.saveButton {
   composes: button from "../styles/shared.module.css";
 }
 
-.itemPicker {
-  composes: dropdown from "../styles/shared.module.css";
-  position: absolute;
-  top: 100%;
-  left: 0;
-  z-index: 20;
-  min-width: 220px;
-  max-height: 220px;
-  overflow-y: auto;
-}
-
-.itemPickerOption {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  gap: 0.5rem;
+.cancelButton {
+  padding: 8px 4px;
   background: transparent;
   border: none;
-  color: var(--color-text);
+  color: var(--color-text-dim);
   font-family: var(--font-body);
   font-size: 0.85rem;
-  padding: 10px 14px;
-  text-align: left;
   cursor: pointer;
 }
 
-.itemPickerOption:hover {
-  background-color: var(--color-bg-card);
+.cancelButton:hover {
   color: var(--color-accent);
 }
 
-.itemPickerMacros {
-  color: var(--color-text-dim);
-  font-size: 0.7rem;
-}
+/* After a new food: keep it for next time? */
 
 .savePrompt {
-  border-radius: var(--card-radius);
-  background-color: var(--color-bg);
-  border-left: 3px solid var(--color-accent);
-  padding: 10px 14px;
-  margin-bottom: 0.75rem;
   display: flex;
   align-items: center;
-  gap: 1rem;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  padding: 10px 12px;
+  background: var(--row-bg);
+  border-radius: var(--row-radius);
   font-family: var(--font-body);
-  font-size: 0.8rem;
+  font-size: 0.85rem;
 }
 
 .savePromptText {
+  flex: 1 1 12rem;
   color: var(--color-text);
-  flex: 1;
 }
 
 .savePromptYes {
@@ -153,97 +202,131 @@
   font-size: 0.8rem;
 }
 
-.itemList {
-  margin-top: 0.25rem;
-}
-
-.itemRow {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 6px 0;
-  border-bottom: 1px solid var(--color-border-subtle);
-  font-size: 0.85rem;
-  color: var(--color-text-dim);
-}
-
-.itemRow:last-child {
-  border-bottom: none;
-}
-
-.itemRowCells {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex: 1;
-  min-width: 0;
-  cursor: pointer;
-}
-
-.itemRowCells:hover {
-  color: var(--color-text);
-}
-
-.itemCellName {
-  width: 160px;
-  flex-shrink: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.itemCell {
-  width: 80px;
-  flex-shrink: 0;
-}
-
-.deleteItem {
-  background: none;
+.savePromptNo {
+  padding: 6px 4px;
+  background: transparent;
   border: none;
   color: var(--color-text-dim);
   font-family: var(--font-body);
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   cursor: pointer;
-  padding: 0;
-  line-height: 1;
-  flex-shrink: 0;
 }
 
-.deleteItem:hover {
-  color: var(--color-accent);
+/* A food's fields: its name (which searches the saved ones), then kcal and grams. */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-.itemRowEditing {
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.nameField {
+  position: relative;
+}
+
+.fieldLabel {
+  color: var(--color-text-dim);
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fieldInput {
+  composes: input from "../styles/shared.module.css";
+  width: 100%;
+  height: 44px;
+  padding-top: 0;
+  padding-bottom: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.fieldInput::placeholder {
+  color: var(--color-text-placeholder);
+}
+
+.nameInput {
+  font-weight: 600;
+}
+
+.macroFields {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.macroFields .fieldInput {
+  font-weight: 700;
+  text-align: center;
+}
+
+@media (max-width: 480px) {
+  .macroFields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.picker {
+  composes: dropdown from "../styles/shared.module.css";
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  margin-top: 4px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.pickerOption {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.5rem;
-  flex-wrap: wrap;
-  padding: 6px 0;
-  border-bottom: 1px solid var(--color-border-subtle);
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 14px;
+  background: transparent;
+  border: none;
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  text-align: left;
+  cursor: pointer;
 }
 
-.itemRowEditing:last-child {
-  border-bottom: none;
-}
-
-.saveItemButton {
-  composes: button from "../styles/shared.module.css";
-  font-size: 0.8rem;
-}
-
-.cancelItemButton:hover {
+.pickerOption:hover {
+  background: var(--color-bg-hover);
   color: var(--color-accent);
 }
 
-@media (max-width: 640px) {
-  .itemCellName {
-    flex: 1 1 0;
-    width: auto;
-    min-width: 0;
-  }
+.pickerKcal {
+  flex-shrink: 0;
+  color: var(--color-text-dim);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
 
-  .itemCell {
-    width: auto;
-    min-width: 2.5rem;
-  }
+.addButton {
+  composes: button from "../styles/shared.module.css";
+  width: 100%;
+  min-height: 44px;
+}
+
+/* As on Trening: until a food has its name and kcal, the button steps back. */
+.addButton:disabled {
+  background: var(--input-bg);
+  color: var(--color-text-placeholder);
+  border: var(--input-border);
+  box-shadow: none;
+  opacity: 1;
 }

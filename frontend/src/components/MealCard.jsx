@@ -1,38 +1,71 @@
-import { useState, useRef, useEffect } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { fetchJson } from "../api";
-import { useReportError } from "../hooks/useReportError";
+import { formatNumber } from "../utils/numbers";
+import { sumMacros } from "../utils/nutritionState";
+import Icon from "./Icon";
 import styles from "./MealCard.module.css";
 
-const EMPTY_FOOD_ITEM = { name: "", kcal: "", protein: "", carbs: "", fat: "" };
+// The forms hold what was typed, so their fields are strings.
+const EMPTY_FOOD = { name: "", kcal: "", protein: "", carbs: "", fat: "" };
+const MACRO_FIELDS = [
+  { key: "kcal", labelKey: "nutrition.kcalLabel" },
+  { key: "protein", labelKey: "nutrition.proteinLabel" },
+  { key: "carbs", labelKey: "nutrition.carbsLabel" },
+  { key: "fat", labelKey: "nutrition.fatLabel" },
+];
 
-function foodItemToFormValues(item) {
+function formFromFood(food) {
   return {
-    name: item.name,
-    kcal: String(item.kcal),
-    protein: String(item.protein),
-    carbs: String(item.carbs),
-    fat: String(item.fat),
+    name: food.name,
+    kcal: String(food.kcal),
+    protein: String(food.protein),
+    carbs: String(food.carbs),
+    fat: String(food.fat),
   };
 }
 
-function MealCard({
-  meal,
-  foodItemTemplates,
-  onAddItem,
-  onUpdateItem,
-  onDeleteItem,
-  onDeleteMeal,
-  onSaveTemplate,
-}) {
+// A name and its kcal are enough; grams left empty count as 0.
+const isComplete = (form) => form.name.trim() !== "" && form.kcal.trim() !== "";
+const isSameName = (nameA, nameB) => nameA.trim().toLowerCase() === nameB.trim().toLowerCase();
+
+// Kcal and the three macros, each under its label.
+function MacroFields({ values, onChange }) {
   const { t } = useTranslation();
-  const reportError = useReportError();
-  const [foodItem, setFoodItem] = useState(EMPTY_FOOD_ITEM);
+  const id = useId();
+  return (
+    <div className={styles.macroFields}>
+      {MACRO_FIELDS.map(({ key, labelKey }) => (
+        <div key={key} className={styles.field} data-field={key}>
+          <label className={styles.fieldLabel} htmlFor={`${id}${key}`}>
+            {t(labelKey)}
+          </label>
+          <input
+            id={`${id}${key}`}
+            className={styles.fieldInput}
+            inputMode="decimal"
+            autoComplete="off"
+            value={values[key]}
+            onChange={(event) => onChange({ ...values, [key]: event.target.value })}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// `actions` are the day's own (useNutritionDay): they save a change and resolve to what was
+// saved, or to null when saving failed and the failure has already been reported.
+function MealCard({ meal, actions, foodItemTemplates, onSaveTemplate }) {
+  const { t, i18n } = useTranslation();
+  const language = i18n.language;
+  const nameId = useId();
+  const [food, setFood] = useState(EMPTY_FOOD);
+  const [isAdding, setIsAdding] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
-  const [savePromptItem, setSavePromptItem] = useState(null);
+  const [savePromptFood, setSavePromptFood] = useState(null);
   const [showMenu, setShowMenu] = useState(false);
   const [editingItemId, setEditingItemId] = useState(null);
-  const [editItem, setEditItem] = useState(EMPTY_FOOD_ITEM);
+  const [editFood, setEditFood] = useState(EMPTY_FOOD);
   const pickerRef = useRef(null);
   const menuRef = useRef(null);
 
@@ -58,83 +91,56 @@ function MealCard({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showMenu]);
 
-  const filteredTemplates = foodItem.name.trim()
-    ? foodItemTemplates.filter((template) =>
-        template.name.toLowerCase().includes(foodItem.name.trim().toLowerCase()),
-      )
+  const query = food.name.trim().toLowerCase();
+  const filteredTemplates = query
+    ? foodItemTemplates.filter((template) => template.name.toLowerCase().includes(query))
     : foodItemTemplates;
 
-  const selectTemplate = (template) => {
-    setFoodItem(foodItemToFormValues(template));
+  const addFood = async () => {
+    setIsAdding(true);
+    const isKnown = foodItemTemplates.some((template) => isSameName(template.name, food.name));
+    const saved = await actions.addItem(meal.id, food);
+    setIsAdding(false);
+    if (!saved) return;
+    setFood(EMPTY_FOOD);
     setShowPicker(false);
-  };
-
-  const addItem = () => {
-    if (!foodItem.name.trim()) return;
-
-    const isKnown = foodItemTemplates.some(
-      (template) => template.name.toLowerCase() === foodItem.name.trim().toLowerCase(),
-    );
-
-    fetchJson(`/api/nutrition/meals/${meal.id}/items`, {
-      method: "POST",
-      json: foodItem,
-    })
-      .then((data) => {
-        onAddItem(data);
-        if (!isKnown) {
-          setSavePromptItem({ ...foodItem, name: foodItem.name.trim() });
-        }
-        setFoodItem(EMPTY_FOOD_ITEM);
-        setShowPicker(false);
-      })
-      .catch(reportError);
-  };
-
-  const deleteItem = (itemId) => {
-    fetchJson(`/api/nutrition/items/${itemId}`, { method: "DELETE" })
-      .then(() => onDeleteItem(itemId))
-      .catch(reportError);
+    // Offered with what was saved, so grams left empty are saved as the 0 they became.
+    if (!isKnown) setSavePromptFood(saved);
   };
 
   const deleteMeal = () => {
     setShowMenu(false);
-    if (!window.confirm(t("nutrition.confirmDeleteMeal", { name: meal.name }))) {
-      return;
+    if (window.confirm(t("nutrition.confirmDeleteMeal", { name: meal.name }))) {
+      actions.deleteMeal(meal.id);
     }
-    fetchJson(`/api/nutrition/meals/${meal.id}`, { method: "DELETE" })
-      .then(() => onDeleteMeal(meal.id))
-      .catch(reportError);
   };
 
-  const startEditingItem = (item) => {
-    setEditingItemId(item.id);
-    setEditItem(foodItemToFormValues(item));
+  const saveEditing = async (itemId) => {
+    if (await actions.updateItem(itemId, editFood)) setEditingItemId(null);
   };
 
-  const saveEditingItem = (itemId) => {
-    fetchJson(`/api/nutrition/items/${itemId}`, {
-      method: "PATCH",
-      json: editItem,
-    })
-      .then((data) => {
-        onUpdateItem(data);
-        setEditingItemId(null);
-      })
-      .catch(reportError);
-  };
+  const kcal = (value) => formatNumber(value, language, { maxDecimals: 0 });
+  const grams = (value) => formatNumber(value, language, { maxDecimals: 1 });
+  const total = sumMacros(meal.items);
 
   return (
-    <div className={styles.card}>
+    <section className={styles.card}>
       <div className={styles.cardHeader}>
-        <h3 className={styles.heading}>{meal.name}</h3>
+        <h2 className={styles.heading}>{meal.name}</h2>
+        <span className={styles.mealKcal}>{`${kcal(total.kcal)} kcal`}</span>
         <div className={styles.menuWrapper} ref={menuRef}>
-          <button className={styles.menuButton} onClick={() => setShowMenu((prev) => !prev)}>
-            ⋮
+          <button
+            type="button"
+            className={styles.menuButton}
+            aria-label={t("nutrition.mealOptions", { name: meal.name })}
+            aria-expanded={showMenu}
+            onClick={() => setShowMenu((prev) => !prev)}
+          >
+            <Icon name="more" />
           </button>
           {showMenu && (
             <div className={styles.menuDropdown}>
-              <button className={styles.menuItem} onClick={deleteMeal}>
+              <button type="button" className={styles.menuItem} onClick={deleteMeal}>
                 {t("nutrition.deleteMeal")}
               </button>
             </div>
@@ -142,148 +148,167 @@ function MealCard({
         </div>
       </div>
 
-      <div className={styles.itemInputRow} style={{ position: "relative" }} ref={pickerRef}>
-        <input
-          type="text"
-          className={styles.itemNameInput}
-          placeholder={t("nutrition.foodNamePlaceholder")}
-          value={foodItem.name}
-          onChange={(event) => {
-            setFoodItem((prev) => ({ ...prev, name: event.target.value }));
-            setShowPicker(true);
-          }}
-          onFocus={() => setShowPicker(true)}
-        />
-        <input
-          type="number"
-          className={styles.itemInput}
-          placeholder={t("nutrition.kcalPlaceholder")}
-          value={foodItem.kcal}
-          onChange={(event) => setFoodItem((prev) => ({ ...prev, kcal: event.target.value }))}
-        />
-        <input
-          type="number"
-          className={styles.itemInput}
-          placeholder={t("nutrition.macroProtein")}
-          value={foodItem.protein}
-          onChange={(event) => setFoodItem((prev) => ({ ...prev, protein: event.target.value }))}
-        />
-        <input
-          type="number"
-          className={styles.itemInput}
-          placeholder={t("nutrition.macroCarbs")}
-          value={foodItem.carbs}
-          onChange={(event) => setFoodItem((prev) => ({ ...prev, carbs: event.target.value }))}
-        />
-        <input
-          type="number"
-          className={styles.itemInput}
-          placeholder={t("nutrition.macroFat")}
-          value={foodItem.fat}
-          onChange={(event) => setFoodItem((prev) => ({ ...prev, fat: event.target.value }))}
-        />
-        <button className={styles.addItemButton} onClick={addItem}>
-          {t("nutrition.addItem")}
-        </button>
+      {meal.items.length > 0 && (
+        <ul className={styles.itemList}>
+          {meal.items.map((item) =>
+            editingItemId === item.id ? (
+              <li key={item.id} className={styles.itemEditing}>
+                <form
+                  className={styles.form}
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    if (isComplete(editFood)) saveEditing(item.id);
+                  }}
+                >
+                  <div className={styles.field} data-field="name">
+                    <label className={styles.fieldLabel} htmlFor={`${nameId}edit`}>
+                      {t("nutrition.foodLabel")}
+                    </label>
+                    <input
+                      id={`${nameId}edit`}
+                      className={`${styles.fieldInput} ${styles.nameInput}`}
+                      autoComplete="off"
+                      value={editFood.name}
+                      onChange={(event) => setEditFood({ ...editFood, name: event.target.value })}
+                    />
+                  </div>
+                  <MacroFields values={editFood} onChange={setEditFood} />
+                  <div className={styles.editActions}>
+                    <button
+                      type="submit"
+                      className={styles.saveButton}
+                      disabled={!isComplete(editFood)}
+                    >
+                      {t("common.save")}
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.cancelButton}
+                      onClick={() => setEditingItemId(null)}
+                    >
+                      {t("common.cancel")}
+                    </button>
+                  </div>
+                </form>
+              </li>
+            ) : (
+              <li key={item.id} className={styles.itemRow}>
+                <button
+                  type="button"
+                  className={styles.itemText}
+                  title={t("nutrition.editItem")}
+                  onClick={() => {
+                    setEditingItemId(item.id);
+                    setEditFood(formFromFood(item));
+                  }}
+                >
+                  <span className={styles.itemName}>{item.name}</span>
+                  <span className={styles.itemDetail}>
+                    {t("nutrition.itemDetail", {
+                      kcal: kcal(item.kcal),
+                      protein: grams(item.protein),
+                      carbs: grams(item.carbs),
+                      fat: grams(item.fat),
+                    })}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  className={styles.iconButton}
+                  aria-label={t("nutrition.deleteItem")}
+                  title={t("nutrition.deleteItem")}
+                  onClick={() => actions.deleteItem(item.id)}
+                >
+                  <Icon name="close" size={16} />
+                </button>
+              </li>
+            ),
+          )}
+        </ul>
+      )}
 
-        {showPicker && filteredTemplates.length > 0 && (
-          <div className={styles.itemPicker}>
-            {filteredTemplates.map((template) => (
-              <button
-                key={template.id}
-                className={styles.itemPickerOption}
-                onClick={() => selectTemplate(template)}
-              >
-                {template.name}
-                <span className={styles.itemPickerMacros}>{template.kcal} kcal</span>
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {savePromptItem && (
+      {savePromptFood && (
         <div className={styles.savePrompt}>
           <span className={styles.savePromptText}>
-            {t("nutrition.saveAsFoodPrompt", { name: savePromptItem.name })}
+            {t("nutrition.saveAsFoodPrompt", { name: savePromptFood.name })}
           </span>
           <button
+            type="button"
             className={styles.savePromptYes}
             onClick={() => {
-              onSaveTemplate(savePromptItem);
-              setSavePromptItem(null);
+              const { name, kcal: foodKcal, protein, carbs, fat } = savePromptFood;
+              onSaveTemplate({ name, kcal: foodKcal, protein, carbs, fat });
+              setSavePromptFood(null);
             }}
           >
             {t("common.yes")}
           </button>
-          <button className={styles.savePromptNo} onClick={() => setSavePromptItem(null)}>
+          <button
+            type="button"
+            className={styles.savePromptNo}
+            onClick={() => setSavePromptFood(null)}
+          >
             {t("common.no")}
           </button>
         </div>
       )}
 
-      <div className={styles.itemList}>
-        {meal.items?.map((item) =>
-          editingItemId === item.id ? (
-            <div key={item.id} className={styles.itemRowEditing}>
-              <input
-                type="text"
-                className={styles.itemNameInput}
-                value={editItem.name}
-                onChange={(event) => setEditItem((prev) => ({ ...prev, name: event.target.value }))}
-              />
-              <input
-                type="number"
-                className={styles.itemInput}
-                value={editItem.kcal}
-                onChange={(event) => setEditItem((prev) => ({ ...prev, kcal: event.target.value }))}
-              />
-              <input
-                type="number"
-                className={styles.itemInput}
-                value={editItem.protein}
-                onChange={(event) =>
-                  setEditItem((prev) => ({ ...prev, protein: event.target.value }))
-                }
-              />
-              <input
-                type="number"
-                className={styles.itemInput}
-                value={editItem.carbs}
-                onChange={(event) =>
-                  setEditItem((prev) => ({ ...prev, carbs: event.target.value }))
-                }
-              />
-              <input
-                type="number"
-                className={styles.itemInput}
-                value={editItem.fat}
-                onChange={(event) => setEditItem((prev) => ({ ...prev, fat: event.target.value }))}
-              />
-              <button className={styles.saveItemButton} onClick={() => saveEditingItem(item.id)}>
-                {t("common.save")}
-              </button>
-              <button className={styles.cancelItemButton} onClick={() => setEditingItemId(null)}>
-                {t("common.cancel")}
-              </button>
+      <form
+        className={styles.form}
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (isComplete(food) && !isAdding) addFood();
+        }}
+      >
+        <div className={`${styles.field} ${styles.nameField}`} data-field="name" ref={pickerRef}>
+          <label className={styles.fieldLabel} htmlFor={`${nameId}add`}>
+            {t("nutrition.foodLabel")}
+          </label>
+          <input
+            id={`${nameId}add`}
+            className={`${styles.fieldInput} ${styles.nameInput}`}
+            placeholder={t("nutrition.foodNamePlaceholder")}
+            autoComplete="off"
+            value={food.name}
+            onChange={(event) => {
+              setFood({ ...food, name: event.target.value });
+              setShowPicker(true);
+            }}
+            onFocus={() => setShowPicker(true)}
+            onKeyDown={(event) => {
+              if (event.key === "Escape") setShowPicker(false);
+            }}
+          />
+          {showPicker && filteredTemplates.length > 0 && (
+            <div className={styles.picker}>
+              {filteredTemplates.map((template) => (
+                <button
+                  type="button"
+                  key={template.id}
+                  className={styles.pickerOption}
+                  onClick={() => {
+                    setFood(formFromFood(template));
+                    setShowPicker(false);
+                  }}
+                >
+                  {template.name}
+                  <span className={styles.pickerKcal}>{`${kcal(template.kcal)} kcal`}</span>
+                </button>
+              ))}
             </div>
-          ) : (
-            <div key={item.id} className={styles.itemRow}>
-              <div className={styles.itemRowCells} onClick={() => startEditingItem(item)}>
-                <span className={styles.itemCellName}>{item.name}</span>
-                <span className={styles.itemCell}>{item.kcal} kcal</span>
-                <span className={styles.itemCell}>{item.protein}p</span>
-                <span className={styles.itemCell}>{item.carbs}c</span>
-                <span className={styles.itemCell}>{item.fat}f</span>
-              </div>
-              <button className={styles.deleteItem} onClick={() => deleteItem(item.id)}>
-                X
-              </button>
-            </div>
-          ),
-        )}
-      </div>
-    </div>
+          )}
+        </div>
+        <MacroFields values={food} onChange={setFood} />
+        <button
+          type="submit"
+          data-action="add-food"
+          className={styles.addButton}
+          disabled={!isComplete(food) || isAdding}
+        >
+          {t("nutrition.addItem")}
+        </button>
+      </form>
+    </section>
   );
 }
 
