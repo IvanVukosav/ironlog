@@ -128,7 +128,8 @@ async function findNextDay(programId) {
 }
 
 // The program being followed (the one of the most recent workout trained from a program) and
-// its next day, for Početna; null when no workout was trained from a program that still exists.
+// its next day, for Početna. Before anything was trained from a program, the only program there
+// is starts at week 1 day 1; with none, or several to choose from, the answer is null.
 router.get("/next", async (req, res) => {
   const lastWorkout = await prisma.workout.findFirst({
     where: { programId: { not: null }, ...TRAINED_WORKOUT },
@@ -136,7 +137,12 @@ router.get("/next", async (req, res) => {
     select: { programId: true },
   });
   const next = lastWorkout ? await findNextDay(lastWorkout.programId) : null;
-  res.json(next ? { programId: lastWorkout.programId, ...next } : null);
+  if (next) return res.json({ programId: lastWorkout.programId, ...next });
+
+  const programs = await prisma.program.findMany({ select: { id: true }, take: 2 });
+  res.json(
+    programs.length === 1 ? { programId: programs[0].id, week: 1, day: 1, finished: false } : null,
+  );
 });
 
 router.get("/:id/next", async (req, res) => {

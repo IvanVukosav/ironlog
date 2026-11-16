@@ -5,6 +5,7 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "rec
 import { fetchJson } from "../api";
 import { useReportError } from "../hooks/useReportError";
 import { useDayLabel } from "../hooks/useDayLabel";
+import { useNextProgramDay } from "../hooks/useNextProgramDay";
 import { useSettings } from "../context/useSettings";
 import { AXIS_TICK, CHART_COLORS, TOOLTIP_STYLE } from "../utils/chartTheme";
 import { DEFAULT_E1RM_FORMULA, findBestSetByE1rm } from "../utils/oneRepMax";
@@ -128,6 +129,8 @@ function Dashboard() {
   const today = todayKey();
   const formula = settings?.e1rmFormula ?? DEFAULT_E1RM_FORMULA;
   const logLink = (dateKey) => `/log?date=${dateKey}`;
+  // Asked for only once today turns out to have no workout yet.
+  const nextDay = useNextProgramDay(formula, workout === null);
 
   useEffect(() => {
     fetchJson(`/api/workouts?date=${today}`)
@@ -162,6 +165,34 @@ function Dashboard() {
       });
   };
 
+  // The program's next day as today's workout: named after the day, its sets a plan to tick off.
+  const startProgramDay = async () => {
+    setIsStarting(true);
+    let created = null;
+    try {
+      created = await fetchJson("/api/workouts", {
+        method: "POST",
+        json: { date: today, name: nextDay.dayName || null },
+      });
+      await fetchJson(`/api/workouts/${created.id}/exercises/bulk`, {
+        method: "POST",
+        json: {
+          program: { id: nextDay.program.id, week: nextDay.week, day: nextDay.day },
+          exercises: nextDay.exercises.map(({ name, sets }) => ({
+            name,
+            sets: sets.map((set) => ({ ...set, isDone: false })),
+          })),
+        },
+      });
+      navigate(logLink(today));
+    } catch (err) {
+      setIsStarting(false);
+      // A workout made before the plan failed to load is still today's: offer it, not a second.
+      if (created) setWorkout(created);
+      reportError(err);
+    }
+  };
+
   const saveKcalGoal = () => {
     const parsed = parseInt(kcalGoalInput);
     if (!kcalGoalInput || isNaN(parsed) || parsed <= 0) {
@@ -180,11 +211,11 @@ function Dashboard() {
       .catch(reportError);
   };
 
-  // Today's workout.
+  // Today's workout: what has been done of it (a plan not yet ticked off is not counted).
   const workoutExercises = workout?.exercises ?? [];
   const workingSets = workoutExercises
     .flatMap((exercise) => exercise.sets ?? [])
-    .filter((set) => !set.isWarmup);
+    .filter((set) => set.isDone && !set.isWarmup);
   const workoutVolume = workingSets.reduce((sum, set) => sum + set.weight * set.reps, 0);
   const workoutMeta = [
     t("dashboard.exerciseCount", { count: workoutExercises.length }),
@@ -250,17 +281,22 @@ function Dashboard() {
                 {workoutExercises.length > 0 && (
                   <ul className={styles.exerciseList}>
                     {workoutExercises.slice(0, VISIBLE_EXERCISES).map((exercise) => {
-                      const sets = exercise.sets ?? [];
+                      const sets = (exercise.sets ?? []).filter((set) => set.isDone);
                       const working = sets.filter((set) => !set.isWarmup);
+                      const planned = (exercise.sets ?? []).filter(
+                        (set) => !set.isDone && !set.isWarmup,
+                      ).length;
                       const top = topSet(sets, formula);
+                      let detail = t("dashboard.noSetsLogged");
+                      if (top) {
+                        detail = `${t("dashboard.setCount", { count: working.length })} · ${formatSet(top, language)}`;
+                      } else if (planned > 0) {
+                        detail = t("dashboard.plannedSets", { count: planned });
+                      }
                       return (
                         <li key={exercise.id} className={styles.exerciseRow}>
                           <span className={styles.exerciseName}>{exercise.name}</span>
-                          <span className={styles.exerciseDetail}>
-                            {top
-                              ? `${t("dashboard.setCount", { count: working.length })} · ${formatSet(top, language)}`
-                              : t("dashboard.noSetsLogged")}
-                          </span>
+                          <span className={styles.exerciseDetail}>{detail}</span>
                         </li>
                       );
                     })}
@@ -278,7 +314,64 @@ function Dashboard() {
                 </Link>
               </>
             )}
-            {workout === null && (
+            {workout === null && nextDay && (
+              <>
+                <div className={styles.todayHeading}>
+                  <span className={styles.programChip}>{t("dashboard.nextInProgram")}</span>
+                  <p className={styles.todayName}>
+                    {nextDay.dayName || t("programs.dayNumber", { number: nextDay.day })}
+                  </p>
+                  <p className={styles.dim}>
+                    {t("dashboard.programPosition", {
+                      name: nextDay.program.name,
+                      week: nextDay.week,
+                      day: nextDay.day,
+                    })}
+                  </p>
+                </div>
+                {nextDay.exercises.length > 0 && (
+                  <ul className={styles.exerciseList}>
+                    {nextDay.exercises.slice(0, VISIBLE_EXERCISES).map((exercise) => (
+                      <li key={exercise.name} className={styles.exerciseRow}>
+                        <span className={styles.exerciseName}>{exercise.name}</span>
+                        <span className={styles.exerciseDetail}>
+                          {exercise.sets[0].weight > 0
+                            ? `${t("dashboard.setCount", { count: exercise.sets.length })} · ${formatSet(exercise.sets[0], language)}`
+                            : t("dashboard.setCount", { count: exercise.sets.length })}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {nextDay.exercises.length > VISIBLE_EXERCISES && (
+                  <p className={styles.dim}>
+                    {t("dashboard.moreExercises", {
+                      count: nextDay.exercises.length - VISIBLE_EXERCISES,
+                    })}
+                  </p>
+                )}
+                <div className={styles.startButtons}>
+                  <button
+                    type="button"
+                    className={styles.startProgramButton}
+                    disabled={isStarting}
+                    onClick={startProgramDay}
+                  >
+                    {t("dashboard.startProgramDay")}
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.startOwnButton}
+                    disabled={isStarting}
+                    onClick={startWorkout}
+                  >
+                    <Icon name="pencil" size={18} />
+                    {t("dashboard.startOwnWorkout")}
+                  </button>
+                </div>
+              </>
+            )}
+            {workout === null && nextDay === null && (
               <>
                 <p className={styles.dim}>{t("dashboard.noWorkoutToday")}</p>
                 <button

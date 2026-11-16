@@ -192,6 +192,50 @@
   padding-right: 20px;
 }
 
+/* "Next in your program", over the day's name. */
+.programChip {
+  align-self: flex-start;
+  margin-bottom: 4px;
+  padding: 3px 10px;
+  border-radius: var(--badge-radius);
+  background: rgba(var(--color-accent-rgb), 0.12);
+  color: var(--color-accent);
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* The program's day first, a workout of one's own beside it (under it on a phone). */
+.startButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.startProgramButton {
+  composes: button from "../styles/shared.module.css";
+  min-height: 48px;
+  padding-left: 24px;
+  padding-right: 24px;
+}
+
+.startOwnButton {
+  composes: button buttonSecondary from "../styles/shared.module.css";
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+@media (max-width: 640px) {
+  .startButtons {
+    flex-direction: column;
+  }
+}
+
 /* A link that looks like the main button; its colour has to beat the page's `a { color }`. */
 .primaryLink {
   composes: button from "../styles/shared.module.css";
