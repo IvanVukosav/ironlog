@@ -25,8 +25,14 @@ function WorkoutSummary({ workout, formula, onDone, onContinue }) {
   const [openedAt] = useState(() => Date.now());
   const [previousSets, setPreviousSets] = useState(null);
 
+  // Without the earlier sets there are no records to name, but the workout can still be closed.
   useEffect(() => {
-    fetchJson("/api/stats/prs").then(setPreviousSets).catch(reportError);
+    fetchJson("/api/stats/prs")
+      .then(setPreviousSets)
+      .catch((err) => {
+        setPreviousSets([]);
+        reportError(err);
+      });
   }, [reportError]);
 
   const summary = summarizeWorkout(workout, previousSets ?? [], formula);
@@ -46,64 +52,71 @@ function WorkoutSummary({ workout, formula, onDone, onContinue }) {
         </p>
       </div>
 
-      <dl className={styles.tiles}>
-        <div className={styles.tile}>
-          <dt className={styles.tileLabel}>{t("log.summaryDuration")}</dt>
-          <dd className={styles.tileValue}>{duration}</dd>
-        </div>
-        <div className={styles.tile}>
-          <dt className={styles.tileLabel}>{t("log.summaryWorkingSets")}</dt>
-          <dd className={styles.tileValue}>{formatNumber(summary.workingSets, language)}</dd>
-        </div>
-        <div className={styles.tile}>
-          <dt className={styles.tileLabel}>{t("log.summaryVolume")}</dt>
-          <dd className={styles.tileValue}>{formatVolume(summary.volume, language)}</dd>
-        </div>
-      </dl>
+      {/* All of it at once, once the records are known: a list growing under a finger would move
+          "Done" away just as it is tapped. */}
+      {previousSets === null ? (
+        <p className={styles.loading}>{t("log.summaryLoading")}</p>
+      ) : (
+        <>
+          <dl className={styles.tiles}>
+            <div className={styles.tile}>
+              <dt className={styles.tileLabel}>{t("log.summaryDuration")}</dt>
+              <dd className={styles.tileValue}>{duration}</dd>
+            </div>
+            <div className={styles.tile}>
+              <dt className={styles.tileLabel}>{t("log.summaryWorkingSets")}</dt>
+              <dd className={styles.tileValue}>{formatNumber(summary.workingSets, language)}</dd>
+            </div>
+            <div className={styles.tile}>
+              <dt className={styles.tileLabel}>{t("log.summaryVolume")}</dt>
+              <dd className={styles.tileValue}>{formatVolume(summary.volume, language)}</dd>
+            </div>
+          </dl>
 
-      <section className={styles.records} aria-labelledby={`${id}records`}>
-        <h3 id={`${id}records`} className={styles.recordsTitle}>
-          {t("log.summaryRecords")}
-        </h3>
-        {previousSets !== null && summary.records.length === 0 && (
-          <p className={styles.noRecords}>{t("log.summaryNoRecords")}</p>
-        )}
-        {summary.records.length > 0 && (
-          <ul className={styles.recordList}>
-            {summary.records.map((record) => (
-              <li key={record.name} className={styles.record}>
-                <span className={styles.trophy}>
-                  <Icon name="trophy" size={22} />
-                </span>
-                <span className={styles.recordText}>
-                  <span className={styles.recordName}>{record.name}</span>
-                  <span className={styles.recordDetail}>
-                    {t("log.summaryRecordDetail", { value: e1rm(record.e1rm) })}
-                  </span>
-                </span>
-                <span className={styles.recordGain}>
-                  {t("log.summaryRecordGain", { value: e1rm(record.gain) })}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+          <section className={styles.records} aria-labelledby={`${id}records`}>
+            <h3 id={`${id}records`} className={styles.recordsTitle}>
+              {t("log.summaryRecords")}
+            </h3>
+            {summary.records.length === 0 ? (
+              <p className={styles.noRecords}>{t("log.summaryNoRecords")}</p>
+            ) : (
+              <ul className={styles.recordList}>
+                {summary.records.map((record) => (
+                  <li key={record.name} className={styles.record}>
+                    <span className={styles.trophy}>
+                      <Icon name="trophy" size={22} />
+                    </span>
+                    <span className={styles.recordText}>
+                      <span className={styles.recordName}>{record.name}</span>
+                      <span className={styles.recordDetail}>
+                        {t("log.summaryRecordDetail", { value: e1rm(record.e1rm) })}
+                      </span>
+                    </span>
+                    <span className={styles.recordGain}>
+                      {t("log.summaryRecordGain", { value: e1rm(record.gain) })}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
 
-      {summary.plannedLeft > 0 && (
-        <p className={styles.planLeft}>
-          {t("log.summaryPlanLeft", { count: summary.plannedLeft })}
-        </p>
+          {summary.plannedLeft > 0 && (
+            <p className={styles.planLeft}>
+              {t("log.summaryPlanLeft", { count: summary.plannedLeft })}
+            </p>
+          )}
+
+          <div className={styles.actions}>
+            <button type="button" className={styles.doneButton} onClick={onDone}>
+              {t("log.done")}
+            </button>
+            <button type="button" className={styles.continueButton} onClick={onContinue}>
+              {t("log.summaryContinue")}
+            </button>
+          </div>
+        </>
       )}
-
-      <div className={styles.actions}>
-        <button type="button" className={styles.doneButton} onClick={onDone}>
-          {t("log.done")}
-        </button>
-        <button type="button" className={styles.continueButton} onClick={onContinue}>
-          {t("log.summaryContinue")}
-        </button>
-      </div>
     </Sheet>
   );
 }

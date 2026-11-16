@@ -178,6 +178,7 @@
     "addWarmups": "Zagrijavanje",
     "addWarmupsFor": "Dodaj zagrijavanje za {{name}}",
     "summaryTitle": "Trening završen",
+    "summaryLoading": "Zbrajam trening…",
     "summaryDuration": "Trajanje",
     "summaryWorkingSets": "Radni setovi",
     "summaryVolume": "Volumen",

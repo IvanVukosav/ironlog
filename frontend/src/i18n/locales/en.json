@@ -176,6 +176,7 @@
     "addWarmups": "Warm-up",
     "addWarmupsFor": "Add warm-up sets for {{name}}",
     "summaryTitle": "Workout finished",
+    "summaryLoading": "Adding it up…",
     "summaryDuration": "Duration",
     "summaryWorkingSets": "Working sets",
     "summaryVolume": "Volume",
