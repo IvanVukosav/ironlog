@@ -43,6 +43,13 @@ export function dateKeyOf(date) {
   return toDateKey(date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate());
 }
 
+// Whether `text` is such a key of a day that exists ("2026-02-30" is not one).
+export function isDateKey(text) {
+  if (typeof text !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(text)) return false;
+  const date = new Date(text);
+  return !Number.isNaN(date.getTime()) && dateKeyOf(date) === text;
+}
+
 // Today on the user's clock, as { year, month, day } and as a key. The one place the local
 // clock comes in: the keys become UTC midnights, which is what everything else compares by.
 export function todayParts() {

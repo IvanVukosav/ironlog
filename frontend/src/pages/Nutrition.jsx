@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { fetchJson } from "../api";
 import DatePicker from "../components/DatePicker";
@@ -8,6 +7,7 @@ import MacroDonut from "../components/MacroDonut";
 import MealCard from "../components/MealCard";
 import TdeeCard from "../components/TdeeCard";
 import { useSettings } from "../context/useSettings";
+import { useDateParam } from "../hooks/useDateParam";
 import { useNutritionDay } from "../hooks/useNutritionDay";
 import { useReportError } from "../hooks/useReportError";
 import { formatWeekdayDate, todayKey } from "../utils/dates";
@@ -53,9 +53,8 @@ function Nutrition() {
   const { t, i18n } = useTranslation();
   const language = i18n.language;
   const reportError = useReportError();
-  const [searchParams] = useSearchParams();
   const [today] = useState(todayKey);
-  const [date, setDate] = useState(searchParams.get("date") || today);
+  const [date, setDate] = useDateParam();
   const { day, isLoading, ...actions } = useNutritionDay(date);
   const { settings } = useSettings();
   const [mealName, setMealName] = useState("");

@@ -1,5 +1,4 @@
 import { useState, useEffect, useEffectEvent, useRef } from "react";
-import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import ExerciseCard from "../components/ExerciseCard";
 import DatePicker from "../components/DatePicker";
@@ -11,6 +10,7 @@ import { fetchJson } from "../api";
 import { useRestTimer } from "../context/useRestTimer";
 import { useToast } from "../context/useToast";
 import { useSettings } from "../context/useSettings";
+import { useDateParam } from "../hooks/useDateParam";
 import { useDragReorder } from "../hooks/useDragReorder";
 import { useReportError } from "../hooks/useReportError";
 import { useWorkout } from "../hooks/useWorkout";
@@ -44,8 +44,7 @@ function Log() {
   const { t, i18n } = useTranslation();
   const { showError } = useToast();
   const reportError = useReportError();
-  const [searchParams] = useSearchParams();
-  const [date, setDate] = useState(searchParams.get("date") || todayKey());
+  const [date, setDate] = useDateParam();
   const { workout, isLoading, ...actions } = useWorkout(date);
   const [exerciseName, setExerciseName] = useState("");
   const [exerciseTemplates, setExerciseTemplates] = useState([]);

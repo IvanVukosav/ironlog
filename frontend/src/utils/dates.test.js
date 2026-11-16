@@ -4,10 +4,29 @@ import {
   formatDayMonth,
   formatShortDate,
   formatWeekdayDate,
+  isDateKey,
   toDateKey,
   todayKey,
   todayParts,
 } from "./dates";
+
+describe("isDateKey", () => {
+  it("takes a day as YYYY-MM-DD that exists, and nothing else", () => {
+    expect(isDateKey("2026-11-16")).toBe(true);
+    expect(isDateKey("2024-02-29")).toBe(true);
+    for (const bad of [
+      "2026-02-30",
+      "2026-13-01",
+      "16.11.2026",
+      "2026-11-6",
+      "",
+      null,
+      undefined,
+    ]) {
+      expect(isDateKey(bad), String(bad)).toBe(false);
+    }
+  });
+});
 
 describe("formatShortDate", () => {
   it("writes day and short month in the language, with the year only when it differs", () => {
