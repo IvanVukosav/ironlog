@@ -9,8 +9,10 @@ import {
 import { useToast } from "../context/useToast";
 import { formatDayMonth } from "../utils/dates";
 import { formatNumber, parseDecimal, toDecimalText, toInputText } from "../utils/numbers";
+import { buildWarmupSets, loadPlateSetup } from "../utils/plates";
 import { useDragReorder } from "../hooks/useDragReorder";
 import Icon from "./Icon";
+import SetSheet from "./SetSheet";
 import styles from "./ExerciseCard.module.css";
 
 const WEIGHT_STEP_KG = 1;
@@ -160,6 +162,11 @@ function SetE1rm({ workoutSet, formula }) {
 
 // `actions` are the workout's own (useWorkout): they save a change and resolve to what was saved,
 // or to null when saving failed and the failure has already been reported.
+//
+// A set is ticked off as it is done; until then it is a plan (from a program, a copy, a template).
+// `isLiveDay` is true for today and later, where a new copy is a plan to tick off; on a day filled
+// in afterwards it is done at once. `onSetDone(set)` hears of every set that became done, so the
+// page can start the rest and the workout's clock. `nextSetId` is the set to do next.
 function Exercise({
   exercise,
   actions,
@@ -170,6 +177,9 @@ function Exercise({
   dropPosition,
   dragItemProps,
   dragHandleProps,
+  nextSetId,
+  isLiveDay,
+  onSetDone,
 }) {
   const { t, i18n } = useTranslation();
   const language = i18n.language;
@@ -177,12 +187,14 @@ function Exercise({
   const [set, setSet] = useState(EMPTY_SET);
   const [isAdding, setIsAdding] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
-  const [editingSetId, setEditingSetId] = useState(null);
-  const [editSet, setEditSet] = useState(EMPTY_SET);
+  // The set whose sheet is open.
+  const [optionsSetId, setOptionsSetId] = useState(null);
   // What is being typed into the superset box; null when not editing, so the saved group shows.
   const [supersetDraft, setSupersetDraft] = useState(null);
   const [lastSession, setLastSession] = useState(null);
   const [showNotes, setShowNotes] = useState(Boolean(exercise.notes));
+  // Kalkulator's bar and plates, for the warm-up ramp.
+  const [plateSetup] = useState(loadPlateSetup);
   const menuRef = useRef(null);
 
   useEffect(() => {
@@ -195,10 +207,12 @@ function Exercise({
 
   const lastWorkingSets = lastSession?.sets.filter((previousSet) => !previousSet.isWarmup) ?? [];
 
+  // Last time's sets come in as a plan to tick off, or done on a day filled in afterwards.
   const copyLastSession = async () => {
     // One after another so the copied sets keep their order; the first failure ends the copy.
     for (const { weight, reps, rpe } of lastWorkingSets) {
-      if (!(await actions.addSet(exercise.id, { weight, reps, rpe, isWarmup: false }))) return;
+      const values = { weight, reps, rpe, isWarmup: false, isDone: !isLiveDay };
+      if (!(await actions.addSet(exercise.id, values))) return;
     }
   };
 
@@ -235,6 +249,7 @@ function Exercise({
     setIsAdding(false);
     if (!saved) return;
     setSet(EMPTY_SET);
+    onSetDone(saved);
     if (!previousSets || saved.isWarmup) return;
 
     const e1rm = calculateEstimatedOneRepMax(saved.weight, saved.reps, saved.rpe, e1rmFormula);
@@ -257,11 +272,11 @@ function Exercise({
   };
 
   const duplicateSet = ({ weight, reps, rpe, isWarmup }) =>
-    actions.addSet(exercise.id, { weight, reps, rpe, isWarmup });
+    actions.addSet(exercise.id, { weight, reps, rpe, isWarmup, isDone: !isLiveDay });
 
-  const startEditingSet = (workoutSet) => {
-    setEditingSetId(workoutSet.id);
-    setEditSet(formFromSet(workoutSet, language));
+  const toggleDone = async (workoutSet) => {
+    const saved = await actions.updateSet(workoutSet.id, { isDone: !workoutSet.isDone });
+    if (saved?.isDone) onSetDone(saved);
   };
 
   const updateSupersetGroup = async (value) => {
@@ -275,59 +290,73 @@ function Exercise({
     if (notes.trim() !== (exercise.notes || "")) actions.updateExercise(exercise.id, { notes });
   };
 
-  const saveEditingSet = async (setId) => {
-    if (await actions.updateSet(setId, toSetValues(editSet))) setEditingSetId(null);
-  };
-
-  // Working sets are numbered; a warm-up shows a W and does not count. A set being edited keeps
-  // its number, so the rows below it and the add button don't renumber meanwhile.
+  // Working sets are numbered; a warm-up shows a Z (W in English) and does not count.
   const setNumbers = [];
   let workingSetCount = 0;
   for (const workoutSet of exercise.sets) {
     if (!workoutSet.isWarmup) workingSetCount += 1;
     setNumbers.push(workoutSet.isWarmup ? null : workingSetCount);
   }
+  const setNameAt = (index) =>
+    setNumbers[index] === null
+      ? t("log.warmupLabel")
+      : t("log.setNumberLabel", { number: setNumbers[index] });
+  const weightReps = (workoutSet) =>
+    t("log.setWeightReps", {
+      weight: formatNumber(workoutSet.weight, language),
+      reps: workoutSet.reps,
+    });
+
+  // While sets are still planned, they are ticked off rather than typed: the form gives way to
+  // "add a set like the last one" and, for a first exercise without them, warm-ups.
+  const hasPlan = exercise.sets.some((workoutSet) => !workoutSet.isDone);
+  const lastWorkingSet = exercise.sets.findLast((workoutSet) => !workoutSet.isWarmup);
+  const firstWorkingSet = exercise.sets.find((workoutSet) => !workoutSet.isWarmup);
+  const warmupSets =
+    firstWorkingSet && !exercise.sets.some((workoutSet) => workoutSet.isWarmup)
+      ? buildWarmupSets(firstWorkingSet.weight, plateSetup)
+      : [];
+
+  const addPlannedSet = () => {
+    const model = lastWorkingSet ?? exercise.sets.at(-1);
+    actions.addSet(exercise.id, {
+      weight: model.weight,
+      reps: model.reps,
+      rpe: null,
+      isWarmup: false,
+      isDone: !isLiveDay,
+    });
+  };
+
+  const addWarmups = () =>
+    actions.addSets(
+      exercise.id,
+      warmupSets.map(({ weight, reps }) => ({ weight, reps, isWarmup: true, isDone: !isLiveDay })),
+      "start",
+    );
 
   const setRows = exercise.sets.map((workoutSet, index) => {
-    if (editingSetId === workoutSet.id) {
-      return (
-        <li key={workoutSet.id} className={styles.setRowEditing}>
-          <form
-            className={styles.editForm}
-            onSubmit={(event) => {
-              event.preventDefault();
-              if (isComplete(editSet)) saveEditingSet(workoutSet.id);
-            }}
-          >
-            <SetFields values={editSet} onChange={setEditSet} />
-            <div className={styles.editActions}>
-              <button
-                type="submit"
-                className={styles.saveSetButton}
-                disabled={!isComplete(editSet)}
-              >
-                {t("common.save")}
-              </button>
-              <button
-                type="button"
-                className={styles.cancelSetButton}
-                onClick={() => setEditingSetId(null)}
-              >
-                {t("common.cancel")}
-              </button>
-            </div>
-          </form>
-        </li>
-      );
-    }
-
     const hasRpe = Number.isFinite(workoutSet.rpe);
+    const isNext = workoutSet.id === nextSetId;
+    const name = `${setNameAt(index)}, ${weightReps(workoutSet)}`;
+    const badgeClass = workoutSet.isWarmup
+      ? `${styles.setNumber} ${styles.setNumberWarmup}`
+      : workoutSet.isDone
+        ? styles.setNumber
+        : `${styles.setNumber} ${styles.setNumberPlanned}`;
+    const tickClass = workoutSet.isDone
+      ? `${styles.tickMark} ${styles.tickMarkDone}`
+      : isNext
+        ? `${styles.tickMark} ${styles.tickMarkNext}`
+        : styles.tickMark;
+
     return (
       <li
         key={workoutSet.id}
         className={[
           styles.setRow,
           workoutSet.isWarmup && styles.setRowWarmup,
+          isNext && styles.setRowNext,
           setDrag.isDragging(workoutSet.id) && styles.setRowDragging,
           setDrag.dropPosition(workoutSet.id) === "before" && styles.setRowDropBefore,
           setDrag.dropPosition(workoutSet.id) === "after" && styles.setRowDropAfter,
@@ -336,61 +365,63 @@ function Exercise({
           .join(" ")}
         {...setDrag.getItemProps(workoutSet.id)}
       >
-        <span
-          className={
-            workoutSet.isWarmup ? `${styles.setNumber} ${styles.setNumberWarmup}` : styles.setNumber
-          }
-          title={
-            workoutSet.isWarmup
-              ? `${t("log.warmupLabel")} · ${t("log.dragToReorder")}`
-              : t("log.dragToReorder")
-          }
-          {...setDrag.getHandleProps(workoutSet.id)}
-        >
-          {workoutSet.isWarmup ? t("log.warmupBadge") : setNumbers[index]}
-        </span>
         <button
           type="button"
-          className={styles.setText}
-          title={t("log.editSet")}
-          onClick={() => startEditingSet(workoutSet)}
+          className={styles.setButton}
+          aria-haspopup="dialog"
+          aria-label={t("log.setOptions", { set: name })}
+          onClick={() => setOptionsSetId(workoutSet.id)}
         >
-          <span className={styles.setMain}>
-            {t("log.setWeightReps", {
-              weight: formatNumber(workoutSet.weight, language),
-              reps: workoutSet.reps,
-            })}
-          </span>
-          {hasRpe && (
-            <span className={styles.setRpe}>
-              {t("log.setRpe", { rpe: formatNumber(workoutSet.rpe, language) })}
+          {/* The number is also the handle that drags the set; a tap without a drag opens it. */}
+          <span
+            className={styles.setHandle}
+            title={t("log.dragToReorder")}
+            {...setDrag.getHandleProps(workoutSet.id)}
+          >
+            <span className={badgeClass}>
+              {workoutSet.isWarmup ? t("log.warmupBadge") : setNumbers[index]}
             </span>
-          )}
-          {showE1rm && hasRpe && <SetE1rm workoutSet={workoutSet} formula={e1rmFormula} />}
+          </span>
+          <span className={styles.setText}>
+            <span
+              className={
+                workoutSet.isDone ? styles.setMain : `${styles.setMain} ${styles.setMainPlanned}`
+              }
+            >
+              {weightReps(workoutSet)}
+            </span>
+            {hasRpe && (
+              <span className={styles.setRpe}>
+                {t("log.setRpe", { rpe: formatNumber(workoutSet.rpe, language) })}
+              </span>
+            )}
+            {showE1rm && hasRpe && workoutSet.isDone && (
+              <SetE1rm workoutSet={workoutSet} formula={e1rmFormula} />
+            )}
+            {isNext && <span className={styles.setNext}>{t("log.nextSet")}</span>}
+          </span>
         </button>
-        <div className={styles.setRowActions}>
-          <button
-            type="button"
-            className={styles.iconButton}
-            aria-label={t("log.duplicateSet")}
-            title={t("log.duplicateSet")}
-            onClick={() => duplicateSet(workoutSet)}
-          >
-            <Icon name="copy" size={16} />
-          </button>
-          <button
-            type="button"
-            className={styles.iconButton}
-            aria-label={t("log.deleteSet")}
-            title={t("log.deleteSet")}
-            onClick={() => actions.deleteSet(workoutSet.id)}
-          >
-            <Icon name="close" size={16} />
-          </button>
-        </div>
+        <button
+          type="button"
+          className={styles.tick}
+          aria-pressed={workoutSet.isDone}
+          aria-label={
+            workoutSet.isDone
+              ? t("log.markNotDone", { set: name })
+              : t("log.markDone", { set: name })
+          }
+          onClick={() => toggleDone(workoutSet)}
+        >
+          <span className={tickClass}>
+            <Icon name="check" size={18} />
+          </span>
+        </button>
       </li>
     );
   });
+
+  const optionsIndex = exercise.sets.findIndex((workoutSet) => workoutSet.id === optionsSetId);
+  const optionsSet = optionsIndex === -1 ? null : exercise.sets[optionsIndex];
 
   return (
     <section
@@ -503,23 +534,55 @@ function Exercise({
 
       {setRows.length > 0 && <ol className={styles.setList}>{setRows}</ol>}
 
-      <form
-        className={styles.addSet}
-        onSubmit={(event) => {
-          event.preventDefault();
-          if (isComplete(set) && !isAdding) addSet();
-        }}
-      >
-        <SetFields values={set} onChange={setSet} />
-        <button
-          type="submit"
-          data-action="add-set"
-          className={styles.addSetButton}
-          disabled={!isComplete(set) || isAdding}
+      {hasPlan ? (
+        <div className={styles.planActions}>
+          <button type="button" className={styles.planButton} onClick={addPlannedSet}>
+            <Icon name="plus" size={18} />
+            {t("log.addPlannedSet")}
+          </button>
+          {warmupSets.length > 0 && (
+            <button
+              type="button"
+              className={styles.planButton}
+              aria-label={t("log.addWarmupsFor", { name: exercise.name })}
+              onClick={addWarmups}
+            >
+              <Icon name="plus" size={18} />
+              {t("log.addWarmups")}
+            </button>
+          )}
+        </div>
+      ) : (
+        <form
+          className={styles.addSet}
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (isComplete(set) && !isAdding) addSet();
+          }}
         >
-          {t("log.addSetNumber", { number: workingSetCount + 1 })}
-        </button>
-      </form>
+          <SetFields values={set} onChange={setSet} />
+          <button
+            type="submit"
+            data-action="add-set"
+            className={styles.addSetButton}
+            disabled={!isComplete(set) || isAdding}
+          >
+            {t("log.addSetNumber", { number: workingSetCount + 1 })}
+          </button>
+        </form>
+      )}
+
+      {optionsSet && (
+        <SetSheet
+          key={optionsSet.id}
+          set={optionsSet}
+          title={`${setNameAt(optionsIndex)} · ${exercise.name}`}
+          onSave={(changes) => actions.updateSet(optionsSet.id, changes)}
+          onCopy={duplicateSet}
+          onDelete={() => actions.deleteSet(optionsSet.id)}
+          onClose={() => setOptionsSetId(null)}
+        />
+      )}
     </section>
   );
 }

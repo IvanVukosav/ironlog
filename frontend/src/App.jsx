@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { fetchJson, UNAUTHORIZED_EVENT } from "./api";
 import { ToastProvider } from "./context/ToastContext";
 import { SettingsProvider } from "./context/SettingsContext";
+import { RestTimerProvider } from "./context/RestTimerContext";
 import ToastContainer from "./components/ToastContainer";
 import RestTimer from "./components/RestTimer";
 import NavBar from "./components/NavBar";
@@ -53,23 +54,25 @@ function App() {
   return (
     <ToastProvider>
       <SettingsProvider>
-        <BrowserRouter>
-          <NavBar />
-          <div className={styles.routes}>
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/log" element={<Log />} />
-              <Route path="/programs" element={<Programs />} />
-              <Route path="/nutrition" element={<Nutrition />} />
-              <Route path="/calendar" element={<Calendar />} />
-              <Route path="/calculator" element={<Calculator />} />
-              <Route path="/stats" element={<Stats />} />
-              <Route path="/settings" element={<Settings />} />
-            </Routes>
-          </div>
-        </BrowserRouter>
-        <ToastContainer />
-        <RestTimer />
+        <RestTimerProvider>
+          <BrowserRouter>
+            <NavBar />
+            <div className={styles.routes}>
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/log" element={<Log />} />
+                <Route path="/programs" element={<Programs />} />
+                <Route path="/nutrition" element={<Nutrition />} />
+                <Route path="/calendar" element={<Calendar />} />
+                <Route path="/calculator" element={<Calculator />} />
+                <Route path="/stats" element={<Stats />} />
+                <Route path="/settings" element={<Settings />} />
+              </Routes>
+            </div>
+          </BrowserRouter>
+          <ToastContainer />
+          <RestTimer />
+        </RestTimerProvider>
       </SettingsProvider>
     </ToastProvider>
   );

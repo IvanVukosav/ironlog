@@ -1,18 +1,24 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useEffectEvent, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import ExerciseCard from "../components/ExerciseCard";
 import DatePicker from "../components/DatePicker";
 import Icon from "../components/Icon";
 import ProgramLoader from "../components/ProgramLoader";
+import WorkoutStatus from "../components/WorkoutStatus";
+import WorkoutSummary from "../components/WorkoutSummary";
 import { fetchJson } from "../api";
+import { useRestTimer } from "../context/useRestTimer";
 import { useToast } from "../context/useToast";
 import { useSettings } from "../context/useSettings";
 import { useDragReorder } from "../hooks/useDragReorder";
 import { useReportError } from "../hooks/useReportError";
 import { useWorkout } from "../hooks/useWorkout";
+import { countSets, findNextSet, lastActivity, shouldAutoClose } from "../utils/activeWorkout";
 import { DEFAULT_E1RM_FORMULA } from "../utils/oneRepMax";
 import { formatWeekdayDate, todayKey } from "../utils/dates";
+import { formatNumber } from "../utils/numbers";
+import { withSetChanged } from "../utils/workoutState";
 import styles from "./Log.module.css";
 
 const MUSCLE_GROUPS = [
@@ -27,6 +33,8 @@ const MUSCLE_GROUPS = [
 ];
 const ALL_MUSCLE_GROUPS_FILTER = "Sve";
 const SUPERSET_COLORS = ["#3ba7ff", "#3ec95c", "#ffb020", "#c678dd", "#ff6b9d"];
+// The rest after a set when Postavke never set one.
+const DEFAULT_REST_SECONDS = 120;
 
 function Log() {
   const { t, i18n } = useTranslation();
@@ -55,8 +63,60 @@ function Log() {
   const workoutMenuRef = useRef(null);
   const pickerMode = settings?.exercisePickerMode ?? "chips";
   const showWorkoutNotes = Boolean(workout?.notes) || notesOpenFor === workout?.id;
+  const restTimer = useRestTimer();
+  const [showSummary, setShowSummary] = useState(false);
+  // The workouts whose start was already asked for, and those that closed themselves, so a
+  // second answer arriving meanwhile does not send it again.
+  const startRequestedFor = useRef(null);
+  const autoClosedFor = useRef(null);
+
+  const today = todayKey();
+  const isToday = date === today;
+  // From today on, sets that come in already filled in (a program day, a template, a copy) are a
+  // plan to tick off; on a day filled in afterwards they are done at once.
+  const isLiveDay = date >= today;
+  const restSeconds = settings?.restSeconds ?? DEFAULT_REST_SECONDS;
+  const formula = settings?.e1rmFormula ?? DEFAULT_E1RM_FORMULA;
+  const next = workout ? findNextSet(workout) : null;
+  const setCounts = workout ? countSets(workout) : null;
 
   const exerciseDrag = useDragReorder(workout?.exercises || [], actions.reorderExercises);
+
+  // "Čučanj 140 kg × 5", for the rest timer's "next".
+  const describeSet = ({ exercise, set }) =>
+    `${exercise.name} ${t("log.setWeightReps", {
+      weight: formatNumber(set.weight, i18n.language),
+      reps: set.reps,
+    })}`;
+
+  // A set just became done. On its own day the workout's clock starts with the first one, and
+  // every one starts the rest, named after the set that follows it.
+  const onSetDone = (saved) => {
+    if (!isToday || !workout || workout.finishedAt) return;
+    if (!workout.startedAt && startRequestedFor.current !== workout.id) {
+      startRequestedFor.current = workout.id;
+      actions.updateWorkout({ startedAt: saved.completedAt ?? new Date().toISOString() });
+    }
+    const following = findNextSet(withSetChanged(workout, saved));
+    restTimer.start(restSeconds, following ? describeSet(following) : null);
+  };
+
+  // A workout left started for hours closes itself at its last done set, as "Finish" would.
+  const autoClose = useEffectEvent((current) => {
+    autoClosedFor.current = current.id;
+    actions.finishWorkout(new Date(lastActivity(current)).toISOString());
+  });
+  useEffect(() => {
+    if (workout && autoClosedFor.current !== workout.id && shouldAutoClose(workout, Date.now())) {
+      autoClose(workout);
+    }
+  }, [workout]);
+
+  const finishWorkout = async () => {
+    if (!(await actions.finishWorkout())) return;
+    restTimer.skip();
+    setShowSummary(false);
+  };
 
   useEffect(() => {
     fetchJson("/api/exercise-templates").then(setExerciseTemplates).catch(reportError);
@@ -164,11 +224,21 @@ function Log() {
   };
 
   const applyWorkoutTemplate = async (templateId) => {
-    if (await actions.applyTemplate(templateId)) setShowTemplatePicker(false);
+    if (await actions.applyTemplate(templateId, isLiveDay)) setShowTemplatePicker(false);
   };
 
   const loadProgramDay = async (program, exercises) => {
-    if (await actions.loadProgramDay(program, exercises)) setShowProgramLoader(false);
+    const asLoaded = exercises.map((exercise) => ({
+      ...exercise,
+      sets: exercise.sets.map((set) => ({ ...set, isDone: !isLiveDay })),
+    }));
+    if (!(await actions.loadProgramDay(program, asLoaded))) return;
+    setShowProgramLoader(false);
+    // A workout without a name takes the program day's.
+    const dayName = programs
+      .find((candidate) => candidate.id === program.id)
+      ?.days.find((day) => day.dayNumber === program.day)?.name;
+    if (!workout.name && dayName) actions.updateWorkout({ name: dayName });
   };
 
   const deleteWorkoutTemplate = (templateId) => {
@@ -219,9 +289,10 @@ function Log() {
             <Icon name="chevronDown" size={16} />
           </DatePicker>
           {workout && (
-            // Uncontrolled: the key is what makes it show the next day's workout.
+            // Uncontrolled: the key is what makes it show the next day's workout, or a name given
+            // from elsewhere (a program day's, when one is loaded).
             <input
-              key={workout.id}
+              key={`${workout.id}:${workout.name ?? ""}`}
               type="text"
               className={styles.workoutName}
               aria-label={t("log.workoutNameLabel")}
@@ -337,57 +408,80 @@ function Log() {
         </div>
       )}
 
+      {workout && workout.exercises.length > 0 && (isToday || workout.startedAt) && (
+        <WorkoutStatus
+          workout={workout}
+          isToday={isToday}
+          onFinish={() => setShowSummary(true)}
+          onResume={() => actions.updateWorkout({ finishedAt: null })}
+        />
+      )}
+
+      {workout && isToday && !workout.startedAt && setCounts.total > 0 && setCounts.done === 0 && (
+        <p className={styles.hint}>
+          {setCounts.planned > 0 ? t("log.planHint") : t("log.freeHint")}
+        </p>
+      )}
+
       {workout && (
         <div>
-          <div className={styles.addRow}>
-            <div className={styles.addExercise} ref={exercisePickerRef}>
-              <input
-                type="text"
-                className={styles.exerciseInput}
-                aria-label={t("log.searchOrTypeExercise")}
-                placeholder={t("log.searchOrTypeExercise")}
-                value={exerciseName}
-                onChange={(event) => {
-                  setExerciseName(event.target.value);
-                  setShowExercisePicker(true);
-                  setSavePromptName(null);
-                }}
-                onFocus={() => setShowExercisePicker(true)}
-                onKeyDown={(event) => {
-                  if (event.key === "Escape") setShowExercisePicker(false);
-                }}
+          <div className={styles.cardList}>
+            {workout.exercises.map((exercise) => (
+              <ExerciseCard
+                key={exercise.id}
+                exercise={exercise}
+                actions={actions}
+                showE1rm={settings?.showE1rm ?? true}
+                e1rmFormula={formula}
+                supersetColor={
+                  exercise.supersetGroup ? supersetColorByGroup[exercise.supersetGroup] : null
+                }
+                isDragging={exerciseDrag.isDragging(exercise.id)}
+                dropPosition={exerciseDrag.dropPosition(exercise.id)}
+                dragItemProps={exerciseDrag.getItemProps(exercise.id)}
+                dragHandleProps={exerciseDrag.getHandleProps(exercise.id)}
+                nextSetId={next?.set.id ?? null}
+                isLiveDay={isLiveDay}
+                onSetDone={onSetDone}
               />
-              <button type="button" className={styles.addButton} onClick={addExercise}>
-                {t("log.addExercise")}
-              </button>
-              {showExercisePicker && (
-                <div className={styles.exercisePicker}>
-                  {pickerMode === "chips" && (
-                    <div className={styles.muscleGroupChips}>
-                      {[ALL_MUSCLE_GROUPS_FILTER, ...MUSCLE_GROUPS].map((group) => (
-                        <button
-                          key={group}
-                          className={
-                            muscleGroupFilter === group
-                              ? styles.muscleGroupChipActive
-                              : styles.muscleGroupChip
-                          }
-                          onClick={() => setMuscleGroupFilter(group)}
-                        >
-                          {group}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+            ))}
+          </div>
 
-                  {pickerMode === "twoStep" &&
-                    !exerciseName.trim() &&
-                    muscleGroupFilter === ALL_MUSCLE_GROUPS_FILTER && (
-                      <div className={styles.categoryList}>
-                        {MUSCLE_GROUPS.map((group) => (
+          {/* Under the cards once there are any: a workout in progress shows its sets first. */}
+          <div className={workout.exercises.length > 0 ? styles.addSectionBelow : undefined}>
+            <div className={styles.addRow}>
+              <div className={styles.addExercise} ref={exercisePickerRef}>
+                <input
+                  type="text"
+                  className={styles.exerciseInput}
+                  aria-label={t("log.searchOrTypeExercise")}
+                  placeholder={t("log.searchOrTypeExercise")}
+                  value={exerciseName}
+                  onChange={(event) => {
+                    setExerciseName(event.target.value);
+                    setShowExercisePicker(true);
+                    setSavePromptName(null);
+                  }}
+                  onFocus={() => setShowExercisePicker(true)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Escape") setShowExercisePicker(false);
+                  }}
+                />
+                <button type="button" className={styles.addButton} onClick={addExercise}>
+                  {t("log.addExercise")}
+                </button>
+                {showExercisePicker && (
+                  <div className={styles.exercisePicker}>
+                    {pickerMode === "chips" && (
+                      <div className={styles.muscleGroupChips}>
+                        {[ALL_MUSCLE_GROUPS_FILTER, ...MUSCLE_GROUPS].map((group) => (
                           <button
                             key={group}
-                            className={styles.categoryListItem}
+                            className={
+                              muscleGroupFilter === group
+                                ? styles.muscleGroupChipActive
+                                : styles.muscleGroupChip
+                            }
                             onClick={() => setMuscleGroupFilter(group)}
                           >
                             {group}
@@ -396,178 +490,185 @@ function Log() {
                       </div>
                     )}
 
-                  {pickerMode === "twoStep" &&
-                    !exerciseName.trim() &&
-                    muscleGroupFilter !== ALL_MUSCLE_GROUPS_FILTER && (
-                      <button
-                        className={styles.backButton}
-                        onClick={() => setMuscleGroupFilter(ALL_MUSCLE_GROUPS_FILTER)}
-                      >
-                        {t("log.back")}
-                      </button>
-                    )}
-
-                  {(pickerMode === "chips" ||
-                    exerciseName.trim() ||
-                    muscleGroupFilter !== ALL_MUSCLE_GROUPS_FILTER) && (
-                    <>
-                      {filteredTemplates.map((template) => (
-                        <div key={template.id} className={styles.exercisePickerItem}>
-                          <button
-                            className={styles.exercisePickerName}
-                            onClick={() => {
-                              setExerciseName(template.name);
-                              setShowExercisePicker(false);
-                            }}
-                          >
-                            {template.name}
-                            {template.muscleGroup && (
-                              <span className={styles.exercisePickerGroup}>
-                                {template.muscleGroup}
-                              </span>
-                            )}
-                          </button>
-                          <button
-                            className={styles.exercisePickerRemove}
-                            onClick={() => removeExerciseTemplate(template.id)}
-                          >
-                            ✕
-                          </button>
+                    {pickerMode === "twoStep" &&
+                      !exerciseName.trim() &&
+                      muscleGroupFilter === ALL_MUSCLE_GROUPS_FILTER && (
+                        <div className={styles.categoryList}>
+                          {MUSCLE_GROUPS.map((group) => (
+                            <button
+                              key={group}
+                              className={styles.categoryListItem}
+                              onClick={() => setMuscleGroupFilter(group)}
+                            >
+                              {group}
+                            </button>
+                          ))}
                         </div>
-                      ))}
-                      {exerciseName.trim() &&
-                        !exerciseTemplates.some(
-                          (template) =>
-                            template.name.toLowerCase() === exerciseName.trim().toLowerCase(),
-                        ) && (
-                          <button
-                            type="button"
-                            className={styles.exercisePickerCustom}
-                            onClick={addExercise}
-                          >
-                            {t("log.addAsExercise", { name: exerciseName.trim() })}
-                          </button>
-                        )}
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
-            {(workoutTemplates.length > 0 || programs.length > 0) && (
-              <div className={styles.loaders}>
-                {workoutTemplates.length > 0 && (
-                  <div className={styles.templatePicker} ref={templatePickerRef}>
-                    <button
-                      type="button"
-                      className={styles.secondaryButton}
-                      aria-expanded={showTemplatePicker}
-                      onClick={() => setShowTemplatePicker((prev) => !prev)}
-                    >
-                      {t("log.loadTemplate")}
-                    </button>
-                    {showTemplatePicker && (
-                      <div className={styles.exercisePicker}>
-                        {workoutTemplates.map((template) => (
+                      )}
+
+                    {pickerMode === "twoStep" &&
+                      !exerciseName.trim() &&
+                      muscleGroupFilter !== ALL_MUSCLE_GROUPS_FILTER && (
+                        <button
+                          className={styles.backButton}
+                          onClick={() => setMuscleGroupFilter(ALL_MUSCLE_GROUPS_FILTER)}
+                        >
+                          {t("log.back")}
+                        </button>
+                      )}
+
+                    {(pickerMode === "chips" ||
+                      exerciseName.trim() ||
+                      muscleGroupFilter !== ALL_MUSCLE_GROUPS_FILTER) && (
+                      <>
+                        {filteredTemplates.map((template) => (
                           <div key={template.id} className={styles.exercisePickerItem}>
                             <button
                               className={styles.exercisePickerName}
-                              onClick={() => applyWorkoutTemplate(template.id)}
+                              onClick={() => {
+                                setExerciseName(template.name);
+                                setShowExercisePicker(false);
+                              }}
                             >
                               {template.name}
-                              <span className={styles.exercisePickerGroup}>
-                                {template.exercises.length} {t("log.exercisesSuffix")}
-                              </span>
+                              {template.muscleGroup && (
+                                <span className={styles.exercisePickerGroup}>
+                                  {template.muscleGroup}
+                                </span>
+                              )}
                             </button>
                             <button
                               className={styles.exercisePickerRemove}
-                              aria-label={t("common.delete")}
-                              onClick={() => deleteWorkoutTemplate(template.id)}
+                              onClick={() => removeExerciseTemplate(template.id)}
                             >
                               ✕
                             </button>
                           </div>
                         ))}
-                      </div>
+                        {exerciseName.trim() &&
+                          !exerciseTemplates.some(
+                            (template) =>
+                              template.name.toLowerCase() === exerciseName.trim().toLowerCase(),
+                          ) && (
+                            <button
+                              type="button"
+                              className={styles.exercisePickerCustom}
+                              onClick={addExercise}
+                            >
+                              {t("log.addAsExercise", { name: exerciseName.trim() })}
+                            </button>
+                          )}
+                      </>
                     )}
                   </div>
                 )}
-                {programs.length > 0 && (
-                  <button
-                    type="button"
-                    className={styles.secondaryButton}
-                    aria-expanded={showProgramLoader}
-                    onClick={() => setShowProgramLoader((prev) => !prev)}
-                  >
-                    {t("log.loadProgram")}
-                  </button>
-                )}
+              </div>
+              {(workoutTemplates.length > 0 || programs.length > 0) && (
+                <div className={styles.loaders}>
+                  {workoutTemplates.length > 0 && (
+                    <div className={styles.templatePicker} ref={templatePickerRef}>
+                      <button
+                        type="button"
+                        className={styles.secondaryButton}
+                        aria-expanded={showTemplatePicker}
+                        onClick={() => setShowTemplatePicker((prev) => !prev)}
+                      >
+                        {t("log.loadTemplate")}
+                      </button>
+                      {showTemplatePicker && (
+                        <div className={styles.exercisePicker}>
+                          {workoutTemplates.map((template) => (
+                            <div key={template.id} className={styles.exercisePickerItem}>
+                              <button
+                                className={styles.exercisePickerName}
+                                onClick={() => applyWorkoutTemplate(template.id)}
+                              >
+                                {template.name}
+                                <span className={styles.exercisePickerGroup}>
+                                  {template.exercises.length} {t("log.exercisesSuffix")}
+                                </span>
+                              </button>
+                              <button
+                                className={styles.exercisePickerRemove}
+                                aria-label={t("common.delete")}
+                                onClick={() => deleteWorkoutTemplate(template.id)}
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {programs.length > 0 && (
+                    <button
+                      type="button"
+                      className={styles.secondaryButton}
+                      aria-expanded={showProgramLoader}
+                      onClick={() => setShowProgramLoader((prev) => !prev)}
+                    >
+                      {t("log.loadProgram")}
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+            {savePromptName && (
+              <div className={styles.savePrompt}>
+                <span className={styles.savePromptText}>
+                  {t("log.savePromptExercise", { name: savePromptName })}
+                </span>
+                <select
+                  className={styles.savePromptSelect}
+                  value={savePromptMuscleGroup}
+                  onChange={(event) => setSavePromptMuscleGroup(event.target.value)}
+                >
+                  <option value="">{t("log.muscleGroupPlaceholder")}</option>
+                  {MUSCLE_GROUPS.map((group) => (
+                    <option key={group} value={group}>
+                      {group}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  className={styles.savePromptYes}
+                  disabled={!savePromptMuscleGroup}
+                  onClick={() => saveExerciseTemplate(savePromptName, savePromptMuscleGroup)}
+                >
+                  {t("common.save")}
+                </button>
+                <button
+                  className={styles.savePromptNo}
+                  onClick={() => {
+                    setSavePromptName(null);
+                    setSavePromptMuscleGroup("");
+                  }}
+                >
+                  {t("common.no")}
+                </button>
               </div>
             )}
-          </div>
-          {savePromptName && (
-            <div className={styles.savePrompt}>
-              <span className={styles.savePromptText}>
-                {t("log.savePromptExercise", { name: savePromptName })}
-              </span>
-              <select
-                className={styles.savePromptSelect}
-                value={savePromptMuscleGroup}
-                onChange={(event) => setSavePromptMuscleGroup(event.target.value)}
-              >
-                <option value="">{t("log.muscleGroupPlaceholder")}</option>
-                {MUSCLE_GROUPS.map((group) => (
-                  <option key={group} value={group}>
-                    {group}
-                  </option>
-                ))}
-              </select>
-              <button
-                className={styles.savePromptYes}
-                disabled={!savePromptMuscleGroup}
-                onClick={() => saveExerciseTemplate(savePromptName, savePromptMuscleGroup)}
-              >
-                {t("common.save")}
-              </button>
-              <button
-                className={styles.savePromptNo}
-                onClick={() => {
-                  setSavePromptName(null);
-                  setSavePromptMuscleGroup("");
-                }}
-              >
-                {t("common.no")}
-              </button>
-            </div>
-          )}
 
-          {showProgramLoader && (
-            <ProgramLoader
-              programs={programs}
-              formula={settings?.e1rmFormula ?? DEFAULT_E1RM_FORMULA}
-              onLoad={loadProgramDay}
-              onClose={() => setShowProgramLoader(false)}
-            />
-          )}
-
-          <div className={styles.cardList}>
-            {workout.exercises.map((exercise) => (
-              <ExerciseCard
-                key={exercise.id}
-                exercise={exercise}
-                actions={actions}
-                showE1rm={settings?.showE1rm ?? true}
-                e1rmFormula={settings?.e1rmFormula ?? DEFAULT_E1RM_FORMULA}
-                supersetColor={
-                  exercise.supersetGroup ? supersetColorByGroup[exercise.supersetGroup] : null
-                }
-                isDragging={exerciseDrag.isDragging(exercise.id)}
-                dropPosition={exerciseDrag.dropPosition(exercise.id)}
-                dragItemProps={exerciseDrag.getItemProps(exercise.id)}
-                dragHandleProps={exerciseDrag.getHandleProps(exercise.id)}
+            {showProgramLoader && (
+              <ProgramLoader
+                programs={programs}
+                formula={formula}
+                onLoad={loadProgramDay}
+                onClose={() => setShowProgramLoader(false)}
               />
-            ))}
+            )}
           </div>
         </div>
+      )}
+
+      {showSummary && workout?.startedAt && (
+        <WorkoutSummary
+          workout={workout}
+          formula={formula}
+          onDone={finishWorkout}
+          onContinue={() => setShowSummary(false)}
+        />
       )}
     </div>
   );

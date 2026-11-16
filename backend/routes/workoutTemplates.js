@@ -46,8 +46,11 @@ router.post("/", async (req, res) => {
   res.json(template);
 });
 
+// `planned: true` makes the template's sets a plan to tick off (a workout of today); otherwise
+// they are logged as done (a day filled in afterwards).
 router.post("/:id/apply", async (req, res) => {
   const workoutId = parseId(req.body?.workoutId);
+  const isDone = req.body?.planned !== true;
   const template = await prisma.workoutTemplate.findUnique({
     where: { id: parseId(req.params.id) },
     include: TEMPLATE_INCLUDE,
@@ -69,6 +72,7 @@ router.post("/:id/apply", async (req, res) => {
             weight: set.weight,
             reps: set.reps,
             rpe: set.rpe,
+            isDone,
           })),
         },
       },

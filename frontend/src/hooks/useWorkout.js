@@ -80,18 +80,25 @@ export function useWorkout(date) {
         show(() => withLists(created));
         return created;
       }, fail),
-    // `fields` is { name } or { notes }.
+    // `fields` is { name }, { notes }, { startedAt } or { finishedAt } (null to carry on).
     updateWorkout: (fields) =>
       save(patch(`/api/workouts/${workout.id}`, fields), withWorkoutChanged),
+    // Ends the workout now, or at `finishedAt` (an ISO time); the sets never done are deleted.
+    finishWorkout: (finishedAt) =>
+      save(
+        post(`/api/workouts/${workout.id}/finish`, finishedAt ? { finishedAt } : {}),
+        (current, finished) => withLists(finished),
+      ),
     deleteWorkout: () => save(remove(`/api/workouts/${workout.id}`), () => null),
 
     addExercise: (name) =>
       save(post(`/api/workouts/${workout.id}/exercises`, { name }), (current, exercise) =>
         withExercisesAdded(current, [exercise]),
       ),
-    applyTemplate: (templateId) =>
+    // `planned` makes the template's sets a plan to tick off instead of done sets.
+    applyTemplate: (templateId, planned) =>
       save(
-        post(`/api/workout-templates/${templateId}/apply`, { workoutId: workout.id }),
+        post(`/api/workout-templates/${templateId}/apply`, { workoutId: workout.id, planned }),
         withExercisesAdded,
       ),
     // `program` is { id, week, day }; the answer is the whole workout with the day's sets in it.
@@ -115,9 +122,17 @@ export function useWorkout(date) {
         withoutExercise(current, exerciseId),
       ),
 
-    // `values` is { weight, reps, rpe, isWarmup }, as typed or as numbers.
+    // `values` is { weight, reps, rpe, isWarmup }, as typed or as numbers, and `isDone: false`
+    // for a set that is only planned.
     addSet: (exerciseId, values) =>
       save(post(`/api/workouts/exercises/${exerciseId}/sets`, values), withSetAdded),
+    // Several sets at the start ("start") or the end ("end") of the exercise.
+    addSets: (exerciseId, sets, position) =>
+      save(
+        post(`/api/workouts/exercises/${exerciseId}/sets/bulk`, { sets, position }),
+        (current, savedSets) => withSetsInOrder(current, exerciseId, savedSets),
+      ),
+    // `values` holds only what changes: { isDone: true } ticks a set off.
     updateSet: (setId, values) =>
       save(patch(`/api/workouts/sets/${setId}`, values), withSetChanged),
     deleteSet: (setId) =>

@@ -6,7 +6,7 @@ import {
   E1RM_FORMULAS,
   MAX_E1RM_REPS_TO_FAILURE,
 } from "../utils/oneRepMax";
-import { BAR_WEIGHTS_KG, DEFAULT_PLATE_SETUP, STANDARD_PLATES_KG } from "../utils/plates";
+import { loadPlateSetup, PLATE_SETUP_STORAGE_KEY } from "../utils/plates";
 import { formatNumber, formatPercent, parseDecimal, toInputText } from "../utils/numbers";
 import { useSettings } from "../context/useSettings";
 import LoadList from "../components/LoadList";
@@ -22,25 +22,6 @@ const DEFAULT_PERCENT_STEP = 5;
 const DEFAULT_PERCENT_FLOOR = 70;
 const MIN_RPE = 1;
 const MAX_RPE = 10;
-const PLATE_SETUP_STORAGE_KEY = "ironlog-plate-setup";
-
-function loadPlateSetup() {
-  try {
-    const stored = JSON.parse(localStorage.getItem(PLATE_SETUP_STORAGE_KEY));
-    if (!stored) return DEFAULT_PLATE_SETUP;
-    return {
-      barWeight: BAR_WEIGHTS_KG.includes(stored.barWeight)
-        ? stored.barWeight
-        : DEFAULT_PLATE_SETUP.barWeight,
-      useCollars: Boolean(stored.useCollars),
-      availablePlates: Array.isArray(stored.availablePlates)
-        ? stored.availablePlates.filter((plate) => STANDARD_PLATES_KG.includes(plate))
-        : DEFAULT_PLATE_SETUP.availablePlates,
-    };
-  } catch {
-    return DEFAULT_PLATE_SETUP;
-  }
-}
 
 // The e1RM for what was typed, worked out the way a set in Trening gets its own: the RPE adds the
 // reps left in reserve, and past MAX_E1RM_REPS_TO_FAILURE reps to failure there is none (e1rm

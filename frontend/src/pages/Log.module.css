@@ -3,6 +3,27 @@
   max-width: calc(640px + 3rem);
 }
 
+/* On a phone the rest timer sits over the bottom of the page; there is room to scroll past it. */
+@media (max-width: 640px) {
+  .page {
+    padding-bottom: calc(1.5rem + 100px);
+  }
+}
+
+/* Before the first set is done: what the ticks are for. */
+.hint {
+  margin: -0.25rem 0 1rem;
+  padding: 0 4px;
+  color: var(--color-text-dim);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.addSectionBelow {
+  margin-top: 1.25rem;
+}
+
 .srOnly {
   position: absolute;
   width: 1px;

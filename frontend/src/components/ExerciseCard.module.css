@@ -252,7 +252,7 @@
   color: var(--color-text-placeholder);
 }
 
-/* Logged sets: a numbered row each. */
+/* Sets: a numbered row each, with its tick at the end. */
 
 .setList {
   list-style: none;
@@ -266,9 +266,9 @@
   position: relative;
   display: flex;
   align-items: center;
-  gap: 10px;
-  min-height: 44px;
-  padding: 0 2px 0 10px;
+  gap: 4px;
+  min-height: 48px;
+  padding: 0 2px;
   background: var(--row-bg);
   border-radius: var(--row-radius);
   border-bottom: var(--row-divider);
@@ -283,11 +283,51 @@
   opacity: 0.4;
 }
 
-.setRowWarmup {
-  opacity: 0.75;
+/* The set to do next. */
+.setRowNext {
+  box-shadow: inset 0 0 0 2px var(--color-accent);
 }
 
-/* The set's number, and the handle that drags it. */
+/* Number and numbers together: a tap opens the set's sheet. */
+.setButton {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 48px;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: var(--row-radius);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  text-align: left;
+  cursor: pointer;
+}
+
+.setButton:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+
+/* The number's tap and drag area. */
+.setHandle {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+}
+
+.setHandle:active {
+  cursor: grabbing;
+}
+
 .setNumber {
   display: flex;
   align-items: center;
@@ -301,13 +341,12 @@
   font-size: 0.8rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  cursor: grab;
-  user-select: none;
-  touch-action: none;
 }
 
-.setNumber:active {
-  cursor: grabbing;
+/* A working set still to do. */
+.setNumberPlanned {
+  background: rgba(var(--color-accent-rgb), 0.12);
+  color: var(--color-accent);
 }
 
 .setNumberWarmup {
@@ -316,7 +355,7 @@
   box-shadow: inset 0 0 0 1px var(--color-border);
 }
 
-/* The set itself; a click edits it. Wraps on a narrow screen rather than overflowing. */
+/* Wraps on a narrow screen rather than overflowing. */
 .setText {
   flex: 1;
   min-width: 0;
@@ -325,13 +364,11 @@
   align-items: baseline;
   column-gap: 10px;
   row-gap: 2px;
-  padding: 10px 0;
-  background: none;
-  border: none;
-  color: var(--color-text);
-  font-family: var(--font-body);
-  text-align: left;
-  cursor: pointer;
+  padding: 12px 0;
+}
+
+.setRowWarmup .setText {
+  opacity: 0.75;
 }
 
 .setMain {
@@ -340,7 +377,11 @@
   font-variant-numeric: tabular-nums;
 }
 
-.setText:hover .setMain {
+.setMainPlanned {
+  color: var(--color-text-dim);
+}
+
+.setButton:hover .setMain {
   color: var(--color-accent);
 }
 
@@ -355,67 +396,89 @@
   font-size: 0.75rem;
 }
 
-.setRowActions {
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
+.setNext {
+  color: var(--color-accent);
+  font-size: 0.75rem;
+  font-weight: 600;
 }
 
-.iconButton {
+/* Done or not: a ring that fills in. */
+.tick {
+  flex: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 48px;
+  height: 48px;
+  padding: 0;
   background: transparent;
   border: none;
-  border-radius: 10px;
-  color: var(--color-text-dim);
+  border-radius: var(--row-radius);
   cursor: pointer;
 }
 
-.iconButton:hover {
+.tickMark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--color-border);
+  border-radius: 999px;
+  color: transparent;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s;
+}
+
+.tick:hover .tickMark {
+  border-color: var(--color-accent);
+}
+
+.tick:focus-visible .tickMark {
+  box-shadow: var(--input-focus-ring);
+}
+
+.tickMarkNext {
+  border-color: var(--color-accent);
   color: var(--color-accent);
 }
 
-.setRowEditing {
-  padding: 10px;
-  background: var(--row-bg);
-  border-radius: var(--row-radius);
-  border-bottom: var(--row-divider);
+.tickMarkDone,
+.tick:hover .tickMarkDone {
+  border-color: var(--color-success);
+  background: var(--color-success);
+  color: var(--color-bg-card);
 }
 
-.setRowEditing:last-child {
-  border-bottom: none;
-}
-
-.editForm {
+/* With a plan in the card: one more set like the last, and warm-ups. */
+.planActions {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
-.editActions {
+.planButton {
+  flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
-  gap: 12px;
-}
-
-.saveSetButton {
-  composes: button from "../styles/shared.module.css";
-}
-
-.cancelSetButton {
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 8px;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--button-radius);
   background: transparent;
-  border: none;
   color: var(--color-text-dim);
   font-family: var(--font-body);
-  font-size: 0.85rem;
-  padding: 8px 4px;
+  font-size: 0.9rem;
+  font-weight: 600;
   cursor: pointer;
 }
 
-.cancelSetButton:hover {
+.planButton:hover {
+  border-color: var(--color-accent);
   color: var(--color-accent);
 }
 

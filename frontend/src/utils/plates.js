@@ -9,6 +9,28 @@ export const DEFAULT_PLATE_SETUP = {
   availablePlates: [25, 20, 15, 10, 5, 2.5, 1.25],
 };
 
+// Where Kalkulator keeps the bar and plates chosen there, so Trening's warm-ups use them too.
+export const PLATE_SETUP_STORAGE_KEY = "ironlog-plate-setup";
+
+// The saved setup, with anything unknown in it replaced by the default.
+export function loadPlateSetup() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(PLATE_SETUP_STORAGE_KEY));
+    if (!stored) return DEFAULT_PLATE_SETUP;
+    return {
+      barWeight: BAR_WEIGHTS_KG.includes(stored.barWeight)
+        ? stored.barWeight
+        : DEFAULT_PLATE_SETUP.barWeight,
+      useCollars: Boolean(stored.useCollars),
+      availablePlates: Array.isArray(stored.availablePlates)
+        ? stored.availablePlates.filter((plate) => STANDARD_PLATES_KG.includes(plate))
+        : DEFAULT_PLATE_SETUP.availablePlates,
+    };
+  } catch {
+    return DEFAULT_PLATE_SETUP;
+  }
+}
+
 // IPF competition plate colors; height is % of the largest plate, width in px.
 export const PLATE_STYLES = {
   25: { color: "#d32f2f", height: 100, width: 14 },
