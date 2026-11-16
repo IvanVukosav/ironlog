@@ -33,6 +33,8 @@
     "exercisePickerChips": "Chips (filter iznad liste)",
     "exercisePickerTwoStep": "Dvokorak (prvo kategorija, pa vježba)",
     "setsSection": "Setovi",
+    "restSection": "Odmor nakon seta (kreće sam kad označiš ili upišeš set)",
+    "restOff": "Bez odmora",
     "showE1rm": "Prikaži e1RM uz svaki set",
     "language": "Jezik",
     "theme": "Tema",

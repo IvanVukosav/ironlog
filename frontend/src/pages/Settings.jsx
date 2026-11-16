@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { downloadFile, fetchJson, getToken, setToken, UNAUTHORIZED_EVENT } from "../api";
 import { DEFAULT_E1RM_FORMULA, E1RM_FORMULAS } from "../utils/oneRepMax";
+import { DEFAULT_REST_SECONDS, formatClock, REST_CHOICES_SECONDS } from "../utils/activeWorkout";
 import { useToast } from "../context/useToast";
 import { useSettings } from "../context/useSettings";
 import { useReportError } from "../hooks/useReportError";
@@ -324,6 +325,20 @@ function Settings() {
             onChange={() => updateSettings({ e1rmFormula: formula })}
           />
           {label}
+        </label>
+      ))}
+
+      <p className={styles.sectionLabel}>{t("settings.restSection")}</p>
+
+      {REST_CHOICES_SECONDS.map((seconds) => (
+        <label key={seconds} className={styles.checkboxRow}>
+          <input
+            type="radio"
+            name="restSeconds"
+            checked={(settings?.restSeconds ?? DEFAULT_REST_SECONDS) === seconds}
+            onChange={() => updateSettings({ restSeconds: seconds })}
+          />
+          {seconds === 0 ? t("settings.restOff") : formatClock(seconds * 1000)}
         </label>
       ))}
 

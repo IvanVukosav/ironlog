@@ -6,6 +6,10 @@ import { findBestSetByE1rm } from "./oneRepMax";
 // A started workout nobody finished closes itself this long after its last done set.
 export const AUTO_CLOSE_AFTER_MS = 6 * 60 * 60 * 1000;
 
+// The rest after a set when the settings have none yet (the API's default too); 0 turns it off.
+export const DEFAULT_REST_SECONDS = 120;
+export const REST_CHOICES_SECONDS = [0, 60, 90, 120, 180, 300];
+
 const allSets = (workout) => workout.exercises.flatMap((exercise) => exercise.sets);
 const doneWorkingSets = (sets) => sets.filter((set) => set.isDone && !set.isWarmup);
 

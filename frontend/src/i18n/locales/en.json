@@ -33,6 +33,8 @@
     "exercisePickerChips": "Chips (filter above list)",
     "exercisePickerTwoStep": "Two-step (category first, then exercise)",
     "setsSection": "Sets",
+    "restSection": "Rest after a set (starts by itself when you tick off or log a set)",
+    "restOff": "No rest",
     "showE1rm": "Show e1RM next to each set",
     "language": "Language",
     "theme": "Theme",

@@ -14,7 +14,13 @@ import { useSettings } from "../context/useSettings";
 import { useDragReorder } from "../hooks/useDragReorder";
 import { useReportError } from "../hooks/useReportError";
 import { useWorkout } from "../hooks/useWorkout";
-import { countSets, findNextSet, lastActivity, shouldAutoClose } from "../utils/activeWorkout";
+import {
+  countSets,
+  DEFAULT_REST_SECONDS,
+  findNextSet,
+  lastActivity,
+  shouldAutoClose,
+} from "../utils/activeWorkout";
 import { DEFAULT_E1RM_FORMULA } from "../utils/oneRepMax";
 import { formatWeekdayDate, todayKey } from "../utils/dates";
 import { formatNumber } from "../utils/numbers";
@@ -33,8 +39,6 @@ const MUSCLE_GROUPS = [
 ];
 const ALL_MUSCLE_GROUPS_FILTER = "Sve";
 const SUPERSET_COLORS = ["#3ba7ff", "#3ec95c", "#ffb020", "#c678dd", "#ff6b9d"];
-// The rest after a set when Postavke never set one.
-const DEFAULT_REST_SECONDS = 120;
 
 function Log() {
   const { t, i18n } = useTranslation();
