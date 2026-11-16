@@ -59,21 +59,72 @@ function toNumber(value) {
   return Number(value.trim().replace(",", "."));
 }
 
-// A logged set: weight and reps, and RPE when one was given.
-function parseSet(body) {
-  const weight = toNumber(body?.weight);
-  const reps = toNumber(body?.reps);
-  const hasRpe = body?.rpe !== undefined && body?.rpe !== null && body?.rpe !== "";
-  const rpe = hasRpe ? toNumber(body.rpe) : null;
-
+function parseWeight(value) {
+  const weight = toNumber(value);
   if (!(weight >= 0)) throw new HttpError(400, "Weight must be a number of 0 or more");
+  return weight;
+}
+
+function parseReps(value) {
+  const reps = toNumber(value);
   if (!Number.isInteger(reps) || reps < 0) {
     throw new HttpError(400, "Reps must be a whole number of 0 or more");
   }
-  if (rpe !== null && !(rpe >= RPE_MIN && rpe <= RPE_MAX)) {
+  return reps;
+}
+
+// No RPE at all is null; one that was given must be 1 to 10.
+function parseRpe(value) {
+  if (value === undefined || value === null || value === "") return null;
+  const rpe = toNumber(value);
+  if (!(rpe >= RPE_MIN && rpe <= RPE_MAX)) {
     throw new HttpError(400, `RPE must be between ${RPE_MIN} and ${RPE_MAX}`);
   }
-  return { weight, reps, rpe, isWarmup: Boolean(body?.isWarmup) };
+  return rpe;
+}
+
+function parseBoolean(value, name) {
+  if (typeof value !== "boolean") throw new HttpError(400, `${name} must be true or false`);
+  return value;
+}
+
+// A logged set: weight and reps, and RPE when one was given. `isDone` is there only when the body
+// says it: a set from a program is a plan (false) until it is ticked off.
+function parseSet(body) {
+  const set = {
+    weight: parseWeight(body?.weight),
+    reps: parseReps(body?.reps),
+    rpe: parseRpe(body?.rpe),
+    isWarmup: Boolean(body?.isWarmup),
+  };
+  if (body && "isDone" in body) set.isDone = parseBoolean(body.isDone, "isDone");
+  return set;
+}
+
+// A change to some of a set's fields: only the ones the body names are checked and returned, so
+// ticking a set off is just { isDone: true }.
+function parseSetChange(body) {
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    throw new HttpError(400, "A set change must be an object");
+  }
+  const change = {};
+  if ("weight" in body) change.weight = parseWeight(body.weight);
+  if ("reps" in body) change.reps = parseReps(body.reps);
+  if ("rpe" in body) change.rpe = parseRpe(body.rpe);
+  if ("isWarmup" in body) change.isWarmup = parseBoolean(body.isWarmup, "isWarmup");
+  if ("isDone" in body) change.isDone = parseBoolean(body.isDone, "isDone");
+  if (Object.keys(change).length === 0) throw new HttpError(400, "Nothing to change in the set");
+  return change;
+}
+
+// A moment as an ISO text ("2026-11-16T17:04:00.000Z"), or null to clear it.
+function parseOptionalDateTime(value, name) {
+  if (value === null) return null;
+  const date = typeof value === "string" ? new Date(value) : new Date(NaN);
+  if (Number.isNaN(date.getTime())) {
+    throw new HttpError(400, `${name} must be a date and time, or null`);
+  }
+  return date;
 }
 
 // A food item or a food template: a name and four numbers.
@@ -95,5 +146,7 @@ module.exports = {
   parseDateRangeQuery,
   toNumber,
   parseSet,
+  parseSetChange,
+  parseOptionalDateTime,
   parseMacros,
 };

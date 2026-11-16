@@ -7,9 +7,18 @@ const {
   parseDateKey,
   parseYearMonth,
   parseSet,
+  parseSetChange,
+  parseOptionalDateTime,
 } = require("../utils/validate");
+const { TRAINED_WORKOUT } = require("../utils/doneSets");
 
 const RANGE_GETTERS = { month: getMonthRange, year: getYearRange };
+const WORKOUT_INCLUDE = {
+  exercises: {
+    orderBy: { order: "asc" },
+    include: { sets: { orderBy: { order: "asc" } } },
+  },
+};
 const prisma = require("../prisma/client");
 
 router.get("/", async (req, res) => {
@@ -24,19 +33,15 @@ router.get("/", async (req, res) => {
   }
   const workouts = await prisma.workout.findMany({
     where: date ? { date: getDayRange(parseDateKey(date)) } : undefined,
-    include: {
-      exercises: {
-        orderBy: { order: "asc" },
-        include: { sets: { orderBy: { order: "asc" } } },
-      },
-    },
+    include: WORKOUT_INCLUDE,
   });
   res.json(workouts);
 });
 
+// The trained days of the week, for the week strip.
 router.get("/week", async (req, res) => {
   const workouts = await prisma.workout.findMany({
-    where: { date: getWeekRange(parseDateKey(req.query.date)) },
+    where: { date: getWeekRange(parseDateKey(req.query.date)), ...TRAINED_WORKOUT },
     select: { date: true, name: true },
   });
   res.json(workouts);
@@ -48,7 +53,9 @@ router.get("/count", async (req, res) => {
   if (!getRange) {
     return res.status(400).json({ error: "Invalid range" });
   }
-  const count = await prisma.workout.count({ where: { date: getRange(parseDateKey(date)) } });
+  const count = await prisma.workout.count({
+    where: { date: getRange(parseDateKey(date)), ...TRAINED_WORKOUT },
+  });
   res.json({ count });
 });
 
@@ -75,7 +82,36 @@ router.patch("/:id", async (req, res) => {
   const data = {};
   if ("name" in body) data.name = body.name?.trim() || null;
   if ("notes" in body) data.notes = body.notes?.trim() || null;
+  if ("startedAt" in body) data.startedAt = parseOptionalDateTime(body.startedAt, "startedAt");
+  if ("finishedAt" in body) data.finishedAt = parseOptionalDateTime(body.finishedAt, "finishedAt");
   const workout = await prisma.workout.update({ where: { id: parseId(req.params.id) }, data });
+  res.json(workout);
+});
+
+// Ends a workout. The sets that stayed a plan are deleted, and so is an exercise they leave
+// empty; then the end is saved. It is now, unless the body names the moment (a workout that
+// closed itself ends at its last done set). Answers the whole workout.
+router.post("/:id/finish", async (req, res) => {
+  const workoutId = parseId(req.params.id);
+  const finishedAt = req.body?.finishedAt
+    ? parseOptionalDateTime(req.body.finishedAt, "finishedAt")
+    : new Date();
+  const workout = await prisma.$transaction(async (tx) => {
+    const planned = await tx.set.findMany({
+      where: { isDone: false, exercise: { workoutId } },
+      select: { id: true, exerciseId: true },
+    });
+    if (planned.length > 0) {
+      await tx.set.deleteMany({ where: { id: { in: planned.map((set) => set.id) } } });
+      const emptied = [...new Set(planned.map((set) => set.exerciseId))];
+      await tx.exercise.deleteMany({ where: { id: { in: emptied }, sets: { none: {} } } });
+    }
+    return tx.workout.update({
+      where: { id: workoutId },
+      data: { finishedAt },
+      include: WORKOUT_INCLUDE,
+    });
+  });
   res.json(workout);
 });
 
@@ -88,6 +124,7 @@ router.delete("/:id", async (req, res) => {
 // Adds several exercises with their sets at once (used when loading a program day).
 // Sets for an exercise already in the workout are appended to it instead of
 // creating a duplicate card. Optionally tags the workout with its program day.
+// A set with `isDone: false` is a plan, to be ticked off as it is done.
 router.post("/:id/exercises/bulk", async (req, res) => {
   const { exercises, program } = req.body ?? {};
   if (
@@ -114,6 +151,8 @@ router.post("/:id/exercises/bulk", async (req, res) => {
           weight: parseFloat(set.weight) || 0,
           reps: parseInt(set.reps) || 0,
           rpe: Number.isFinite(parseFloat(set.rpe)) ? parseFloat(set.rpe) : null,
+          isWarmup: set.isWarmup === true,
+          isDone: set.isDone !== false,
           order: startOrder + index,
         }));
       const match = existingByName.get(name.trim().toLowerCase());
@@ -142,12 +181,7 @@ router.post("/:id/exercises/bulk", async (req, res) => {
             programDay: parseInt(program.day),
           }
         : {},
-      include: {
-        exercises: {
-          orderBy: { order: "asc" },
-          include: { sets: { orderBy: { order: "asc" } } },
-        },
-      },
+      include: WORKOUT_INCLUDE,
     });
   });
 
@@ -208,14 +242,65 @@ router.delete("/exercises/:id", async (req, res) => {
   res.json({ success: true });
 });
 
+// A set is done when it is logged, unless the body makes it a plan (`isDone: false`).
 router.post("/exercises/:id/sets", async (req, res) => {
   const data = parseSet(req.body);
+  const isDone = data.isDone ?? true;
   const exerciseId = parseId(req.params.id);
   const existingSetCount = await prisma.set.count({ where: { exerciseId } });
   const set = await prisma.set.create({
-    data: { ...data, order: existingSetCount, exercise: { connect: { id: exerciseId } } },
+    data: {
+      ...data,
+      isDone,
+      completedAt: isDone ? new Date() : null,
+      order: existingSetCount,
+      exercise: { connect: { id: exerciseId } },
+    },
   });
   res.json(set);
+});
+
+// Several sets for one exercise at once, at its start (warm-ups go before the working sets) or
+// at its end. Answers all of the exercise's sets in their new order.
+router.post("/exercises/:id/sets/bulk", async (req, res) => {
+  const { sets, position = "end" } = req.body ?? {};
+  if (!Array.isArray(sets) || sets.length === 0) {
+    return res.status(400).json({ error: "sets must be a list of at least one set" });
+  }
+  if (position !== "start" && position !== "end") {
+    return res.status(400).json({ error: 'position must be "start" or "end"' });
+  }
+  const rows = sets.map((body) => {
+    const set = parseSet(body);
+    return { ...set, isDone: set.isDone ?? true };
+  });
+  const exerciseId = parseId(req.params.id);
+  const now = new Date();
+
+  const saved = await prisma.$transaction(async (tx) => {
+    const existing = await tx.set.findMany({
+      where: { exerciseId },
+      orderBy: { order: "asc" },
+      select: { id: true },
+    });
+    if (position === "start") {
+      // The sets already there move down by as many as come in.
+      for (const [index, { id }] of existing.entries()) {
+        await tx.set.update({ where: { id }, data: { order: rows.length + index } });
+      }
+    }
+    const startOrder = position === "start" ? 0 : existing.length;
+    await tx.set.createMany({
+      data: rows.map((set, index) => ({
+        ...set,
+        completedAt: set.isDone ? now : null,
+        order: startOrder + index,
+        exerciseId,
+      })),
+    });
+    return tx.set.findMany({ where: { exerciseId }, orderBy: { order: "asc" } });
+  });
+  res.json(saved);
 });
 
 router.patch("/exercises/:id/sets/reorder", async (req, res) => {
@@ -236,11 +321,12 @@ router.patch("/exercises/:id/sets/reorder", async (req, res) => {
   res.json({ success: true });
 });
 
+// Changes only the fields that were sent: { isDone: true } ticks a set off, and the time it was
+// done is kept with it.
 router.patch("/sets/:id", async (req, res) => {
-  const set = await prisma.set.update({
-    where: { id: parseId(req.params.id) },
-    data: parseSet(req.body),
-  });
+  const change = parseSetChange(req.body);
+  if ("isDone" in change) change.completedAt = change.isDone ? new Date() : null;
+  const set = await prisma.set.update({ where: { id: parseId(req.params.id) }, data: change });
   res.json(set);
 });
 

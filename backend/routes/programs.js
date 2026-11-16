@@ -3,6 +3,7 @@ const router = express.Router();
 const prisma = require("../prisma/client");
 const { parseId } = require("../utils/validate");
 const { HttpError } = require("../utils/errorHandler");
+const { TRAINED_WORKOUT } = require("../utils/doneSets");
 
 const MAX_WEEKS = 52;
 const MAX_DAYS = 14;
@@ -102,32 +103,48 @@ router.delete("/:id", async (req, res) => {
   res.json({ success: true });
 });
 
-// The day after the most recent workout logged from this program, wrapping
-// into the next week; week 1 day 1 when nothing has been logged yet.
-router.get("/:id/next", async (req, res) => {
-  const programId = parseId(req.params.id);
+// The day after the most recent workout trained from this program, wrapping into the next week;
+// week 1 day 1 when nothing has been trained from it yet. A day with only its plan loaded does
+// not count. Null when there is no such program.
+async function findNextDay(programId) {
   const program = await prisma.program.findUnique({
     where: { id: programId },
     include: { days: { select: { id: true } } },
   });
-  if (!program) {
-    return res.status(404).json({ error: "Program not found" });
-  }
+  if (!program) return null;
 
   const lastWorkout = await prisma.workout.findFirst({
-    where: { programId, programWeek: { not: null }, programDay: { not: null } },
+    where: { programId, programWeek: { not: null }, programDay: { not: null }, ...TRAINED_WORKOUT },
     orderBy: [{ date: "desc" }, { id: "desc" }],
   });
-  if (!lastWorkout) {
-    return res.json({ week: 1, day: 1, finished: false });
-  }
+  if (!lastWorkout) return { week: 1, day: 1, finished: false };
 
   const dayCount = program.days.length;
   const isLastDayOfWeek = lastWorkout.programDay >= dayCount;
   const week = isLastDayOfWeek ? lastWorkout.programWeek + 1 : lastWorkout.programWeek;
   const day = isLastDayOfWeek ? 1 : lastWorkout.programDay + 1;
   const finished = week > program.weeks;
-  res.json(finished ? { week: 1, day: 1, finished } : { week, day, finished });
+  return finished ? { week: 1, day: 1, finished } : { week, day, finished };
+}
+
+// The program being followed (the one of the most recent workout trained from a program) and
+// its next day, for Početna; null when no workout was trained from a program that still exists.
+router.get("/next", async (req, res) => {
+  const lastWorkout = await prisma.workout.findFirst({
+    where: { programId: { not: null }, ...TRAINED_WORKOUT },
+    orderBy: [{ date: "desc" }, { id: "desc" }],
+    select: { programId: true },
+  });
+  const next = lastWorkout ? await findNextDay(lastWorkout.programId) : null;
+  res.json(next ? { programId: lastWorkout.programId, ...next } : null);
+});
+
+router.get("/:id/next", async (req, res) => {
+  const next = await findNextDay(parseId(req.params.id));
+  if (!next) {
+    return res.status(404).json({ error: "Program not found" });
+  }
+  res.json(next);
 });
 
 module.exports = router;

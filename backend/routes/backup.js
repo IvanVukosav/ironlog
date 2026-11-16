@@ -65,9 +65,10 @@ router.get("/export", async (req, res) => {
   });
 });
 
-// Every logged set as one CSV row, for spreadsheets.
+// Every logged (done) set as one CSV row, for spreadsheets; a plan not yet done is left out.
 router.get("/sets.csv", async (req, res) => {
   const sets = await prisma.set.findMany({
+    where: { isDone: true },
     include: { exercise: { include: { workout: true } } },
     orderBy: [
       { exercise: { workout: { date: "asc" } } },

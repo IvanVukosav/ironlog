@@ -3,6 +3,7 @@ const router = express.Router();
 const prisma = require("../prisma/client");
 const { getWeekRange, getMonthRange, getYearRange, isDateKey } = require("../utils/dateRange");
 const { parseDateKey } = require("../utils/validate");
+const { DONE_SET, TRAINED_WORKOUT } = require("../utils/doneSets");
 
 const UNCATEGORIZED_MUSCLE_GROUP = "Ostalo";
 const VOLUME_RANGE_GETTERS = { week: getWeekRange, month: getMonthRange, year: getYearRange };
@@ -32,15 +33,18 @@ function toDateKey(date) {
   return new Date(date).toISOString().split("T")[0];
 }
 
+// Every done set of every exercise, by name. `workoutId` lets a page leave one workout out (the
+// one being finished, when it asks what that workout beat).
 router.get("/prs", async (req, res) => {
   const exercises = await prisma.exercise.findMany({
-    include: { sets: true, workout: true },
+    include: { sets: { where: DONE_SET }, workout: true },
   });
 
   const setsByExerciseName = {};
   exercises.forEach((exercise) => {
     const sets = exercise.sets.map((set) => ({
       date: exercise.workout.date,
+      workoutId: exercise.workoutId,
       weight: set.weight,
       reps: set.reps,
       rpe: set.rpe,
@@ -54,8 +58,8 @@ router.get("/prs", async (req, res) => {
 
 router.get("/exercise/:name/history", async (req, res) => {
   const exercises = await prisma.exercise.findMany({
-    where: { name: req.params.name },
-    include: { sets: true, workout: true },
+    where: { name: req.params.name, sets: { some: DONE_SET } },
+    include: { sets: { where: DONE_SET }, workout: true },
     orderBy: { workout: { date: "asc" } },
   });
 
@@ -78,14 +82,14 @@ router.get("/exercise/:name/last", async (req, res) => {
   const exercise = await prisma.exercise.findFirst({
     where: {
       name: req.params.name,
-      sets: { some: {} },
+      sets: { some: DONE_SET },
       ...(currentWorkout && {
         workoutId: { not: workoutId },
         workout: { date: { lte: currentWorkout.date } },
       }),
     },
     include: {
-      sets: { orderBy: { order: "asc" } },
+      sets: { where: DONE_SET, orderBy: { order: "asc" } },
       workout: { select: { date: true } },
     },
     orderBy: [{ workout: { date: "desc" } }, { id: "desc" }],
@@ -105,7 +109,11 @@ router.get("/volume", async (req, res) => {
 
   // Working sets only: a warm-up is preparation, not training volume.
   const sets = await prisma.set.findMany({
-    where: { isWarmup: false, exercise: { workout: { date: getRange(parseDateKey(date)) } } },
+    where: {
+      ...DONE_SET,
+      isWarmup: false,
+      exercise: { workout: { date: getRange(parseDateKey(date)) } },
+    },
     include: { exercise: true },
   });
 
@@ -186,7 +194,10 @@ router.get("/tdee", async (req, res) => {
 // `date` is the client's today: the server's clock may already be on another day.
 router.get("/streak", async (req, res) => {
   const todayKey = isDateKey(req.query.date) ? req.query.date : toDateKey(new Date());
-  const workouts = await prisma.workout.findMany({ select: { date: true } });
+  const workouts = await prisma.workout.findMany({
+    where: TRAINED_WORKOUT,
+    select: { date: true },
+  });
   const dateKeys = new Set(workouts.map((workout) => toDateKey(workout.date)));
   const sortedKeys = Array.from(dateKeys).sort();
 

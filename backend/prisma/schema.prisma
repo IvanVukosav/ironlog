@@ -16,6 +16,10 @@ model Workout {
   programId   Int?
   programWeek Int?
   programDay  Int?
+  // Set by the first set done during the day itself and by "Finish". A workout logged afterwards
+  // has neither, and one still going has no finishedAt.
+  startedAt  DateTime?
+  finishedAt DateTime?
   exercises Exercise[]
 
   @@index([date])
@@ -44,6 +48,10 @@ model Set {
   rpe        Float?
   order      Int      @default(0)
   isWarmup   Boolean  @default(false)
+  // A set loaded from a program is a plan until it is ticked off. Only done sets count in stats,
+  // records and volume; "Finish" deletes the ones that were never done.
+  isDone      Boolean   @default(true)
+  completedAt DateTime?
   exerciseId Int
   exercise   Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
 
@@ -102,6 +110,8 @@ model Settings {
   // JSON array of exercise names shown at the top of Stats; empty means "most trained".
   featuredExercises     String  @default("[]")
   showPowerliftingTotal Boolean @default(false)
+  // The rest that starts by itself when a set is done during a workout; 0 turns it off.
+  restSeconds Int @default(120)
 
 }
 

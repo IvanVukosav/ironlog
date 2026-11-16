@@ -8,6 +8,8 @@ const {
   parseDateRangeQuery,
   toNumber,
   parseSet,
+  parseSetChange,
+  parseOptionalDateTime,
   parseMacros,
 } = require("./validate");
 
@@ -104,6 +106,54 @@ test("parseSet refuses what is not a weight, whole reps or an RPE of 1 to 10", (
     assert.throws(() => parseSet(body), isBadRequest, `accepted ${JSON.stringify(body)}`);
   }
   assert.throws(() => parseSet({ weight: "100", reps: "pet" }), /Reps must be a whole number/);
+});
+
+test("parseSet passes isDone on only when the body names it, and then only as true or false", () => {
+  assert.equal("isDone" in parseSet({ weight: "100", reps: "5" }), false);
+  assert.equal(parseSet({ weight: "100", reps: "5", isDone: false }).isDone, false);
+  assert.equal(parseSet({ weight: "100", reps: "5", isDone: true }).isDone, true);
+  assert.throws(() => parseSet({ weight: "100", reps: "5", isDone: "false" }), isBadRequest);
+});
+
+test("parseSetChange checks and returns only the fields that were sent", () => {
+  assert.deepEqual(parseSetChange({ isDone: true }), { isDone: true });
+  assert.deepEqual(parseSetChange({ weight: "142,5" }), { weight: 142.5 });
+  assert.deepEqual(parseSetChange({ reps: 3, rpe: "" }), { reps: 3, rpe: null });
+  assert.deepEqual(
+    parseSetChange({ weight: 100, reps: "5", rpe: "8,5", isWarmup: false, isDone: false }),
+    { weight: 100, reps: 5, rpe: 8.5, isWarmup: false, isDone: false },
+  );
+});
+
+test("parseSetChange refuses an empty change and values a set cannot have", () => {
+  const bad = [
+    {},
+    null,
+    [],
+    { weight: "-5" },
+    { reps: "5,5" },
+    { rpe: "11" },
+    { isDone: 1 },
+    { isWarmup: "yes" },
+  ];
+  for (const body of bad) {
+    assert.throws(() => parseSetChange(body), isBadRequest, `accepted ${JSON.stringify(body)}`);
+  }
+});
+
+test("parseOptionalDateTime reads an ISO moment, keeps null, and refuses the rest", () => {
+  assert.equal(
+    parseOptionalDateTime("2026-11-16T17:04:00.000Z", "startedAt").toISOString(),
+    "2026-11-16T17:04:00.000Z",
+  );
+  assert.equal(parseOptionalDateTime(null, "finishedAt"), null);
+  for (const bad of ["yesterday", "", 1763312640000, undefined, {}]) {
+    assert.throws(
+      () => parseOptionalDateTime(bad, "startedAt"),
+      /startedAt must be a date and time/,
+      `accepted ${JSON.stringify(bad)}`,
+    );
+  }
 });
 
 test("parseMacros trims the name and wants four numbers", () => {
