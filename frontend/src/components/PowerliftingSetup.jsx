@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { isSameExerciseName } from "../utils/exerciseNames";
+import { formatNumber } from "../utils/numbers";
 import { DEFAULT_E1RM_FORMULA } from "../utils/oneRepMax";
 import {
   MAIN_LIFTS,
@@ -8,6 +9,7 @@ import {
   calculateWilks,
   findMainLiftBests,
 } from "../utils/strengthScores";
+import SegmentedControl from "./SegmentedControl";
 import styles from "./PowerliftingSetup.module.css";
 
 const SETTINGS_FIELD_BY_LIFT = {
@@ -22,7 +24,8 @@ const DECIMAL_PLACES = 1;
  * underneath. `exerciseSets` is the /api/stats/prs shape; `onChange` saves a settings patch.
  */
 function PowerliftingSetup({ settings, exerciseSets, bodyweight, onChange }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const score = (value) => formatNumber(value, i18n.language, { decimals: DECIMAL_PLACES });
   const formula = settings.e1rmFormula ?? DEFAULT_E1RM_FORMULA;
   const sex = settings.sex ?? SEXES.male;
   const bests = findMainLiftBests(exerciseSets, settings, formula);
@@ -37,34 +40,31 @@ function PowerliftingSetup({ settings, exerciseSets, bodyweight, onChange }) {
     : null;
   let summary = t("settings.powerliftingMissingLifts");
   if (total !== null && !bodyweight) {
-    summary = t("settings.powerliftingTotalOnly", { total: total.toFixed(DECIMAL_PLACES) });
+    summary = t("settings.powerliftingTotalOnly", { total: score(total) });
   } else if (total !== null) {
     summary = t("settings.powerliftingSummary", {
-      total: total.toFixed(DECIMAL_PLACES),
-      dots: calculateDots(total, bodyweight.weight, sex).toFixed(DECIMAL_PLACES),
-      wilks: calculateWilks(total, bodyweight.weight, sex).toFixed(DECIMAL_PLACES),
-      bodyweight: bodyweight.weight,
+      total: score(total),
+      dots: score(calculateDots(total, bodyweight.weight, sex)),
+      wilks: score(calculateWilks(total, bodyweight.weight, sex)),
+      bodyweight: formatNumber(bodyweight.weight, i18n.language),
     });
   }
 
   return (
-    <div className={styles.panel}>
+    <div className={styles.setup}>
       <div className={styles.group}>
-        <span className={styles.groupLabel}>{t("settings.sexLabel")}</span>
-        <div className={styles.segmented} role="group" aria-label={t("settings.sexLabel")}>
-          {Object.values(SEXES).map((option) => (
-            <button
-              key={option}
-              type="button"
-              aria-pressed={sex === option}
-              className={
-                sex === option ? `${styles.segment} ${styles.segmentActive}` : styles.segment
-              }
-              onClick={() => onChange({ sex: option })}
-            >
-              {t(`settings.sexes.${option}`)}
-            </button>
-          ))}
+        <div className={styles.row}>
+          <span className={styles.groupLabel}>{t("settings.sexLabel")}</span>
+          <SegmentedControl
+            compact
+            label={t("settings.sexLabel")}
+            options={Object.values(SEXES).map((option) => ({
+              value: option,
+              label: t(`settings.sexes.${option}`),
+            }))}
+            value={sex}
+            onChange={(option) => onChange({ sex: option })}
+          />
         </div>
         <p className={styles.hint}>{t("settings.sexHint")}</p>
       </div>
@@ -101,7 +101,7 @@ function PowerliftingSetup({ settings, exerciseSets, bodyweight, onChange }) {
                 ))}
               </select>
               <span className={styles.liftValue}>
-                {bests[lift] ? `${bests[lift].e1rm.toFixed(DECIMAL_PLACES)} kg` : "—"}
+                {bests[lift] ? `${score(bests[lift].e1rm)} kg` : "—"}
               </span>
             </label>
           );

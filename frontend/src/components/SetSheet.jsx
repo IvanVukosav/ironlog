@@ -2,6 +2,7 @@ import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import Sheet from "./Sheet";
 import Icon from "./Icon";
+import SwitchRow from "./SwitchRow";
 import { formatNumber, toDecimalText, toInputText } from "../utils/numbers";
 import styles from "./SetSheet.module.css";
 
@@ -176,24 +177,12 @@ function SetSheet({ set, title, onSave, onCopy, onDelete, onClose }) {
 
       <div className={styles.divider} aria-hidden="true" />
 
-      <button
-        type="button"
-        role="switch"
-        aria-checked={draft.isWarmup}
-        className={styles.switchRow}
-        onClick={() => setDraft((current) => ({ ...current, isWarmup: !current.isWarmup }))}
-      >
-        <span className={styles.switchText}>
-          <span className={styles.switchLabel}>{t("log.warmupLabel")}</span>
-          <span className={styles.switchHint}>{t("log.warmupHint")}</span>
-        </span>
-        <span
-          className={draft.isWarmup ? `${styles.switch} ${styles.switchOn}` : styles.switch}
-          aria-hidden="true"
-        >
-          <span className={styles.knob} />
-        </span>
-      </button>
+      <SwitchRow
+        label={t("log.warmupLabel")}
+        hint={t("log.warmupHint")}
+        checked={draft.isWarmup}
+        onChange={(isWarmup) => setDraft((current) => ({ ...current, isWarmup }))}
+      />
 
       <div className={styles.actions}>
         <button

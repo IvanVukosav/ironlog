@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { downloadFile, fetchJson, getToken, setToken, UNAUTHORIZED_EVENT } from "../api";
 import { DEFAULT_E1RM_FORMULA, E1RM_FORMULAS } from "../utils/oneRepMax";
@@ -6,15 +6,26 @@ import { DEFAULT_REST_SECONDS, formatClock, REST_CHOICES_SECONDS } from "../util
 import { useToast } from "../context/useToast";
 import { useSettings } from "../context/useSettings";
 import { useReportError } from "../hooks/useReportError";
+import NumberField from "../components/NumberField";
 import PowerliftingSetup from "../components/PowerliftingSetup";
+import SegmentedControl from "../components/SegmentedControl";
+import SwitchRow from "../components/SwitchRow";
 import styles from "./Settings.module.css";
 
 const BODYWEIGHT_LOOKBACK_DAYS = 3650;
 
-const GOAL_FIELDS = ["kcalGoal", "proteinGoal", "trainingsPerWeek", "carbsGoal", "fatGoal"];
+const GOAL_FIELDS = ["kcalGoal", "proteinGoal", "carbsGoal", "fatGoal", "trainingsPerWeek"];
 
+const DEFAULT_LANGUAGE = "hr";
 const DEFAULT_THEME = "auto";
 const DEFAULT_TEMPLATE = "moderna";
+const DEFAULT_PICKER_MODE = "chips";
+
+// Each language's name in itself, as people look for it.
+const LANGUAGES = [
+  { value: "hr", label: "Hrvatski" },
+  { value: "en", label: "English" },
+];
 
 const THEMES = [
   // Follows the device: Graphite in dark mode, Daylight in light mode.
@@ -41,6 +52,45 @@ const TEMPLATES = [
   { value: "glass", label: "Glass" },
 ];
 
+// A card of settings under a small title.
+function Section({ title, children }) {
+  const id = useId();
+  return (
+    <section className={styles.card} aria-labelledby={id}>
+      <h2 id={id} className={styles.cardTitle}>
+        {title}
+      </h2>
+      {children}
+    </section>
+  );
+}
+
+// One choice out of several, as chips that wrap; `options` are { value, label, swatch? }.
+function ChipGroup({ label, options, value, onChange }) {
+  return (
+    <div className={styles.chips} role="group" aria-label={label}>
+      {options.map((option) => (
+        <button
+          key={option.value}
+          type="button"
+          className={styles.chip}
+          aria-pressed={option.value === value}
+          onClick={() => onChange(option.value)}
+        >
+          {option.swatch && (
+            <span
+              className={styles.swatch}
+              style={{ background: option.swatch }}
+              aria-hidden="true"
+            />
+          )}
+          {option.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function Settings() {
   const { t } = useTranslation();
   const { showError, showSuccess } = useToast();
@@ -52,8 +102,6 @@ function Settings() {
   // Logged exercises with their sets and the latest bodyweight, for the powerlifting setup.
   const [exerciseSets, setExerciseSets] = useState([]);
   const [latestBodyweight, setLatestBodyweight] = useState(null);
-  const [themeMenuOpen, setThemeMenuOpen] = useState(false);
-  const [templateMenuOpen, setTemplateMenuOpen] = useState(false);
 
   useEffect(() => {
     const load = (path, onData) => fetchJson(path).then(onData).catch(reportError);
@@ -64,39 +112,6 @@ function Settings() {
     );
   }, [reportError]);
 
-  useEffect(() => {
-    if (!themeMenuOpen) return undefined;
-    const handleClickOutside = (event) => {
-      if (!event.target.closest("[data-theme-menu]")) {
-        setThemeMenuOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [themeMenuOpen]);
-
-  useEffect(() => {
-    if (!templateMenuOpen) return undefined;
-    const handleClickOutside = (event) => {
-      if (!event.target.closest("[data-template-menu]")) {
-        setTemplateMenuOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [templateMenuOpen]);
-
-  // The page's theme, template and language follow the settings (SettingsProvider).
-  const changeTheme = (theme) => {
-    setThemeMenuOpen(false);
-    updateSettings({ theme });
-  };
-
-  const changeTemplate = (template) => {
-    setTemplateMenuOpen(false);
-    updateSettings({ template });
-  };
-
   // Anything but a whole number of zero or more puts the saved goal back.
   const commitGoal = (field) => {
     const draft = goalDrafts[field];
@@ -106,7 +121,7 @@ function Settings() {
       delete next[field];
       return next;
     });
-    const value = Number(draft);
+    const value = Number(draft.trim());
     if (draft.trim() === "" || !Number.isInteger(value) || value < 0) return;
     if (value !== settings?.[field]) updateSettings({ [field]: value });
   };
@@ -143,257 +158,186 @@ function Settings() {
     window.dispatchEvent(new Event(UNAUTHORIZED_EVENT));
   };
 
-  const currentTheme = THEMES.find((theme) => theme.value === (settings?.theme || DEFAULT_THEME));
-  const themeLabel = (theme) => (theme.labelKey ? t(theme.labelKey) : theme.label);
+  // The page's theme, template and language follow the settings (SettingsProvider).
+  const change = (field) => (value) => updateSettings({ [field]: value });
 
   return (
     <div className={styles.page}>
-      <h1 className={styles.heading}>{t("settings.title")}</h1>
-      <p className={styles.autoSaveHint}>{t("settings.autoSaveHint")}</p>
+      <header className={styles.header}>
+        <h1 className={styles.heading}>{t("settings.title")}</h1>
+        <p className={styles.headerHint}>{t("settings.autoSaveHint")}</p>
+      </header>
 
-      <div className={styles.field}>
-        <span className={styles.fieldLabel}>{t("settings.language")}</span>
-        <select
-          className={styles.languageSelect}
-          value={settings?.language || "hr"}
-          onChange={(event) => updateSettings({ language: event.target.value })}
-        >
-          <option value="hr">Hrvatski</option>
-          <option value="en">English</option>
-        </select>
-      </div>
-
-      <div className={styles.field}>
-        <span className={styles.fieldLabel}>{t("settings.theme")}</span>
-        <div className={styles.themePicker} data-theme-menu>
-          <button
-            type="button"
-            className={styles.themeTrigger}
-            onClick={() => setThemeMenuOpen((prev) => !prev)}
-          >
-            <span className={styles.themeDot} style={{ background: currentTheme?.swatch }} />
-            <span>{currentTheme && themeLabel(currentTheme)}</span>
-            <span className={styles.themeCaret}>{themeMenuOpen ? "▴" : "▾"}</span>
-          </button>
-          {themeMenuOpen && (
-            <div className={styles.themeDropdown}>
-              {THEMES.map((theme) => (
-                <button
-                  type="button"
-                  key={theme.value}
-                  className={
-                    theme.value === currentTheme?.value
-                      ? `${styles.themeOption} ${styles.themeOptionActive}`
-                      : styles.themeOption
-                  }
-                  onClick={() => changeTheme(theme.value)}
-                >
-                  <span className={styles.themeDot} style={{ background: theme.swatch }} />
-                  <span>{themeLabel(theme)}</span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className={styles.field}>
-        <span className={styles.fieldLabel}>{t("settings.template")}</span>
-        <div className={styles.themePicker} data-template-menu>
-          <button
-            type="button"
-            className={styles.themeTrigger}
-            onClick={() => setTemplateMenuOpen((prev) => !prev)}
-          >
-            <span>
-              {
-                TEMPLATES.find(
-                  (template) => template.value === (settings?.template || DEFAULT_TEMPLATE),
-                )?.label
-              }
-            </span>
-            <span className={styles.themeCaret}>{templateMenuOpen ? "▴" : "▾"}</span>
-          </button>
-          {templateMenuOpen && (
-            <div className={styles.themeDropdown}>
-              {TEMPLATES.map((template) => (
-                <button
-                  type="button"
-                  key={template.value}
-                  className={
-                    template.value === (settings?.template || DEFAULT_TEMPLATE)
-                      ? `${styles.themeOption} ${styles.themeOptionActive}`
-                      : styles.themeOption
-                  }
-                  onClick={() => changeTemplate(template.value)}
-                >
-                  <span>{template.label}</span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {GOAL_FIELDS.map((field) => (
-        <div key={field} className={styles.field}>
-          <span className={styles.fieldLabel}>{t(`settings.${field}`)}</span>
-          <input
-            type="number"
-            min="0"
-            className={styles.fieldInput}
-            value={goalDrafts[field] ?? settings?.[field] ?? ""}
-            onChange={(event) =>
-              setGoalDrafts((drafts) => ({ ...drafts, [field]: event.target.value }))
-            }
-            onBlur={() => commitGoal(field)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") event.target.blur();
-            }}
+      <Section title={t("settings.appearanceSection")}>
+        <div className={styles.row}>
+          <span className={styles.rowLabel}>{t("settings.language")}</span>
+          <SegmentedControl
+            compact
+            label={t("settings.language")}
+            options={LANGUAGES}
+            value={settings?.language || DEFAULT_LANGUAGE}
+            onChange={change("language")}
           />
         </div>
-      ))}
+        <div className={styles.block}>
+          <span className={styles.rowText}>
+            <span className={styles.rowLabel}>{t("settings.theme")}</span>
+            <span className={styles.rowHint}>{t("settings.themeHint")}</span>
+          </span>
+          <ChipGroup
+            label={t("settings.theme")}
+            options={THEMES.map((theme) => ({
+              value: theme.value,
+              label: theme.labelKey ? t(theme.labelKey) : theme.label,
+              swatch: theme.swatch,
+            }))}
+            value={settings?.theme || DEFAULT_THEME}
+            onChange={change("theme")}
+          />
+        </div>
+        <div className={styles.block}>
+          <span className={styles.rowLabel}>{t("settings.template")}</span>
+          <ChipGroup
+            label={t("settings.template")}
+            options={TEMPLATES}
+            value={settings?.template || DEFAULT_TEMPLATE}
+            onChange={change("template")}
+          />
+        </div>
+      </Section>
 
-      <p className={styles.sectionLabel}>{t("settings.dashboardWidgets")}</p>
+      <Section title={t("settings.goalsSection")}>
+        <div className={styles.goals}>
+          {GOAL_FIELDS.map((field) => (
+            <NumberField
+              key={field}
+              label={t(`settings.${field}`)}
+              inputMode="numeric"
+              value={goalDrafts[field] ?? String(settings?.[field] ?? "")}
+              onChange={(text) => setGoalDrafts((drafts) => ({ ...drafts, [field]: text }))}
+              onBlur={() => commitGoal(field)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") event.currentTarget.blur();
+              }}
+            />
+          ))}
+        </div>
+      </Section>
 
-      <label className={styles.checkboxRow}>
-        <input
-          type="checkbox"
-          checked={settings?.showWorkoutWidget ?? true}
-          onChange={(event) => updateSettings({ showWorkoutWidget: event.target.checked })}
-        />
-        {t("settings.showWorkoutWidget")}
-      </label>
-
-      <label className={styles.checkboxRow}>
-        <input
-          type="checkbox"
-          checked={settings?.showNutritionWidget ?? true}
-          onChange={(event) => updateSettings({ showNutritionWidget: event.target.checked })}
-        />
-        {t("settings.showNutritionWidget")}
-      </label>
-
-      <label className={styles.checkboxRow}>
-        <input
-          type="checkbox"
-          checked={settings?.showPrWidget ?? true}
-          onChange={(event) => updateSettings({ showPrWidget: event.target.checked })}
-        />
-        {t("settings.showPrWidget")}
-      </label>
-
-      <p className={styles.sectionLabel}>{t("settings.exercisePickerSection")}</p>
-
-      <label className={styles.checkboxRow}>
-        <input
-          type="radio"
-          name="exercisePickerMode"
-          checked={(settings?.exercisePickerMode ?? "chips") === "chips"}
-          onChange={() => updateSettings({ exercisePickerMode: "chips" })}
-        />
-        {t("settings.exercisePickerChips")}
-      </label>
-
-      <label className={styles.checkboxRow}>
-        <input
-          type="radio"
-          name="exercisePickerMode"
-          checked={settings?.exercisePickerMode === "twoStep"}
-          onChange={() => updateSettings({ exercisePickerMode: "twoStep" })}
-        />
-        {t("settings.exercisePickerTwoStep")}
-      </label>
-
-      <p className={styles.sectionLabel}>{t("settings.setsSection")}</p>
-
-      <label className={styles.checkboxRow}>
-        <input
-          type="checkbox"
+      <Section title={t("settings.trainingSection")}>
+        <div className={styles.block}>
+          <span className={styles.rowText}>
+            <span className={styles.rowLabel}>{t("settings.restLabel")}</span>
+            <span className={styles.rowHint}>{t("settings.restHint")}</span>
+          </span>
+          <ChipGroup
+            label={t("settings.restLabel")}
+            options={REST_CHOICES_SECONDS.map((seconds) => ({
+              value: seconds,
+              label: seconds === 0 ? t("settings.restOff") : formatClock(seconds * 1000),
+            }))}
+            value={settings?.restSeconds ?? DEFAULT_REST_SECONDS}
+            onChange={change("restSeconds")}
+          />
+        </div>
+        <SwitchRow
+          label={t("settings.showE1rm")}
           checked={settings?.showE1rm ?? true}
-          onChange={(event) => updateSettings({ showE1rm: event.target.checked })}
+          onChange={change("showE1rm")}
         />
-        {t("settings.showE1rm")}
-      </label>
-
-      {Object.entries(E1RM_FORMULAS).map(([formula, { label }]) => (
-        <label key={formula} className={styles.checkboxRow}>
-          <input
-            type="radio"
-            name="e1rmFormula"
-            checked={(settings?.e1rmFormula ?? DEFAULT_E1RM_FORMULA) === formula}
-            onChange={() => updateSettings({ e1rmFormula: formula })}
+        <div className={styles.row}>
+          <span className={styles.rowLabel}>{t("settings.e1rmFormula")}</span>
+          <SegmentedControl
+            compact
+            label={t("settings.e1rmFormula")}
+            options={Object.entries(E1RM_FORMULAS).map(([value, { label }]) => ({ value, label }))}
+            value={settings?.e1rmFormula ?? DEFAULT_E1RM_FORMULA}
+            onChange={change("e1rmFormula")}
           />
-          {label}
-        </label>
-      ))}
-
-      <p className={styles.sectionLabel}>{t("settings.restSection")}</p>
-
-      {REST_CHOICES_SECONDS.map((seconds) => (
-        <label key={seconds} className={styles.checkboxRow}>
-          <input
-            type="radio"
-            name="restSeconds"
-            checked={(settings?.restSeconds ?? DEFAULT_REST_SECONDS) === seconds}
-            onChange={() => updateSettings({ restSeconds: seconds })}
+        </div>
+        <div className={styles.row}>
+          <span className={styles.rowLabel}>{t("settings.exercisePicker")}</span>
+          <SegmentedControl
+            compact
+            label={t("settings.exercisePicker")}
+            options={[
+              { value: "chips", label: t("settings.pickerFilter") },
+              { value: "twoStep", label: t("settings.pickerTwoStep") },
+            ]}
+            value={settings?.exercisePickerMode ?? DEFAULT_PICKER_MODE}
+            onChange={change("exercisePickerMode")}
           />
-          {seconds === 0 ? t("settings.restOff") : formatClock(seconds * 1000)}
-        </label>
-      ))}
+        </div>
+      </Section>
 
-      <p className={styles.sectionLabel}>{t("settings.powerliftingSection")}</p>
+      <Section title={t("settings.homeSection")}>
+        <SwitchRow
+          label={t("dashboard.workoutToday")}
+          checked={settings?.showWorkoutWidget ?? true}
+          onChange={change("showWorkoutWidget")}
+        />
+        <SwitchRow
+          label={t("dashboard.nutritionToday")}
+          checked={settings?.showNutritionWidget ?? true}
+          onChange={change("showNutritionWidget")}
+        />
+        <SwitchRow
+          label={t("dashboard.latestPr")}
+          checked={settings?.showPrWidget ?? true}
+          onChange={change("showPrWidget")}
+        />
+      </Section>
 
-      <label className={styles.checkboxRow}>
-        <input
-          type="checkbox"
+      <Section title={t("settings.powerliftingSection")}>
+        <SwitchRow
+          label={t("settings.showPowerliftingTotal")}
+          hint={t("settings.powerliftingHint")}
           checked={settings?.showPowerliftingTotal ?? false}
-          onChange={(event) => updateSettings({ showPowerliftingTotal: event.target.checked })}
+          onChange={change("showPowerliftingTotal")}
         />
-        {t("settings.showPowerliftingTotal")}
-      </label>
-      <p className={styles.optionHint}>{t("settings.powerliftingHint")}</p>
-
-      {/* Sex and the three lifts only feed the powerlifting numbers, so they hide with them. */}
-      {settings?.showPowerliftingTotal && (
-        <PowerliftingSetup
-          settings={settings}
-          exerciseSets={exerciseSets}
-          bodyweight={latestBodyweight}
-          onChange={updateSettings}
-        />
-      )}
-
-      <p className={styles.sectionLabel}>{t("settings.backupSection")}</p>
-      <p className={styles.backupHint}>{t("settings.backupHint")}</p>
-      <div className={styles.backupActions}>
-        <button
-          type="button"
-          className={styles.backupButton}
-          onClick={() => download("/api/backup/export", "ironlog-backup.json")}
-        >
-          {t("settings.backupExportJson")}
-        </button>
-        <button
-          type="button"
-          className={styles.backupButton}
-          onClick={() => download("/api/backup/sets.csv", "ironlog-sets.csv")}
-        >
-          {t("settings.backupExportCsv")}
-        </button>
-        <label className={styles.backupButton}>
-          {t("settings.backupImport")}
-          <input
-            type="file"
-            accept="application/json,.json"
-            className={styles.hiddenFileInput}
-            onChange={(event) => {
-              importBackup(event.target.files[0]);
-              event.target.value = "";
-            }}
+        {/* Sex and the three lifts only feed the powerlifting numbers, so they hide with them. */}
+        {settings?.showPowerliftingTotal && (
+          <PowerliftingSetup
+            settings={settings}
+            exerciseSets={exerciseSets}
+            bodyweight={latestBodyweight}
+            onChange={updateSettings}
           />
-        </label>
-      </div>
+        )}
+      </Section>
+
+      <Section title={t("settings.backupSection")}>
+        <p className={styles.text}>{t("settings.backupHint")}</p>
+        <div className={styles.actions}>
+          <button
+            type="button"
+            className={styles.secondaryButton}
+            onClick={() => download("/api/backup/export", "ironlog-backup.json")}
+          >
+            {t("settings.backupExportJson")}
+          </button>
+          <button
+            type="button"
+            className={styles.secondaryButton}
+            onClick={() => download("/api/backup/sets.csv", "ironlog-sets.csv")}
+          >
+            {t("settings.backupExportCsv")}
+          </button>
+          {/* The file box itself is invisible but still reached with Tab; the label is its face. */}
+          <label className={styles.fileButton}>
+            {t("settings.backupImport")}
+            <input
+              type="file"
+              accept="application/json,.json"
+              className={styles.fileInput}
+              onChange={(event) => {
+                importBackup(event.target.files[0]);
+                event.target.value = "";
+              }}
+            />
+          </label>
+        </div>
+      </Section>
 
       {getToken() && (
         <button type="button" className={styles.logoutButton} onClick={logout}>
