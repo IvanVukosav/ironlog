@@ -44,6 +44,13 @@ const ICONS = {
   minus: <path d="M5 12h14" />,
   plus: <path d="M12 5v14M5 12h14" />,
   trash: <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />,
+  // A circled "!": something went wrong.
+  alert: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7.5v5.5M12 16.5h.01" />
+    </>
+  ),
   pencil: (
     <>
       <path d="M4 20h4L19 9l-4-4L4 16v4z" />

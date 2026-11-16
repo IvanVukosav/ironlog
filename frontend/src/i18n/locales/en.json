@@ -68,6 +68,7 @@
     "backupImported": "Backup restored"
   },
   "common": {
+    "closeMessage": "Close message",
     "save": "Save",
     "delete": "Delete",
     "cancel": "Cancel",
@@ -134,7 +135,7 @@
     "e1rmUnavailable": "e1RM —",
     "e1rmUnavailableHint": "No e1RM above {{max}} reps to failure (reps plus reps in reserve from RPE)",
     "duplicateSet": "Duplicate set",
-    "newPrToast": "🎉 New PR! {{name}} {{value}}kg e1RM",
+    "newPrToast": "New PR! {{name}} {{value}} kg e1RM",
     "warmupLabel": "Warm-up",
     "warmupBadge": "W",
     "supersetPlaceholder": "—",

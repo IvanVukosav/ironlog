@@ -6,43 +6,87 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  max-width: 320px;
+  width: min(360px, calc(100vw - 2rem));
 }
 
-.toastError,
-.toastSuccess {
-  border-radius: var(--card-radius);
+/* On a phone: at the bottom, above the tab bar, the newest nearest the thumb. */
+@media (max-width: 640px) {
+  .container {
+    top: auto;
+    left: 12px;
+    right: 12px;
+    bottom: calc(76px + env(safe-area-inset-bottom));
+    width: auto;
+    flex-direction: column-reverse;
+  }
+
+  /* The rest timer sits right above the tab bar; messages go above it. */
+  .aboveRest {
+    bottom: calc(176px + env(safe-area-inset-bottom));
+  }
+
+  /* A sheet open at the bottom has the thumb there: messages show at the top instead. */
+  :global(body:has([aria-modal="true"])) .container {
+    top: 1rem;
+    bottom: auto;
+    flex-direction: column;
+  }
+}
+
+.toast {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  background-color: var(--color-bg-elevated);
-  border-left: 3px solid var(--color-accent);
-  padding: 0.65rem 0.85rem;
-  font-family: var(--font-body);
-  font-size: 0.8rem;
+  gap: 10px;
+  min-height: 52px;
+  box-sizing: border-box;
+  padding: 4px 4px 4px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--card-radius);
+  background: var(--color-bg-elevated);
+  box-shadow: var(--elevation-dropdown);
   color: var(--color-text);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  line-height: 1.35;
 }
 
-.toastSuccess {
-  border-left-color: var(--color-success);
+.iconSuccess,
+.iconError {
+  flex: none;
+  display: flex;
+}
+
+.iconSuccess {
+  color: var(--color-success);
+}
+
+.iconError {
+  color: var(--color-accent);
 }
 
 .message {
   flex: 1;
+  min-width: 0;
+  padding: 8px 0;
+  overflow-wrap: anywhere;
 }
 
 .closeButton {
-  background: none;
-  border: none;
-  color: var(--color-text-dim);
-  font-size: 0.8rem;
-  cursor: pointer;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
   padding: 0;
-  line-height: 1;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--color-text-dim);
+  cursor: pointer;
 }
 
 .closeButton:hover {
+  background: var(--color-bg-hover);
   color: var(--color-text);
 }
