@@ -23,20 +23,12 @@ import {
 } from "../utils/activeWorkout";
 import { DEFAULT_E1RM_FORMULA } from "../utils/oneRepMax";
 import { formatWeekdayDate, todayKey } from "../utils/dates";
+import { MUSCLE_GROUPS, muscleGroupLabel } from "../utils/muscleGroups";
 import { formatNumber } from "../utils/numbers";
 import { withSetChanged } from "../utils/workoutState";
 import styles from "./Log.module.css";
 
-const MUSCLE_GROUPS = [
-  "Leđa",
-  "Prsa",
-  "Kvadriceps",
-  "Stražnja loža",
-  "Ramena",
-  "Gluteus",
-  "Ruke",
-  "Trbušnjaci",
-];
+// The filter that shows every group; a value, shown as "Sve"/"All".
 const ALL_MUSCLE_GROUPS_FILTER = "Sve";
 const SUPERSET_COLORS = ["#3ba7ff", "#3ec95c", "#ffb020", "#c678dd", "#ff6b9d"];
 
@@ -487,7 +479,9 @@ function Log() {
                             }
                             onClick={() => setMuscleGroupFilter(group)}
                           >
-                            {group}
+                            {group === ALL_MUSCLE_GROUPS_FILTER
+                              ? t("muscleGroups.all")
+                              : muscleGroupLabel(group, t)}
                           </button>
                         ))}
                       </div>
@@ -503,7 +497,7 @@ function Log() {
                               className={styles.categoryListItem}
                               onClick={() => setMuscleGroupFilter(group)}
                             >
-                              {group}
+                              {muscleGroupLabel(group, t)}
                             </button>
                           ))}
                         </div>
@@ -536,7 +530,7 @@ function Log() {
                               {template.name}
                               {template.muscleGroup && (
                                 <span className={styles.exercisePickerGroup}>
-                                  {template.muscleGroup}
+                                  {muscleGroupLabel(template.muscleGroup, t)}
                                 </span>
                               )}
                             </button>
@@ -630,7 +624,7 @@ function Log() {
                   <option value="">{t("log.muscleGroupPlaceholder")}</option>
                   {MUSCLE_GROUPS.map((group) => (
                     <option key={group} value={group}>
-                      {group}
+                      {muscleGroupLabel(group, t)}
                     </option>
                   ))}
                 </select>

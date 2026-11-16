@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { DEFAULT_MEAL_NAME } from "../hooks/useNutritionDay";
 import { formatNumber, toInputText } from "../utils/numbers";
 import { sumMacros } from "../utils/nutritionState";
 import Icon from "./Icon";
@@ -69,6 +70,9 @@ function MealCard({ meal, actions, foodItemTemplates, onSaveTemplate }) {
   const [editFood, setEditFood] = useState(EMPTY_FOOD);
   const pickerRef = useRef(null);
   const menuRef = useRef(null);
+  // The meal the app makes for food added by name is saved as "Ostalo"; it is shown in the
+  // page's language. Meals named by hand are shown as named.
+  const mealName = meal.name === DEFAULT_MEAL_NAME ? t("nutrition.defaultMeal") : meal.name;
 
   useEffect(() => {
     if (!showPicker) return undefined;
@@ -111,7 +115,7 @@ function MealCard({ meal, actions, foodItemTemplates, onSaveTemplate }) {
 
   const deleteMeal = () => {
     setShowMenu(false);
-    if (window.confirm(t("nutrition.confirmDeleteMeal", { name: meal.name }))) {
+    if (window.confirm(t("nutrition.confirmDeleteMeal", { name: mealName }))) {
       actions.deleteMeal(meal.id);
     }
   };
@@ -127,13 +131,13 @@ function MealCard({ meal, actions, foodItemTemplates, onSaveTemplate }) {
   return (
     <section className={styles.card}>
       <div className={styles.cardHeader}>
-        <h2 className={styles.heading}>{meal.name}</h2>
+        <h2 className={styles.heading}>{mealName}</h2>
         <span className={styles.mealKcal}>{`${kcal(total.kcal)} kcal`}</span>
         <div className={styles.menuWrapper} ref={menuRef}>
           <button
             type="button"
             className={styles.menuButton}
-            aria-label={t("nutrition.mealOptions", { name: meal.name })}
+            aria-label={t("nutrition.mealOptions", { name: mealName })}
             aria-expanded={showMenu}
             onClick={() => setShowMenu((prev) => !prev)}
           >

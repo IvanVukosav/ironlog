@@ -242,7 +242,20 @@
     "nothingThisDay": "Za ovaj dan i tjedan nema vježbi.",
     "load": "Učitaj"
   },
+  "muscleGroups": {
+    "all": "Sve",
+    "back": "Leđa",
+    "chest": "Prsa",
+    "quads": "Kvadriceps",
+    "hamstrings": "Stražnja loža",
+    "shoulders": "Ramena",
+    "glutes": "Gluteus",
+    "arms": "Ruke",
+    "abs": "Trbušnjaci",
+    "other": "Ostalo"
+  },
   "nutrition": {
+    "defaultMeal": "Ostalo",
     "dayTotal": "Ukupno",
     "noEntries": "Za ovaj dan još nema unosa.",
     "quickAddPlaceholder": "Brzo dodaj namirnicu po nazivu",

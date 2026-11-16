@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { fetchJson } from "../api";
 import { useReportError } from "../hooks/useReportError";
 import { todayKey } from "../utils/dates";
+import { muscleGroupLabel } from "../utils/muscleGroups";
 import { formatVolume } from "../utils/numbers";
 import SegmentedControl from "./SegmentedControl";
 import styles from "./MuscleGroupVolumeChart.module.css";
@@ -42,7 +43,7 @@ function MuscleGroupVolumeChart() {
         <div className={styles.barList}>
           {volumeData.map((entry) => (
             <div key={entry.muscleGroup} className={styles.barRow}>
-              <span className={styles.barLabel}>{entry.muscleGroup}</span>
+              <span className={styles.barLabel}>{muscleGroupLabel(entry.muscleGroup, t)}</span>
               <div className={styles.barTrack}>
                 <div
                   className={styles.barFill}

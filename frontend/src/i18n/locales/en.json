@@ -237,7 +237,20 @@
     "nothingThisDay": "No exercises for this day and week.",
     "load": "Load"
   },
+  "muscleGroups": {
+    "all": "All",
+    "back": "Back",
+    "chest": "Chest",
+    "quads": "Quads",
+    "hamstrings": "Hamstrings",
+    "shoulders": "Shoulders",
+    "glutes": "Glutes",
+    "arms": "Arms",
+    "abs": "Abs",
+    "other": "Other"
+  },
   "nutrition": {
+    "defaultMeal": "Other",
     "dayTotal": "Total",
     "noEntries": "Nothing logged for this day yet.",
     "quickAddPlaceholder": "Quickly add a food item by name",
