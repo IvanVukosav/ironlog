@@ -565,6 +565,80 @@
   color: var(--color-accent);
 }
 
+/* Reps and RPE: the box alone on a computer; their − and + show only on a phone (below). */
+.stepControl {
+  display: flex;
+}
+
+.phoneStep {
+  display: none;
+}
+
+/* On a phone each field is a row of its own, the row itself the box, as in Kalkulator: the
+   name, then − number +. The weight's box gives way to the row; its buttons join the others. */
+@media (max-width: 640px) {
+  .fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .field {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 6px 6px 14px;
+    border-radius: var(--row-radius);
+    background: var(--input-bg);
+  }
+
+  .field:focus-within {
+    box-shadow: var(--input-focus-ring);
+  }
+
+  .fieldLabel {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.875rem;
+  }
+
+  .field .weightControl,
+  .field .stepControl {
+    flex: none;
+    align-items: center;
+    gap: 4px;
+    height: auto;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    overflow: visible;
+  }
+
+  .field .stepButton {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--button-radius);
+    background: var(--color-border);
+    color: var(--color-text);
+  }
+
+  .field .weightInput,
+  .field .fieldInput,
+  .field .fieldInput:focus {
+    width: 5.5rem;
+    height: 44px;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    font-size: 1.35rem;
+    text-align: center;
+  }
+}
+
 .addSetButton {
   composes: button from "../styles/shared.module.css";
   width: 100%;

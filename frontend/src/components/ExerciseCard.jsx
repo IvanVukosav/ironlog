@@ -9,11 +9,19 @@ import {
   formulaMaxReps,
   isRoughEstimate,
   MAX_RELIABLE_REPS_TO_FAILURE,
+  MAX_RPE,
+  MIN_RPE,
   repsToFailure,
 } from "../utils/oneRepMax";
 import { useToast } from "../context/useToast";
 import { formatDayMonth } from "../utils/dates";
-import { formatNumber, parseDecimal, toDecimalText, toInputText } from "../utils/numbers";
+import {
+  formatNumber,
+  parseDecimal,
+  stepNumber,
+  toDecimalText,
+  toInputText,
+} from "../utils/numbers";
 import { buildWarmupSets, loadPlateSetup } from "../utils/plates";
 import { useDragReorder } from "../hooks/useDragReorder";
 import Icon from "./Icon";
@@ -22,6 +30,11 @@ import styles from "./ExerciseCard.module.css";
 
 const WEIGHT_STEP_KG = 1;
 const MINIMUM_WEIGHT_KG = 0;
+// − and + for reps and RPE on a phone: how far a tap moves them, and where an empty one starts.
+const REPS_STEP = 1;
+const REPS_START = 5;
+const RPE_STEP = 0.5;
+const RPE_START = 8;
 const E1RM_DECIMAL_PLACES = 1;
 // The set forms hold what was typed, so their fields are strings.
 const EMPTY_SET = { weight: "", reps: "", rpe: "", isWarmup: false };
@@ -56,11 +69,56 @@ function toSetValues(form) {
 
 const isComplete = (form) => form.weight.trim() !== "" && form.reps.trim() !== "";
 
-// Weight, reps and RPE, each under its label. The weight has − and + for 1 kg steps.
+// Weight, reps and RPE, each under its label. The weight has − and + for 1 kg steps. On a phone
+// each is a row of its own with − and + (reps and RPE get theirs only there), as in Kalkulator.
 function SetFields({ values, onChange }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const id = useId();
   const change = (field) => (event) => onChange({ ...values, [field]: event.target.value });
+  // − and + for reps (whole, from 5 when empty) and RPE (from 8, within 1 to 10).
+  const stepField = (field, amount, options) => {
+    const next = stepNumber(values[field], amount, options);
+    onChange({
+      ...values,
+      [field]: field === "reps" ? String(next) : toInputText(next, i18n.language),
+    });
+  };
+  const phoneSteps = (field, by, options, labels) => [
+    <button
+      key="less"
+      type="button"
+      className={`${styles.stepButton} ${styles.phoneStep}`}
+      aria-label={labels.less}
+      onClick={() => stepField(field, -by, options)}
+    >
+      <Icon name="minus" size={18} />
+    </button>,
+    <button
+      key="more"
+      type="button"
+      className={`${styles.stepButton} ${styles.phoneStep}`}
+      aria-label={labels.more}
+      onClick={() => stepField(field, by, options)}
+    >
+      <Icon name="plus" size={18} />
+    </button>,
+  ];
+  const [lessReps, moreReps] = phoneSteps(
+    "reps",
+    REPS_STEP,
+    { start: REPS_START, min: 0 },
+    { less: t("log.lessReps"), more: t("log.moreReps") },
+  );
+  const rpeStep = formatNumber(RPE_STEP, i18n.language);
+  const [lessRpe, moreRpe] = phoneSteps(
+    "rpe",
+    RPE_STEP,
+    { start: RPE_START, min: MIN_RPE, max: MAX_RPE },
+    {
+      less: t("log.lessRpeBy", { step: rpeStep }),
+      more: t("log.moreRpeBy", { step: rpeStep }),
+    },
+  );
 
   const stepWeight = (amount) => {
     const current = parseDecimal(values.weight);
@@ -110,27 +168,35 @@ function SetFields({ values, onChange }) {
         <label className={styles.fieldLabel} htmlFor={`${id}reps`}>
           {t("log.repsLabel")}
         </label>
-        <input
-          id={`${id}reps`}
-          className={styles.fieldInput}
-          inputMode="numeric"
-          autoComplete="off"
-          value={values.reps}
-          onChange={change("reps")}
-        />
+        <div className={styles.stepControl}>
+          {lessReps}
+          <input
+            id={`${id}reps`}
+            className={styles.fieldInput}
+            inputMode="numeric"
+            autoComplete="off"
+            value={values.reps}
+            onChange={change("reps")}
+          />
+          {moreReps}
+        </div>
       </div>
       <div className={styles.field} data-field="rpe">
         <label className={styles.fieldLabel} htmlFor={`${id}rpe`}>
           {t("log.rpeLabel")}
         </label>
-        <input
-          id={`${id}rpe`}
-          className={styles.fieldInput}
-          inputMode="decimal"
-          autoComplete="off"
-          value={values.rpe}
-          onChange={change("rpe")}
-        />
+        <div className={styles.stepControl}>
+          {lessRpe}
+          <input
+            id={`${id}rpe`}
+            className={styles.fieldInput}
+            inputMode="decimal"
+            autoComplete="off"
+            value={values.rpe}
+            onChange={change("rpe")}
+          />
+          {moreRpe}
+        </div>
       </div>
     </div>
   );
