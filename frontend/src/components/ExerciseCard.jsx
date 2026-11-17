@@ -3,8 +3,13 @@ import { useTranslation } from "react-i18next";
 import { fetchJson } from "../api";
 import {
   calculateEstimatedOneRepMax,
+  DEFAULT_E1RM_FORMULA,
+  E1RM_FORMULAS,
   findBestSetByE1rm,
-  MAX_E1RM_REPS_TO_FAILURE,
+  formulaMaxReps,
+  isRoughEstimate,
+  MAX_RELIABLE_REPS_TO_FAILURE,
+  repsToFailure,
 } from "../utils/oneRepMax";
 import { useToast } from "../context/useToast";
 import { formatDayMonth } from "../utils/dates";
@@ -131,33 +136,42 @@ function SetFields({ values, onChange }) {
   );
 }
 
-// e1RM after a logged set, or "—" when it has too many reps to failure to estimate one.
+// e1RM after a logged set: with "≈" when it is only a rough guess (more than
+// MAX_RELIABLE_REPS_TO_FAILURE reps to failure), and "—" when there is none: no rep to failure,
+// or more than the formula takes at all (the hover says which).
 function SetE1rm({ workoutSet, formula }) {
   const { t, i18n } = useTranslation();
-  const e1rm = calculateEstimatedOneRepMax(
-    workoutSet.weight,
-    workoutSet.reps,
-    workoutSet.rpe,
-    formula,
-  );
+  const { weight, reps, rpe } = workoutSet;
+  const e1rm = calculateEstimatedOneRepMax(weight, reps, rpe, formula);
 
   if (e1rm === null) {
+    const isPastFormula = repsToFailure(reps, rpe) > formulaMaxReps(formula);
+    const { label } = E1RM_FORMULAS[formula] ?? E1RM_FORMULAS[DEFAULT_E1RM_FORMULA];
     return (
       <span
         className={styles.e1rmText}
-        title={t("log.e1rmUnavailableHint", { max: MAX_E1RM_REPS_TO_FAILURE })}
+        title={
+          isPastFormula
+            ? t("log.e1rmUnavailableHint", { formula: label, max: formulaMaxReps(formula) })
+            : undefined
+        }
       >
         {t("log.e1rmUnavailable")}
       </span>
     );
   }
-  return (
-    <span className={styles.e1rmText}>
-      {t("log.e1rmSuffix", {
-        value: formatNumber(e1rm, i18n.language, { decimals: E1RM_DECIMAL_PLACES }),
-      })}
-    </span>
-  );
+  const value = formatNumber(e1rm, i18n.language, { decimals: E1RM_DECIMAL_PLACES });
+  if (isRoughEstimate(reps, rpe)) {
+    return (
+      <span
+        className={styles.e1rmText}
+        title={t("log.e1rmRoughHint", { max: MAX_RELIABLE_REPS_TO_FAILURE })}
+      >
+        {t("log.e1rmRough", { value })}
+      </span>
+    );
+  }
+  return <span className={styles.e1rmText}>{t("log.e1rmSuffix", { value })}</span>;
 }
 
 // `actions` are the workout's own (useWorkout): they save a change and resolve to what was saved,

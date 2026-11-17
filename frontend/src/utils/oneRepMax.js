@@ -1,11 +1,12 @@
 const RPE_SCALE_MAX = 10;
 const TIMELINE_DECIMAL_PLACES = 1;
-// The formulas stop meaning anything past this many reps to failure (Brzycki even turns
-// negative at 37), so such sets get no e1RM instead of a made-up one.
-export const MAX_E1RM_REPS_TO_FAILURE = 15;
+// The most reps to failure where an e1RM is still a fair guess. Past it the e1RM is still worked
+// out and counted, but shown as rough ("≈").
+export const MAX_RELIABLE_REPS_TO_FAILURE = 15;
 
 // Every e1RM formula the app offers. Adding one here is all it takes: Settings lists it and
-// every e1RM uses it when picked. `maxReps` is the most reps the formula accepts at all.
+// every e1RM uses it when picked. `maxReps` is the most reps the formula takes at all (Brzycki
+// divides by zero at 37); without one it has no end.
 export const E1RM_FORMULAS = {
   epley: { label: "Epley", estimate: (weight, reps) => weight * (1 + reps / 30) },
   brzycki: {
@@ -29,21 +30,21 @@ export function repsToFailure(reps, rpe) {
   return reps + RPE_SCALE_MAX - effectiveRpe;
 }
 
-// Null when the reps to failure are outside 1 to MAX_E1RM_REPS_TO_FAILURE.
+// The most reps to failure `formula` takes at all: Infinity for one without an end.
+export function formulaMaxReps(formula) {
+  return (E1RM_FORMULAS[formula] ?? E1RM_FORMULAS[DEFAULT_E1RM_FORMULA]).maxReps ?? Infinity;
+}
+
+// Null below one rep to failure, and past what the formula takes at all (formulaMaxReps).
 export function calculateEstimatedOneRepMax(weight, reps, rpe, formula) {
   const toFailure = repsToFailure(reps, rpe);
-  if (toFailure < 1 || toFailure > MAX_E1RM_REPS_TO_FAILURE) return null;
+  if (toFailure < 1 || toFailure > formulaMaxReps(formula)) return null;
   return calculateOneRepMax(weight, toFailure, formula);
 }
 
-// The estimate however many reps to failure, as far as the formula goes at all (its maxReps);
-// null past that. Only Kalkulator shows these, as rough past MAX_E1RM_REPS_TO_FAILURE: sets in
-// Trening and the records still stop there.
-export function calculateRoughOneRepMax(weight, reps, rpe, formula) {
-  const toFailure = repsToFailure(reps, rpe);
-  const { maxReps = Infinity } = E1RM_FORMULAS[formula] ?? E1RM_FORMULAS[DEFAULT_E1RM_FORMULA];
-  if (toFailure < 1 || toFailure > maxReps) return null;
-  return calculateOneRepMax(weight, toFailure, formula);
+// An e1RM from more than MAX_RELIABLE_REPS_TO_FAILURE reps to failure is only a rough guess.
+export function isRoughEstimate(reps, rpe) {
+  return repsToFailure(reps, rpe) > MAX_RELIABLE_REPS_TO_FAILURE;
 }
 
 export function findBestSetByE1rm(sets, formula) {

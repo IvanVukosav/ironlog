@@ -86,7 +86,8 @@ describe("summarizePeriod", () => {
         sets: [
           single(100, 20),
           single(140, 5, { isWarmup: true }),
-          { weight: 50, reps: 30, rpe: 10, isWarmup: false, date: daysAgo(4) },
+          // 40 reps to failure: past what Brzycki takes at all, so no e1RM.
+          { weight: 50, reps: 40, rpe: 10, isWarmup: false, date: daysAgo(4) },
         ],
       },
     ];

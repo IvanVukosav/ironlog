@@ -61,9 +61,10 @@ describe("summarizeExercise", () => {
   });
 
   it("is null when no set has an e1RM", () => {
+    // 40 reps to failure: past what Brzycki takes at all.
     expect(
       summarizeExercise(
-        [{ weight: 50, reps: 30, rpe: 10, date: daysAgo(1) }],
+        [{ weight: 50, reps: 40, rpe: 10, date: daysAgo(1) }],
         "brzycki",
         LAST_30_DAYS,
       ),

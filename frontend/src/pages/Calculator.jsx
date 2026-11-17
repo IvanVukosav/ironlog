@@ -1,11 +1,11 @@
 import { useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  calculateRoughOneRepMax,
+  calculateEstimatedOneRepMax,
   DEFAULT_E1RM_FORMULA,
   E1RM_FORMULAS,
-  MAX_E1RM_REPS_TO_FAILURE,
-  repsToFailure,
+  isRoughEstimate,
+  MAX_RELIABLE_REPS_TO_FAILURE,
 } from "../utils/oneRepMax";
 import { loadPlateSetup, PLATE_SETUP_STORAGE_KEY } from "../utils/plates";
 import { formatNumber, formatPercent, parseDecimal, toInputText } from "../utils/numbers";
@@ -30,9 +30,9 @@ const RPE_STEP = 0.5;
 const RPE_START = 8;
 
 // The e1RM for what was typed, worked out the way a set in Trening gets its own: the RPE adds the
-// reps left in reserve. Past MAX_E1RM_REPS_TO_FAILURE reps to failure, where Trening has none,
-// it is still given but marked rough; past what the formula takes at all there is none (e1rm
-// null). Null until there is a weight, a whole number of reps, and an RPE from 1 to 10 or none.
+// reps left in reserve. Past MAX_RELIABLE_REPS_TO_FAILURE reps to failure it is marked rough;
+// past what the formula takes at all there is none (e1rm null). Null until there is a weight, a
+// whole number of reps, and an RPE from 1 to 10 or none.
 function estimateFromText(weightText, repsText, rpeText, formula) {
   const weight = parseDecimal(weightText);
   const reps = parseDecimal(repsText);
@@ -40,8 +40,8 @@ function estimateFromText(weightText, repsText, rpeText, formula) {
   if (!(weight > 0) || !Number.isInteger(reps) || reps < 1) return null;
   if (rpe !== null && !(rpe >= MIN_RPE && rpe <= MAX_RPE)) return null;
   return {
-    e1rm: calculateRoughOneRepMax(weight, reps, rpe, formula),
-    isRough: repsToFailure(reps, rpe) > MAX_E1RM_REPS_TO_FAILURE,
+    e1rm: calculateEstimatedOneRepMax(weight, reps, rpe, formula),
+    isRough: isRoughEstimate(reps, rpe),
   };
 }
 
@@ -75,7 +75,7 @@ function Calculator() {
     });
   } else if (estimate?.isRough) {
     detail = t("calculator.roughEstimate", {
-      max: MAX_E1RM_REPS_TO_FAILURE,
+      max: MAX_RELIABLE_REPS_TO_FAILURE,
       formula: formulaInfo.label,
     });
   }
