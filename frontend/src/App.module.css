@@ -2,6 +2,11 @@
   padding-bottom: 1rem;
 }
 
+/* Each page sets how wide it gets (max-width); on a wider screen it sits in the middle. */
+.routes > * {
+  margin-inline: auto;
+}
+
 /* Room for the fixed phone tab bar (NavBar) so it never covers the end of a page. */
 @media (max-width: 640px) {
   .routes {
