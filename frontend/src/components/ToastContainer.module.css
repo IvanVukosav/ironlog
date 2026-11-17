@@ -7,6 +7,9 @@
   flex-direction: column;
   gap: 0.5rem;
   width: min(360px, calc(100vw - 2rem));
+  /* A message lies over the page without catching a tap meant for what is under it (Spremi at
+     the end of a form, on a phone); only its ✕ takes one. */
+  pointer-events: none;
 }
 
 /* On a phone: at the bottom, above the tab bar, the newest nearest the thumb. */
@@ -84,6 +87,7 @@
   background: transparent;
   color: var(--color-text-dim);
   cursor: pointer;
+  pointer-events: auto;
 }
 
 .closeButton:hover {
