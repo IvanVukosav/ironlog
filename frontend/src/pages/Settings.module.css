@@ -104,10 +104,11 @@
   border-color: var(--color-text-dim);
 }
 
+/* The chosen one stands out by an outline in the text colour, not by a flash of the accent. */
 .chip[aria-pressed="true"] {
-  border-color: var(--color-accent);
-  background: rgba(var(--color-accent-rgb), 0.12);
-  color: var(--color-accent);
+  border-color: var(--color-text);
+  box-shadow: inset 0 0 0 1px var(--color-text);
+  background: var(--color-bg-elevated);
 }
 
 .swatch {
