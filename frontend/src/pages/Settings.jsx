@@ -1,11 +1,13 @@
 import { useEffect, useId, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router-dom";
 import { downloadFile, fetchJson, getToken, setToken, UNAUTHORIZED_EVENT } from "../api";
 import { DEFAULT_E1RM_FORMULA, E1RM_FORMULAS } from "../utils/oneRepMax";
 import { DEFAULT_REST_SECONDS, formatClock, REST_CHOICES_SECONDS } from "../utils/activeWorkout";
 import { useToast } from "../context/useToast";
 import { useSettings } from "../context/useSettings";
 import { useReportError } from "../hooks/useReportError";
+import NavIcon from "../components/NavIcon";
 import NumberField from "../components/NumberField";
 import PowerliftingSetup from "../components/PowerliftingSetup";
 import SegmentedControl from "../components/SegmentedControl";
@@ -52,15 +54,34 @@ const TEMPLATES = [
   { value: "glass", label: "Glass" },
 ];
 
-// A card of settings under a small title.
-function Section({ title, children }) {
-  const id = useId();
+// The page's sections in order. On a wide screen a menu beside them shows one at a time (the one
+// in the address, ?section=…); on a phone they all follow one another. `title` and `nav` are keys
+// under "settings." (`nav` when the menu says it shorter); "settings.<id>About" says what is in it.
+const SECTIONS = [
+  { id: "appearance", icon: "appearance", title: "appearanceSection" },
+  { id: "goals", icon: "goals", title: "goalsSection" },
+  { id: "training", icon: "workout", title: "trainingSection" },
+  { id: "home", icon: "home", title: "homeSection", nav: "homeNav" },
+  { id: "powerlifting", icon: "trophy", title: "powerliftingSection" },
+  { id: "backup", icon: "backup", title: "backupSection" },
+];
+const SECTION_PARAM = "section";
+
+// A section of settings: on a phone a card under a small title. On a wide screen (CSS) the title
+// is a heading over the card, with what the section holds, and only the open section shows.
+function Section({ id, isOpen, children }) {
+  const { t } = useTranslation();
+  const headingId = useId();
+  const { title } = SECTIONS.find((section) => section.id === id);
   return (
-    <section className={styles.card} aria-labelledby={id}>
-      <h2 id={id} className={styles.cardTitle}>
-        {title}
-      </h2>
-      {children}
+    <section className={styles.section} data-open={isOpen} aria-labelledby={headingId}>
+      <div>
+        <h2 id={headingId} className={styles.sectionTitle}>
+          {t(`settings.${title}`)}
+        </h2>
+        <p className={styles.sectionAbout}>{t(`settings.${id}About`)}</p>
+      </div>
+      <div className={styles.sectionBody}>{children}</div>
     </section>
   );
 }
@@ -161,189 +182,221 @@ function Settings() {
   // The page's theme, template and language follow the settings (SettingsProvider).
   const change = (field) => (value) => updateSettings({ [field]: value });
 
+  // The open section is kept in the address, so a reload or a link keeps it; the first is the
+  // default and leaves the address clean. Choosing one replaces the address: Back leaves the page.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requested = searchParams.get(SECTION_PARAM);
+  const openSection = SECTIONS.some((section) => section.id === requested)
+    ? requested
+    : SECTIONS[0].id;
+  const openSectionNamed = (id) =>
+    setSearchParams(id === SECTIONS[0].id ? {} : { [SECTION_PARAM]: id }, { replace: true });
+  const sectionProps = (id) => ({ id, isOpen: id === openSection });
+
   return (
     <div className={styles.page}>
-      <header className={styles.header}>
-        <h1 className={styles.heading}>{t("settings.title")}</h1>
-        <p className={styles.headerHint}>{t("settings.autoSaveHint")}</p>
-      </header>
-
-      <Section title={t("settings.appearanceSection")}>
-        <div className={styles.row}>
-          <span className={styles.rowLabel}>{t("settings.language")}</span>
-          <SegmentedControl
-            compact
-            label={t("settings.language")}
-            options={LANGUAGES}
-            value={settings?.language || DEFAULT_LANGUAGE}
-            onChange={change("language")}
-          />
-        </div>
-        <div className={styles.block}>
-          <span className={styles.rowText}>
-            <span className={styles.rowLabel}>{t("settings.theme")}</span>
-            <span className={styles.rowHint}>{t("settings.themeHint")}</span>
-          </span>
-          <ChipGroup
-            label={t("settings.theme")}
-            options={THEMES.map((theme) => ({
-              value: theme.value,
-              label: theme.labelKey ? t(theme.labelKey) : theme.label,
-              swatch: theme.swatch,
-            }))}
-            value={settings?.theme || DEFAULT_THEME}
-            onChange={change("theme")}
-          />
-        </div>
-        <div className={styles.block}>
-          <span className={styles.rowLabel}>{t("settings.template")}</span>
-          <ChipGroup
-            label={t("settings.template")}
-            options={TEMPLATES}
-            value={settings?.template || DEFAULT_TEMPLATE}
-            onChange={change("template")}
-          />
-        </div>
-      </Section>
-
-      <Section title={t("settings.goalsSection")}>
-        <div className={styles.goals}>
-          {GOAL_FIELDS.map((field) => (
-            <NumberField
-              key={field}
-              label={t(`settings.${field}`)}
-              inputMode="numeric"
-              value={goalDrafts[field] ?? String(settings?.[field] ?? "")}
-              onChange={(text) => setGoalDrafts((drafts) => ({ ...drafts, [field]: text }))}
-              onBlur={() => commitGoal(field)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") event.currentTarget.blur();
-              }}
-            />
+      <aside>
+        <header className={styles.header}>
+          <h1 className={styles.heading}>{t("settings.title")}</h1>
+          <p className={styles.headerHint}>{t("settings.autoSaveHint")}</p>
+        </header>
+        <nav className={styles.sectionNav} aria-label={t("settings.sectionsNav")}>
+          {SECTIONS.map((section) => (
+            <button
+              key={section.id}
+              type="button"
+              className={styles.sectionLink}
+              aria-current={section.id === openSection ? "true" : undefined}
+              onClick={() => openSectionNamed(section.id)}
+            >
+              <NavIcon name={section.icon} size={18} />
+              {t(`settings.${section.nav ?? section.title}`)}
+            </button>
           ))}
-        </div>
-      </Section>
+        </nav>
+      </aside>
 
-      <Section title={t("settings.trainingSection")}>
-        <div className={styles.block}>
-          <span className={styles.rowText}>
-            <span className={styles.rowLabel}>{t("settings.restLabel")}</span>
-            <span className={styles.rowHint}>{t("settings.restHint")}</span>
-          </span>
-          <ChipGroup
-            label={t("settings.restLabel")}
-            options={REST_CHOICES_SECONDS.map((seconds) => ({
-              value: seconds,
-              label: seconds === 0 ? t("settings.restOff") : formatClock(seconds * 1000),
-            }))}
-            value={settings?.restSeconds ?? DEFAULT_REST_SECONDS}
-            onChange={change("restSeconds")}
-          />
-        </div>
-        <SwitchRow
-          label={t("settings.showE1rm")}
-          checked={settings?.showE1rm ?? true}
-          onChange={change("showE1rm")}
-        />
-        <div className={styles.row}>
-          <span className={styles.rowLabel}>{t("settings.e1rmFormula")}</span>
-          <SegmentedControl
-            compact
-            label={t("settings.e1rmFormula")}
-            options={Object.entries(E1RM_FORMULAS).map(([value, { label }]) => ({ value, label }))}
-            value={settings?.e1rmFormula ?? DEFAULT_E1RM_FORMULA}
-            onChange={change("e1rmFormula")}
-          />
-        </div>
-        <div className={styles.row}>
-          <span className={styles.rowLabel}>{t("settings.exercisePicker")}</span>
-          <SegmentedControl
-            compact
-            label={t("settings.exercisePicker")}
-            options={[
-              { value: "chips", label: t("settings.pickerFilter") },
-              { value: "twoStep", label: t("settings.pickerTwoStep") },
-            ]}
-            value={settings?.exercisePickerMode ?? DEFAULT_PICKER_MODE}
-            onChange={change("exercisePickerMode")}
-          />
-        </div>
-      </Section>
-
-      <Section title={t("settings.homeSection")}>
-        <SwitchRow
-          label={t("dashboard.workoutToday")}
-          checked={settings?.showWorkoutWidget ?? true}
-          onChange={change("showWorkoutWidget")}
-        />
-        <SwitchRow
-          label={t("dashboard.nutritionToday")}
-          checked={settings?.showNutritionWidget ?? true}
-          onChange={change("showNutritionWidget")}
-        />
-        <SwitchRow
-          label={t("dashboard.latestPr")}
-          checked={settings?.showPrWidget ?? true}
-          onChange={change("showPrWidget")}
-        />
-      </Section>
-
-      <Section title={t("settings.powerliftingSection")}>
-        <SwitchRow
-          label={t("settings.showPowerliftingTotal")}
-          hint={t("settings.powerliftingHint")}
-          checked={settings?.showPowerliftingTotal ?? false}
-          onChange={change("showPowerliftingTotal")}
-        />
-        {/* Sex and the three lifts only feed the powerlifting numbers, so they hide with them. */}
-        {settings?.showPowerliftingTotal && (
-          <PowerliftingSetup
-            settings={settings}
-            exerciseSets={exerciseSets}
-            bodyweight={latestBodyweight}
-            onChange={updateSettings}
-          />
-        )}
-      </Section>
-
-      <Section title={t("settings.backupSection")}>
-        <p className={styles.text}>{t("settings.backupHint")}</p>
-        <div className={styles.actions}>
-          <button
-            type="button"
-            className={styles.secondaryButton}
-            onClick={() => download("/api/backup/export", "ironlog-backup.json")}
-          >
-            {t("settings.backupExportJson")}
-          </button>
-          <button
-            type="button"
-            className={styles.secondaryButton}
-            onClick={() => download("/api/backup/sets.csv", "ironlog-sets.csv")}
-          >
-            {t("settings.backupExportCsv")}
-          </button>
-          {/* The file box itself is invisible but still reached with Tab; the label is its face. */}
-          <label className={styles.fileButton}>
-            {t("settings.backupImport")}
-            <input
-              type="file"
-              accept="application/json,.json"
-              className={styles.fileInput}
-              onChange={(event) => {
-                importBackup(event.target.files[0]);
-                event.target.value = "";
-              }}
+      <div className={styles.content}>
+        <Section {...sectionProps("appearance")}>
+          <div className={styles.row}>
+            <span className={styles.rowLabel}>{t("settings.language")}</span>
+            <SegmentedControl
+              compact
+              label={t("settings.language")}
+              options={LANGUAGES}
+              value={settings?.language || DEFAULT_LANGUAGE}
+              onChange={change("language")}
             />
-          </label>
-        </div>
-      </Section>
+          </div>
+          <div className={styles.block}>
+            <span className={styles.rowText}>
+              <span className={styles.rowLabel}>{t("settings.theme")}</span>
+              <span className={styles.rowHint}>{t("settings.themeHint")}</span>
+            </span>
+            <ChipGroup
+              label={t("settings.theme")}
+              options={THEMES.map((theme) => ({
+                value: theme.value,
+                label: theme.labelKey ? t(theme.labelKey) : theme.label,
+                swatch: theme.swatch,
+              }))}
+              value={settings?.theme || DEFAULT_THEME}
+              onChange={change("theme")}
+            />
+          </div>
+          <div className={styles.block}>
+            <span className={styles.rowLabel}>{t("settings.template")}</span>
+            <ChipGroup
+              label={t("settings.template")}
+              options={TEMPLATES}
+              value={settings?.template || DEFAULT_TEMPLATE}
+              onChange={change("template")}
+            />
+          </div>
+        </Section>
 
-      {getToken() && (
-        <button type="button" className={styles.logoutButton} onClick={logout}>
-          {t("auth.logout")}
-        </button>
-      )}
+        <Section {...sectionProps("goals")}>
+          <div className={styles.goals}>
+            {GOAL_FIELDS.map((field) => (
+              <NumberField
+                key={field}
+                label={t(`settings.${field}`)}
+                inputMode="numeric"
+                value={goalDrafts[field] ?? String(settings?.[field] ?? "")}
+                onChange={(text) => setGoalDrafts((drafts) => ({ ...drafts, [field]: text }))}
+                onBlur={() => commitGoal(field)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") event.currentTarget.blur();
+                }}
+              />
+            ))}
+          </div>
+        </Section>
+
+        <Section {...sectionProps("training")}>
+          <div className={styles.block}>
+            <span className={styles.rowText}>
+              <span className={styles.rowLabel}>{t("settings.restLabel")}</span>
+              <span className={styles.rowHint}>{t("settings.restHint")}</span>
+            </span>
+            <ChipGroup
+              label={t("settings.restLabel")}
+              options={REST_CHOICES_SECONDS.map((seconds) => ({
+                value: seconds,
+                label: seconds === 0 ? t("settings.restOff") : formatClock(seconds * 1000),
+              }))}
+              value={settings?.restSeconds ?? DEFAULT_REST_SECONDS}
+              onChange={change("restSeconds")}
+            />
+          </div>
+          <SwitchRow
+            label={t("settings.showE1rm")}
+            checked={settings?.showE1rm ?? true}
+            onChange={change("showE1rm")}
+          />
+          <div className={styles.row}>
+            <span className={styles.rowLabel}>{t("settings.e1rmFormula")}</span>
+            <SegmentedControl
+              compact
+              label={t("settings.e1rmFormula")}
+              options={Object.entries(E1RM_FORMULAS).map(([value, { label }]) => ({
+                value,
+                label,
+              }))}
+              value={settings?.e1rmFormula ?? DEFAULT_E1RM_FORMULA}
+              onChange={change("e1rmFormula")}
+            />
+          </div>
+          <div className={styles.row}>
+            <span className={styles.rowLabel}>{t("settings.exercisePicker")}</span>
+            <SegmentedControl
+              compact
+              label={t("settings.exercisePicker")}
+              options={[
+                { value: "chips", label: t("settings.pickerFilter") },
+                { value: "twoStep", label: t("settings.pickerTwoStep") },
+              ]}
+              value={settings?.exercisePickerMode ?? DEFAULT_PICKER_MODE}
+              onChange={change("exercisePickerMode")}
+            />
+          </div>
+        </Section>
+
+        <Section {...sectionProps("home")}>
+          <SwitchRow
+            label={t("dashboard.workoutToday")}
+            checked={settings?.showWorkoutWidget ?? true}
+            onChange={change("showWorkoutWidget")}
+          />
+          <SwitchRow
+            label={t("dashboard.nutritionToday")}
+            checked={settings?.showNutritionWidget ?? true}
+            onChange={change("showNutritionWidget")}
+          />
+          <SwitchRow
+            label={t("dashboard.latestPr")}
+            checked={settings?.showPrWidget ?? true}
+            onChange={change("showPrWidget")}
+          />
+        </Section>
+
+        <Section {...sectionProps("powerlifting")}>
+          <SwitchRow
+            label={t("settings.showPowerliftingTotal")}
+            hint={t("settings.powerliftingHint")}
+            checked={settings?.showPowerliftingTotal ?? false}
+            onChange={change("showPowerliftingTotal")}
+          />
+          {/* Sex and the three lifts only feed the powerlifting numbers, so they hide with them. */}
+          {settings?.showPowerliftingTotal && (
+            <PowerliftingSetup
+              settings={settings}
+              exerciseSets={exerciseSets}
+              bodyweight={latestBodyweight}
+              onChange={updateSettings}
+            />
+          )}
+        </Section>
+
+        <Section {...sectionProps("backup")}>
+          <p className={styles.text}>{t("settings.backupHint")}</p>
+          <div className={styles.actions}>
+            <button
+              type="button"
+              className={styles.secondaryButton}
+              onClick={() => download("/api/backup/export", "ironlog-backup.json")}
+            >
+              {t("settings.backupExportJson")}
+            </button>
+            <button
+              type="button"
+              className={styles.secondaryButton}
+              onClick={() => download("/api/backup/sets.csv", "ironlog-sets.csv")}
+            >
+              {t("settings.backupExportCsv")}
+            </button>
+            {/* The file box itself is invisible but still reached with Tab; the label is its face. */}
+            <label className={styles.fileButton}>
+              {t("settings.backupImport")}
+              <input
+                type="file"
+                accept="application/json,.json"
+                className={styles.fileInput}
+                onChange={(event) => {
+                  importBackup(event.target.files[0]);
+                  event.target.value = "";
+                }}
+              />
+            </label>
+          </div>
+        </Section>
+
+        {getToken() && (
+          <button type="button" className={styles.logoutButton} onClick={logout}>
+            {t("auth.logout")}
+          </button>
+        )}
+      </div>
     </div>
   );
 }

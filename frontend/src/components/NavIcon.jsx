@@ -53,6 +53,27 @@ const ICONS = {
       <rect x="14" y="14" width="6" height="6" rx="1.5" />
     </>
   ),
+  // The sections of Postavke.
+  appearance: (
+    <>
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4" />
+    </>
+  ),
+  goals: (
+    <>
+      <circle cx="12" cy="12" r="8" />
+      <circle cx="12" cy="12" r="4" />
+    </>
+  ),
+  trophy: (
+    <>
+      <path d="M8 21h8M12 17v4" />
+      <path d="M7 4h10v5a5 5 0 0 1-10 0V4z" />
+      <path d="M17 6h3v1.5A3.5 3.5 0 0 1 16.6 11M7 6H4v1.5A3.5 3.5 0 0 0 7.4 11" />
+    </>
+  ),
+  backup: <path d="M12 4v11M7 10l5 5 5-5M5 20h14" />,
 };
 
 function NavIcon({ name, size = 24 }) {
