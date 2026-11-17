@@ -97,7 +97,7 @@
     ]
   },
   "log": {
-    "title": "Training log",
+    "title": "Workout",
     "saveAsTemplate": "Save as template",
     "templateNameLabel": "Template name:",
     "confirmDeleteWorkout": "Delete this workout? All its exercises and sets will be deleted.",
@@ -204,7 +204,7 @@
     "close": "Close"
   },
   "programs": {
-    "intro": "A program is a plan spanning several weeks. Enter a scheme for each exercise and week (e.g. 5x5@75); weights are calculated from your current e1RM when you load the program in Log.",
+    "intro": "A program is a plan spanning several weeks. Click New program, add days and exercises, then enter a scheme for each week, e.g. 5x5@75 (5 sets of 5 reps at 75%). You start a program workout on Home (Start from the program) or in Workout (Load program), and the weights are worked out from your e1RM then.",
     "newProgram": "New program",
     "editProgram": "Edit program",
     "name": "Name",
@@ -284,7 +284,7 @@
     "defaultMeal": "Other",
     "dayTotal": "Total",
     "noEntries": "Nothing logged for this day yet.",
-    "quickAddPlaceholder": "Quickly add a food item by name",
+    "quickAddPlaceholder": "Add a food item by name",
     "mealNamePlaceholder": "Meal name",
     "addMeal": "Add meal",
     "mealOptions": "Options for {{name}}",

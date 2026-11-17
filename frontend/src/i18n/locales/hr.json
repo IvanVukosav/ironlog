@@ -97,7 +97,7 @@
     ]
   },
   "log": {
-    "title": "Log treninga",
+    "title": "Trening",
     "saveAsTemplate": "Spremi kao predložak",
     "templateNameLabel": "Naziv predloška:",
     "confirmDeleteWorkout": "Obrisati ovaj trening? Sve vježbe i setovi u njemu bit će obrisani.",
@@ -207,7 +207,7 @@
     "close": "Zatvori"
   },
   "programs": {
-    "intro": "Program je plan od nekoliko tjedana. Za svaku vježbu i tjedan upišeš shemu (npr. 5x5@75), a kilaže se računaju iz tvog trenutnog e1RM-a kad program učitaš u Logu.",
+    "intro": "Program je plan od nekoliko tjedana. Klikni Novi program, dodaj dane i vježbe, pa za svaki tjedan upiši shemu, npr. 5x5@75 (5 serija po 5 ponavljanja na 75 %). Trening po programu pokrećeš na Početnoj (Započni po programu) ili u Treningu (Učitaj program), a kilaže se tad izračunaju iz tvog e1RM-a.",
     "newProgram": "Novi program",
     "editProgram": "Uredi program",
     "name": "Naziv",
@@ -289,7 +289,7 @@
     "defaultMeal": "Ostalo",
     "dayTotal": "Ukupno",
     "noEntries": "Za ovaj dan još nema unosa.",
-    "quickAddPlaceholder": "Brzo dodaj namirnicu po nazivu",
+    "quickAddPlaceholder": "Dodaj namirnicu po nazivu",
     "mealNamePlaceholder": "Ime obroka",
     "addMeal": "Dodaj obrok",
     "mealOptions": "Opcije za {{name}}",
