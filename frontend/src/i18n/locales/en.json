@@ -33,6 +33,7 @@
     "language": "Language",
     "theme": "Theme",
     "themeAuto": "Automatic",
+    "themeAutoNote": "automatic",
     "themeHint": "Automatic follows your device: Graphite in dark mode, Daylight in light mode.",
     "template": "Template",
     "goalsSection": "Goals",

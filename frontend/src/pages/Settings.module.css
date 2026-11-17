@@ -199,6 +199,18 @@
   background: var(--color-bg-elevated);
 }
 
+/* "· automatski" on the theme that Automatski shows right now. */
+.chipNote {
+  color: var(--color-text-dim);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.chipNote::before {
+  content: "·";
+  margin-right: 6px;
+}
+
 .swatch {
   flex: none;
   width: 12px;
@@ -379,7 +391,7 @@
 }
 
 .wide .table .chips {
-  flex: 0 1 520px;
+  flex: 0 1 560px;
   justify-content: flex-end;
   gap: 6px;
 }

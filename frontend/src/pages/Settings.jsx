@@ -77,7 +77,7 @@ const SECTION_PARAM = "section";
 const anchorOf = (id) => `settings-${id}`;
 const SECTION_ANCHORS = SECTIONS.map((section) => anchorOf(section.id));
 
-// One choice out of several, as chips that wrap; `options` are { value, label, swatch? }.
+// One choice out of several, as chips that wrap; `options` are { value, label, swatch?, note? }.
 function ChipGroup({ label, options, value, onChange }) {
   return (
     <div className={styles.chips} role="group" aria-label={label}>
@@ -97,6 +97,7 @@ function ChipGroup({ label, options, value, onChange }) {
             />
           )}
           {option.label}
+          {option.note && <span className={styles.chipNote}>{option.note}</span>}
         </button>
       ))}
     </div>
@@ -126,6 +127,8 @@ function Settings() {
   const [latestBodyweight, setLatestBodyweight] = useState(null);
 
   const isWide = useMediaQuery(WIDE_SCREEN);
+  // What "auto" shows right now: Graphite while the device is in dark mode, Daylight in light.
+  const autoTheme = useMediaQuery("(prefers-color-scheme: dark)") ? "graphite" : "daylight";
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
   const navigate = useNavigate();
@@ -221,10 +224,12 @@ function Settings() {
   const restSeconds = settings?.restSeconds ?? DEFAULT_REST_SECONDS;
   const formula = settings?.e1rmFormula ?? DEFAULT_E1RM_FORMULA;
   const formulaLabel = (E1RM_FORMULAS[formula] ?? E1RM_FORMULAS[DEFAULT_E1RM_FORMULA]).label;
+  // With "auto" chosen, the theme it shows now says so: picking that one would change nothing.
   const themeOptions = THEMES.map((option) => ({
     value: option.value,
     label: option.labelKey ? t(option.labelKey) : option.label,
     swatch: option.swatch,
+    note: theme === "auto" && option.value === autoTheme ? t("settings.themeAutoNote") : null,
   }));
   const restLabel = (seconds) =>
     seconds === 0 ? t("settings.restOff") : formatClock(seconds * 1000);

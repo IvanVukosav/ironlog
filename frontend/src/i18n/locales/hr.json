@@ -33,6 +33,7 @@
     "language": "Jezik",
     "theme": "Tema",
     "themeAuto": "Automatski",
+    "themeAutoNote": "automatski",
     "themeHint": "Automatski prati uređaj: Graphite u tamnom načinu, Daylight u svijetlom.",
     "template": "Predložak",
     "goalsSection": "Ciljevi",
