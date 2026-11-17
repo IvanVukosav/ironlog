@@ -412,7 +412,6 @@ function Exercise({
             {showE1rm && hasRpe && workoutSet.isDone && (
               <SetE1rm workoutSet={workoutSet} formula={e1rmFormula} />
             )}
-            {isNext && <span className={styles.setNext}>{t("log.nextSet")}</span>}
           </span>
         </button>
         <button

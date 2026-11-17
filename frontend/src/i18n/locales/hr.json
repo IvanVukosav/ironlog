@@ -187,7 +187,6 @@
     "resume": "Nastavi",
     "planHint": "Ovo je plan za danas. Kad odradiš set, klikni kvačicu i tad kreće trajanje.",
     "freeHint": "Upiši kilažu i ponavljanja i klikni Dodaj set. Trajanje kreće s prvim setom.",
-    "nextSet": "sljedeći",
     "setNumberLabel": "Set {{number}}",
     "setOptions": "{{set}}: uredi i mogućnosti",
     "markDone": "Označi kao odrađen: {{set}}",

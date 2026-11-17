@@ -185,7 +185,6 @@
     "resume": "Resume",
     "planHint": "This is today's plan. Tick a set off once you have done it, and the clock starts.",
     "freeHint": "Type the weight and reps and press Add set. The clock starts with the first set.",
-    "nextSet": "next",
     "setNumberLabel": "Set {{number}}",
     "setOptions": "{{set}}: edit and options",
     "markDone": "Mark as done: {{set}}",

@@ -396,12 +396,6 @@
   font-size: 0.75rem;
 }
 
-.setNext {
-  color: var(--color-accent);
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
 /* Done or not: a ring that fills in. */
 .tick {
   flex: none;
