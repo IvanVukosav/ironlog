@@ -7,22 +7,32 @@ import { formatNumber } from "../utils/numbers";
 import { useReportError } from "../hooks/useReportError";
 import styles from "./ProgramLoader.module.css";
 
-// "1×1 @ 162,5 kg, 3×5 @ 135 kg" from consecutive identical sets.
-function summarizeSets(sets, language) {
-  const runs = [];
+const isSameRun = (a, b) =>
+  a.weight === b.weight && a.reps === b.reps && a.rpe === b.rpe && a.drops === b.drops;
+
+// "1×1 @ 162,5 kg, 3×5 @ 135 kg + 1 drop" from consecutive identical sets; a set's drop sets
+// count with it.
+function summarizeSets(sets, language, t) {
+  const single = [];
   for (const set of sets) {
-    const last = runs.at(-1);
-    if (last && last.weight === set.weight && last.reps === set.reps && last.rpe === set.rpe) {
-      last.count += 1;
+    if (set.isDrop) {
+      if (single.length > 0) single.at(-1).drops += 1;
     } else {
-      runs.push({ ...set, count: 1 });
+      single.push({ ...set, drops: 0 });
     }
+  }
+  const runs = [];
+  for (const set of single) {
+    const last = runs.at(-1);
+    if (last && isSameRun(last, set)) last.count += 1;
+    else runs.push({ ...set, count: 1 });
   }
   return runs
     .map((run) => {
       const load = run.weight ? ` @ ${formatNumber(run.weight, language)} kg` : "";
       const rpe = run.rpe !== null ? ` RPE ${formatNumber(run.rpe, language)}` : "";
-      return `${run.count}×${run.reps}${load}${rpe}`;
+      const drops = run.drops > 0 ? ` ${t("programs.dropCount", { count: run.drops })}` : "";
+      return `${run.count}×${run.reps}${load}${rpe}${drops}`;
     })
     .join(", ");
 }
@@ -71,14 +81,18 @@ function ProgramLoader({ programs, formula, onLoad, onClose }) {
     .map((exercise) => {
       const groups = parseScheme(exercise.weekSchemes[week - 1]) ?? [];
       const e1rm = bestE1rmByName[exercise.name] ?? null;
-      return { name: exercise.name, ...buildProgramSets(groups, e1rm, program.trainingMaxPercent) };
+      return {
+        name: exercise.name,
+        supersetGroup: exercise.supersetGroup ?? null,
+        ...buildProgramSets(groups, e1rm, program.trainingMaxPercent),
+      };
     })
     .filter((exercise) => exercise.sets.length > 0);
 
   const load = () =>
     onLoad(
       { id: programId, week, day },
-      plannedExercises.map(({ name, sets }) => ({ name, sets })),
+      plannedExercises.map(({ name, sets, supersetGroup }) => ({ name, sets, supersetGroup })),
     );
 
   if (!program) return null;
@@ -147,7 +161,7 @@ function ProgramLoader({ programs, formula, onLoad, onClose }) {
             <li key={exercise.name} className={styles.previewRow}>
               <span className={styles.previewName}>{exercise.name}</span>
               <span className={styles.previewSets}>
-                {summarizeSets(exercise.sets, i18n.language)}
+                {summarizeSets(exercise.sets, i18n.language, t)}
               </span>
               {exercise.missingE1rm && (
                 <span className={styles.warning}>{t("programs.missingE1rm")}</span>

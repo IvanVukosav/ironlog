@@ -178,8 +178,9 @@ function Dashboard() {
         method: "POST",
         json: {
           program: { id: nextDay.program.id, week: nextDay.week, day: nextDay.day },
-          exercises: nextDay.exercises.map(({ name, sets }) => ({
+          exercises: nextDay.exercises.map(({ name, sets, supersetGroup }) => ({
             name,
+            supersetGroup,
             sets: sets.map((set) => ({ ...set, isDone: false })),
           })),
         },
@@ -330,16 +331,22 @@ function Dashboard() {
                 </div>
                 {nextDay.exercises.length > 0 && (
                   <ul className={styles.exerciseList}>
-                    {nextDay.exercises.slice(0, VISIBLE_EXERCISES).map((exercise) => (
-                      <li key={exercise.name} className={styles.exerciseRow}>
-                        <span className={styles.exerciseName}>{exercise.name}</span>
-                        <span className={styles.exerciseDetail}>
-                          {exercise.sets[0].weight > 0
-                            ? `${t("dashboard.setCount", { count: exercise.sets.length })} · ${formatSet(exercise.sets[0], language)}`
-                            : t("dashboard.setCount", { count: exercise.sets.length })}
-                        </span>
-                      </li>
-                    ))}
+                    {nextDay.exercises.slice(0, VISIBLE_EXERCISES).map((exercise) => {
+                      // Drop sets go with their set, so they are not counted.
+                      const setCount = t("dashboard.setCount", {
+                        count: exercise.sets.filter((set) => !set.isDrop).length,
+                      });
+                      return (
+                        <li key={exercise.name} className={styles.exerciseRow}>
+                          <span className={styles.exerciseName}>{exercise.name}</span>
+                          <span className={styles.exerciseDetail}>
+                            {exercise.sets[0].weight > 0
+                              ? `${setCount} · ${formatSet(exercise.sets[0], language)}`
+                              : setCount}
+                          </span>
+                        </li>
+                      );
+                    })}
                   </ul>
                 )}
                 {nextDay.exercises.length > VISIBLE_EXERCISES && (

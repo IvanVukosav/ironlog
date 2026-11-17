@@ -7,7 +7,7 @@ import { useReportError } from "./useReportError";
 /**
  * The next day of the program being followed (the one the latest trained workout came from),
  * with its sets worked out the way Trening's program loader does it:
- * { program, week, day, dayName, exercises: [{ name, sets, missingE1rm }] }.
+ * { program, week, day, dayName, exercises: [{ name, supersetGroup, sets, missingE1rm }] }.
  *
  * Undefined while it is being asked for, null when no program is followed or the program is
  * over. With `enabled` false (a day that already has its workout) nothing is asked.
@@ -41,6 +41,7 @@ export function useNextProgramDay(formula, enabled) {
         const exercises = programDay.exercises
           .map((exercise) => ({
             name: exercise.name,
+            supersetGroup: exercise.supersetGroup ?? null,
             ...buildProgramSets(
               parseScheme(exercise.weekSchemes[position.week - 1]) ?? [],
               bestE1rmByName[exercise.name] ?? null,

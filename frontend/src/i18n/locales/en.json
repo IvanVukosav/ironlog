@@ -255,6 +255,8 @@
     "dayCount_one": "{{count}} day",
     "dayCount_other": "{{count}} days",
     "trainingMaxShort": "TM {{percent}}",
+    "dropCount_one": "+ {{count}} drop",
+    "dropCount_other": "+ {{count}} drops",
     "programLabel": "Program",
     "weekLabel": "Week",
     "dayLabel": "Day",
