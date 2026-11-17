@@ -124,7 +124,8 @@ router.delete("/:id", async (req, res) => {
 // Adds several exercises with their sets at once (used when loading a program day).
 // Sets for an exercise already in the workout are appended to it instead of
 // creating a duplicate card. Optionally tags the workout with its program day.
-// A set with `isDone: false` is a plan, to be ticked off as it is done.
+// A set with `isDone: false` is a plan, to be ticked off as it is done. A new exercise takes its
+// `supersetGroup` along; one already there keeps its own.
 router.post("/:id/exercises/bulk", async (req, res) => {
   const { exercises, program } = req.body ?? {};
   if (
@@ -145,13 +146,14 @@ router.post("/:id/exercises/bulk", async (req, res) => {
     );
     let nextOrder = existing.length;
 
-    for (const { name, sets } of exercises) {
+    for (const { name, sets, supersetGroup } of exercises) {
       const setData = (startOrder) =>
         sets.map((set, index) => ({
           weight: parseFloat(set.weight) || 0,
           reps: parseInt(set.reps) || 0,
           rpe: Number.isFinite(parseFloat(set.rpe)) ? parseFloat(set.rpe) : null,
           isWarmup: set.isWarmup === true,
+          isDrop: set.isDrop === true && set.isWarmup !== true,
           isDone: set.isDone !== false,
           order: startOrder + index,
         }));
@@ -165,6 +167,7 @@ router.post("/:id/exercises/bulk", async (req, res) => {
           data: {
             name: name.trim(),
             order: nextOrder++,
+            supersetGroup: typeof supersetGroup === "string" ? supersetGroup.trim() || null : null,
             workoutId,
             sets: { create: setData(0) },
           },

@@ -88,15 +88,24 @@ function parseBoolean(value, name) {
   return value;
 }
 
-// A logged set: weight and reps, and RPE when one was given. `isDone` is there only when the body
-// says it: a set from a program is a plan (false) until it is ticked off.
+function refuseWarmupDrop(set) {
+  if (set.isWarmup && set.isDrop) {
+    throw new HttpError(400, "A set can't be both a warm-up and a drop set");
+  }
+}
+
+// A logged set: weight and reps, and RPE when one was given; a warm-up or a drop set (done right
+// after the set before it, with less weight) says so. `isDone` is there only when the body says
+// it: a set from a program is a plan (false) until it is ticked off.
 function parseSet(body) {
   const set = {
     weight: parseWeight(body?.weight),
     reps: parseReps(body?.reps),
     rpe: parseRpe(body?.rpe),
     isWarmup: Boolean(body?.isWarmup),
+    isDrop: Boolean(body?.isDrop),
   };
+  refuseWarmupDrop(set);
   if (body && "isDone" in body) set.isDone = parseBoolean(body.isDone, "isDone");
   return set;
 }
@@ -112,8 +121,10 @@ function parseSetChange(body) {
   if ("reps" in body) change.reps = parseReps(body.reps);
   if ("rpe" in body) change.rpe = parseRpe(body.rpe);
   if ("isWarmup" in body) change.isWarmup = parseBoolean(body.isWarmup, "isWarmup");
+  if ("isDrop" in body) change.isDrop = parseBoolean(body.isDrop, "isDrop");
   if ("isDone" in body) change.isDone = parseBoolean(body.isDone, "isDone");
   if (Object.keys(change).length === 0) throw new HttpError(400, "Nothing to change in the set");
+  refuseWarmupDrop(change);
   return change;
 }
 

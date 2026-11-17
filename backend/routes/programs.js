@@ -60,6 +60,8 @@ function parseProgramBody(body) {
       exerciseData.push({
         name: exerciseName,
         order: exerciseIndex,
+        supersetGroup:
+          typeof exercise.supersetGroup === "string" ? exercise.supersetGroup.trim() || null : null,
         weekSchemes: JSON.stringify(weekSchemes),
       });
     }

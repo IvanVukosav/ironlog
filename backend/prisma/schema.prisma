@@ -48,6 +48,8 @@ model Set {
   rpe        Float?
   order      Int      @default(0)
   isWarmup   Boolean  @default(false)
+  // A drop set follows the set before it at once, with less weight and no rest between.
+  isDrop     Boolean  @default(false)
   // A set loaded from a program is a plan until it is ticked off. Only done sets count in stats,
   // records and volume; "Finish" deletes the ones that were never done.
   isDone      Boolean   @default(true)
@@ -197,6 +199,8 @@ model ProgramExercise {
   id           Int        @id @default(autoincrement())
   name         String
   order        Int        @default(0)
+  // Exercises of a day with the same letter are a superset; loading the day keeps it.
+  supersetGroup String?
   // JSON array with one set scheme per week, e.g. ["5x5@75", "5x4@80", "1x1@90, 3x5@75"].
   weekSchemes  String
   programDayId Int

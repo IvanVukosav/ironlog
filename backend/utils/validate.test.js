@@ -64,13 +64,23 @@ test("parseSet reads a set as typed, with a decimal comma or point", () => {
     reps: 5,
     rpe: 7.5,
     isWarmup: false,
+    isDrop: false,
   });
   assert.deepEqual(parseSet({ weight: " 92.5 ", reps: 4, rpe: 8, isWarmup: true }), {
     weight: 92.5,
     reps: 4,
     rpe: 8,
     isWarmup: true,
+    isDrop: false,
   });
+});
+
+test("parseSet marks a drop set, which can't also be a warm-up", () => {
+  assert.equal(parseSet({ weight: "80", reps: "8", isDrop: true }).isDrop, true);
+  assert.throws(
+    () => parseSet({ weight: "80", reps: "8", isDrop: true, isWarmup: true }),
+    /both a warm-up and a drop set/,
+  );
 });
 
 test("parseSet leaves RPE out when none was given", () => {
@@ -85,6 +95,7 @@ test("parseSet takes zero, so bodyweight and failed sets can be logged", () => {
     reps: 0,
     rpe: null,
     isWarmup: false,
+    isDrop: false,
   });
 });
 
@@ -123,6 +134,10 @@ test("parseSetChange checks and returns only the fields that were sent", () => {
     parseSetChange({ weight: 100, reps: "5", rpe: "8,5", isWarmup: false, isDone: false }),
     { weight: 100, reps: 5, rpe: 8.5, isWarmup: false, isDone: false },
   );
+  assert.deepEqual(parseSetChange({ isDrop: true, isWarmup: false }), {
+    isDrop: true,
+    isWarmup: false,
+  });
 });
 
 test("parseSetChange refuses an empty change and values a set cannot have", () => {
@@ -135,6 +150,8 @@ test("parseSetChange refuses an empty change and values a set cannot have", () =
     { rpe: "11" },
     { isDone: 1 },
     { isWarmup: "yes" },
+    { isDrop: "yes" },
+    { isDrop: true, isWarmup: true },
   ];
   for (const body of bad) {
     assert.throws(() => parseSetChange(body), isBadRequest, `accepted ${JSON.stringify(body)}`);

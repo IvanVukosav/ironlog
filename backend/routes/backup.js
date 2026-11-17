@@ -85,6 +85,7 @@ router.get("/sets.csv", async (req, res) => {
     "reps",
     "rpe",
     "warmup",
+    "drop",
     "exercise_notes",
   ];
   const rows = sets.map((set) => [
@@ -96,6 +97,7 @@ router.get("/sets.csv", async (req, res) => {
     set.reps,
     set.rpe,
     set.isWarmup ? 1 : 0,
+    set.isDrop ? 1 : 0,
     set.exercise.notes,
   ]);
   const csv = [header, ...rows].map((row) => row.map(csvCell).join(",")).join("\r\n");
