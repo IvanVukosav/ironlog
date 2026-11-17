@@ -37,7 +37,7 @@ const RPE_STEP = 0.5;
 const RPE_START = 8;
 const E1RM_DECIMAL_PLACES = 1;
 // The set forms hold what was typed, so their fields are strings.
-const EMPTY_SET = { weight: "", reps: "", rpe: "", isWarmup: false };
+const EMPTY_SET = { weight: "", reps: "", rpe: "", isWarmup: false, isDrop: false };
 
 // A set as a short chip: "102,5×5 @8" in Croatian.
 function formatSetShort(workoutSet, language) {
@@ -54,6 +54,7 @@ function formFromSet(workoutSet, language) {
     reps: String(workoutSet.reps),
     rpe: toInputText(workoutSet.rpe, language),
     isWarmup: Boolean(workoutSet.isWarmup),
+    isDrop: Boolean(workoutSet.isDrop),
   };
 }
 
@@ -64,6 +65,7 @@ function toSetValues(form) {
     reps: toDecimalText(form.reps),
     rpe: toDecimalText(form.rpe),
     isWarmup: form.isWarmup,
+    isDrop: form.isDrop,
   };
 }
 
@@ -290,8 +292,8 @@ function Exercise({
   // Last time's sets come in as a plan to tick off, or done on a day filled in afterwards.
   const copyLastSession = async () => {
     // One after another so the copied sets keep their order; the first failure ends the copy.
-    for (const { weight, reps, rpe } of lastWorkingSets) {
-      const values = { weight, reps, rpe, isWarmup: false, isDone: !isLiveDay };
+    for (const { weight, reps, rpe, isDrop } of lastWorkingSets) {
+      const values = { weight, reps, rpe, isWarmup: false, isDrop, isDone: !isLiveDay };
       if (!(await actions.addSet(exercise.id, values))) return;
     }
   };
@@ -351,8 +353,8 @@ function Exercise({
     }
   };
 
-  const duplicateSet = ({ weight, reps, rpe, isWarmup }) =>
-    actions.addSet(exercise.id, { weight, reps, rpe, isWarmup, isDone: !isLiveDay });
+  const duplicateSet = ({ weight, reps, rpe, isWarmup, isDrop }) =>
+    actions.addSet(exercise.id, { weight, reps, rpe, isWarmup, isDrop, isDone: !isLiveDay });
 
   const toggleDone = async (workoutSet) => {
     const saved = await actions.updateSet(workoutSet.id, { isDone: !workoutSet.isDone });
@@ -370,17 +372,25 @@ function Exercise({
     if (notes.trim() !== (exercise.notes || "")) actions.updateExercise(exercise.id, { notes });
   };
 
-  // Working sets are numbered; a warm-up shows a Z (W in English) and does not count.
+  // Working sets are numbered. A warm-up shows a Z (W in English) and a drop set a D, and
+  // neither counts: a drop set belongs to the set before it.
   const setNumbers = [];
   let workingSetCount = 0;
   for (const workoutSet of exercise.sets) {
-    if (!workoutSet.isWarmup) workingSetCount += 1;
-    setNumbers.push(workoutSet.isWarmup ? null : workingSetCount);
+    const isNumbered = !workoutSet.isWarmup && !workoutSet.isDrop;
+    if (isNumbered) workingSetCount += 1;
+    setNumbers.push(isNumbered ? workingSetCount : null);
   }
-  const setNameAt = (index) =>
-    setNumbers[index] === null
-      ? t("log.warmupLabel")
-      : t("log.setNumberLabel", { number: setNumbers[index] });
+  const setNameAt = (index) => {
+    if (exercise.sets[index]?.isWarmup) return t("log.warmupLabel");
+    if (exercise.sets[index]?.isDrop) return t("log.dropLabel");
+    return t("log.setNumberLabel", { number: setNumbers[index] });
+  };
+  const badgeTextAt = (index) => {
+    if (exercise.sets[index].isWarmup) return t("log.warmupBadge");
+    if (exercise.sets[index].isDrop) return t("log.dropBadge");
+    return setNumbers[index];
+  };
   const weightReps = (workoutSet) =>
     t("log.setWeightReps", {
       weight: formatNumber(workoutSet.weight, language),
@@ -390,8 +400,9 @@ function Exercise({
   // While sets are still planned, they are ticked off rather than typed: the form gives way to
   // "add a set like the last one" and, for a first exercise without them, warm-ups.
   const hasPlan = exercise.sets.some((workoutSet) => !workoutSet.isDone);
-  const lastWorkingSet = exercise.sets.findLast((workoutSet) => !workoutSet.isWarmup);
-  const firstWorkingSet = exercise.sets.find((workoutSet) => !workoutSet.isWarmup);
+  const isMainSet = (workoutSet) => !workoutSet.isWarmup && !workoutSet.isDrop;
+  const lastWorkingSet = exercise.sets.findLast(isMainSet);
+  const firstWorkingSet = exercise.sets.find(isMainSet);
   const warmupSets =
     firstWorkingSet && !exercise.sets.some((workoutSet) => workoutSet.isWarmup)
       ? buildWarmupSets(firstWorkingSet.weight, plateSetup)
@@ -436,6 +447,7 @@ function Exercise({
         className={[
           styles.setRow,
           workoutSet.isWarmup && styles.setRowWarmup,
+          workoutSet.isDrop && styles.setRowDrop,
           isNext && styles.setRowNext,
           setDrag.isDragging(workoutSet.id) && styles.setRowDragging,
           setDrag.dropPosition(workoutSet.id) === "before" && styles.setRowDropBefore,
@@ -458,9 +470,7 @@ function Exercise({
             title={t("log.dragToReorder")}
             {...setDrag.getHandleProps(workoutSet.id)}
           >
-            <span className={badgeClass}>
-              {workoutSet.isWarmup ? t("log.warmupBadge") : setNumbers[index]}
-            </span>
+            <span className={badgeClass}>{badgeTextAt(index)}</span>
           </span>
           <span className={styles.setText}>
             <span
@@ -555,6 +565,7 @@ function Exercise({
                   title={t("log.useLastSet")}
                   onClick={() => setSet(formFromSet(previousSet, language))}
                 >
+                  {previousSet.isDrop && `${t("log.dropBadge")} `}
                   {formatSetShort(previousSet, language)}
                 </button>
               ))}

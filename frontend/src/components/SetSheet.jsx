@@ -30,6 +30,7 @@ function draftFromSet(set, language) {
     reps: String(set.reps),
     rpe: toInputText(set.rpe, language),
     isWarmup: Boolean(set.isWarmup),
+    isDrop: Boolean(set.isDrop),
   };
 }
 
@@ -40,7 +41,7 @@ function readDraft(draft) {
   const rpe = draft.rpe.trim() === "" ? null : readNumber(draft.rpe);
   if (!(weight >= 0) || !Number.isInteger(reps) || reps < 0) return null;
   if (rpe !== null && !(rpe >= RPE_MIN && rpe <= RPE_MAX)) return null;
-  return { weight, reps, rpe, isWarmup: draft.isWarmup };
+  return { weight, reps, rpe, isWarmup: draft.isWarmup, isDrop: draft.isDrop };
 }
 
 // The fields of `values` that differ from the saved set.
@@ -80,7 +81,7 @@ function StepperField({ id, label, value, inputMode, placeholder, less, more, on
 
 /**
  * Everything about one set: its weight, reps and RPE (typed, or stepped with − and +), whether it
- * is a warm-up, a copy of it, or deleting it. A change is saved when the sheet closes, by "Done",
+ * is a warm-up or a drop set, a copy of it, or deleting it. A change is saved when the sheet closes, by "Done",
  * a tap beside it or Escape; while a field holds something that is not a number, closing drops it.
  */
 function SetSheet({ set, title, onSave, onCopy, onDelete, onClose }) {
@@ -177,11 +178,30 @@ function SetSheet({ set, title, onSave, onCopy, onDelete, onClose }) {
 
       <div className={styles.divider} aria-hidden="true" />
 
+      {/* A set is a warm-up or a drop set, never both. */}
       <SwitchRow
         label={t("log.warmupLabel")}
         hint={t("log.warmupHint")}
         checked={draft.isWarmup}
-        onChange={(isWarmup) => setDraft((current) => ({ ...current, isWarmup }))}
+        onChange={(isWarmup) =>
+          setDraft((current) => ({
+            ...current,
+            isWarmup,
+            isDrop: isWarmup ? false : current.isDrop,
+          }))
+        }
+      />
+      <SwitchRow
+        label={t("log.dropLabel")}
+        hint={t("log.dropHint")}
+        checked={draft.isDrop}
+        onChange={(isDrop) =>
+          setDraft((current) => ({
+            ...current,
+            isDrop,
+            isWarmup: isDrop ? false : current.isWarmup,
+          }))
+        }
       />
 
       <div className={styles.actions}>

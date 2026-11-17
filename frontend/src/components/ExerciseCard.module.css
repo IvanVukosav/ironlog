@@ -371,6 +371,11 @@
   opacity: 0.75;
 }
 
+/* A drop set hangs off the set before it. */
+.setRowDrop {
+  margin-left: 22px;
+}
+
 .setMain {
   font-size: 0.95rem;
   font-weight: 700;

@@ -85,7 +85,8 @@ function Log() {
     })}`;
 
   // A set just became done. On its own day the workout's clock starts with the first one, and
-  // every one starts the rest, named after the set that follows it.
+  // every one starts the rest, named after the set that follows it, except before a drop set,
+  // which comes straight after: the rest waits for the last drop.
   const onSetDone = (saved) => {
     if (!isToday || !workout || workout.finishedAt) return;
     if (!workout.startedAt && startRequestedFor.current !== workout.id) {
@@ -93,6 +94,10 @@ function Log() {
       actions.updateWorkout({ startedAt: saved.completedAt ?? new Date().toISOString() });
     }
     const following = findNextSet(withSetChanged(workout, saved));
+    if (following?.set.isDrop && following.exercise.id === saved.exerciseId) {
+      restTimer.skip();
+      return;
+    }
     restTimer.start(restSeconds, following ? describeSet(following) : null);
   };
 
