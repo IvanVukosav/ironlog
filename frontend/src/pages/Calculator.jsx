@@ -1,10 +1,11 @@
 import { useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  calculateEstimatedOneRepMax,
+  calculateRoughOneRepMax,
   DEFAULT_E1RM_FORMULA,
   E1RM_FORMULAS,
   MAX_E1RM_REPS_TO_FAILURE,
+  repsToFailure,
 } from "../utils/oneRepMax";
 import { loadPlateSetup, PLATE_SETUP_STORAGE_KEY } from "../utils/plates";
 import { formatNumber, formatPercent, parseDecimal, toInputText } from "../utils/numbers";
@@ -24,7 +25,8 @@ const MIN_RPE = 1;
 const MAX_RPE = 10;
 
 // The e1RM for what was typed, worked out the way a set in Trening gets its own: the RPE adds the
-// reps left in reserve, and past MAX_E1RM_REPS_TO_FAILURE reps to failure there is none (e1rm
+// reps left in reserve. Past MAX_E1RM_REPS_TO_FAILURE reps to failure, where Trening has none,
+// it is still given but marked rough; past what the formula takes at all there is none (e1rm
 // null). Null until there is a weight, a whole number of reps, and an RPE from 1 to 10 or none.
 function estimateFromText(weightText, repsText, rpeText, formula) {
   const weight = parseDecimal(weightText);
@@ -32,7 +34,10 @@ function estimateFromText(weightText, repsText, rpeText, formula) {
   const rpe = rpeText.trim() === "" ? null : parseDecimal(rpeText);
   if (!(weight > 0) || !Number.isInteger(reps) || reps < 1) return null;
   if (rpe !== null && !(rpe >= MIN_RPE && rpe <= MAX_RPE)) return null;
-  return { e1rm: calculateEstimatedOneRepMax(weight, reps, rpe, formula) };
+  return {
+    e1rm: calculateRoughOneRepMax(weight, reps, rpe, formula),
+    isRough: repsToFailure(reps, rpe) > MAX_E1RM_REPS_TO_FAILURE,
+  };
 }
 
 // 100 % down to the floor, a step at a time.
@@ -52,10 +57,23 @@ function Calculator() {
   const [plateSetup, setPlateSetup] = useState(loadPlateSetup);
   const plateSectionRef = useRef(null);
   const formula = settings?.e1rmFormula ?? DEFAULT_E1RM_FORMULA;
-  const formulaLabel = (E1RM_FORMULAS[formula] ?? E1RM_FORMULAS[DEFAULT_E1RM_FORMULA]).label;
+  const formulaInfo = E1RM_FORMULAS[formula] ?? E1RM_FORMULAS[DEFAULT_E1RM_FORMULA];
   const estimate = estimateFromText(weight, reps, rpe, formula);
   const e1rm = estimate?.e1rm ?? null;
   const kg = (value) => formatNumber(value, language, { maxDecimals: 1 });
+
+  let detail = t("calculator.formulaNote", { formula: formulaInfo.label });
+  if (estimate && e1rm === null) {
+    detail = t("calculator.beyondFormula", {
+      formula: formulaInfo.label,
+      max: formulaInfo.maxReps,
+    });
+  } else if (estimate?.isRough) {
+    detail = t("calculator.roughEstimate", {
+      max: MAX_E1RM_REPS_TO_FAILURE,
+      formula: formulaInfo.label,
+    });
+  }
 
   const changePlateSetup = (nextSetup) => {
     setPlateSetup(nextSetup);
@@ -114,15 +132,12 @@ function Calculator() {
               "—"
             ) : (
               <>
+                {estimate.isRough && "≈ "}
                 {kg(e1rm)} <span className={styles.bigUnit}>kg</span>
               </>
             )}
           </p>
-          <p className={styles.detail}>
-            {estimate && e1rm === null
-              ? t("calculator.tooManyReps", { max: MAX_E1RM_REPS_TO_FAILURE })
-              : t("calculator.formulaNote", { formula: formulaLabel })}
-          </p>
+          <p className={styles.detail}>{detail}</p>
         </div>
       </section>
 

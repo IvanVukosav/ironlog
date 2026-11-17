@@ -3,8 +3,10 @@ import {
   buildE1rmTimeline,
   calculateEstimatedOneRepMax,
   calculateOneRepMax,
+  calculateRoughOneRepMax,
   E1RM_FORMULAS,
   findBestSetByE1rm,
+  repsToFailure,
 } from "./oneRepMax";
 
 const day = (date) => `${date}T00:00:00.000Z`;
@@ -49,6 +51,35 @@ describe("calculateEstimatedOneRepMax", () => {
   it("has no estimate below one rep to failure", () => {
     expect(calculateEstimatedOneRepMax(100, 0, 10, "brzycki")).toBeNull();
     expect(calculateEstimatedOneRepMax(100, 1, 11, "lombardi")).toBeNull();
+  });
+});
+
+describe("repsToFailure", () => {
+  it("adds the reps the RPE leaves in reserve, and none without an RPE", () => {
+    expect(repsToFailure(5, 8)).toBe(7);
+    expect(repsToFailure(6, 7.5)).toBe(8.5);
+    expect(repsToFailure(5, null)).toBe(5);
+  });
+});
+
+describe("calculateRoughOneRepMax", () => {
+  it("is the usual estimate up to 15 reps to failure", () => {
+    expect(calculateRoughOneRepMax(100, 5, 8, "brzycki")).toBeCloseTo(
+      calculateEstimatedOneRepMax(100, 5, 8, "brzycki"),
+    );
+  });
+
+  it("goes past 15 reps to failure, as far as the formula itself goes", () => {
+    // 12 reps @ RPE 5 = 17 reps to failure.
+    expect(calculateRoughOneRepMax(100, 12, 5, "brzycki")).toBeCloseTo((100 * 36) / 20);
+    expect(calculateRoughOneRepMax(100, 36, null, "brzycki")).toBeCloseTo(3600);
+    // Brzycki divides by zero at 37 reps to failure; Epley has no end.
+    expect(calculateRoughOneRepMax(100, 37, null, "brzycki")).toBeNull();
+    expect(calculateRoughOneRepMax(100, 50, null, "epley")).toBeCloseTo(100 * (1 + 50 / 30));
+  });
+
+  it("has no estimate below one rep to failure", () => {
+    expect(calculateRoughOneRepMax(100, 0, null, "lombardi")).toBeNull();
   });
 });
 

@@ -22,14 +22,28 @@ export function calculateOneRepMax(weight, reps, formula) {
   return estimate(weight, reps);
 }
 
-// Null when the reps to failure (reps + reps in reserve from RPE) are outside 1 to
-// MAX_E1RM_REPS_TO_FAILURE.
-export function calculateEstimatedOneRepMax(weight, reps, rpe, formula) {
+// The reps done plus those the RPE says were left in reserve. A set without an RPE counts as
+// taken to failure.
+export function repsToFailure(reps, rpe) {
   const effectiveRpe = Number.isFinite(rpe) ? rpe : RPE_SCALE_MAX;
-  const repsInReserve = RPE_SCALE_MAX - effectiveRpe;
-  const repsToFailure = reps + repsInReserve;
-  if (repsToFailure < 1 || repsToFailure > MAX_E1RM_REPS_TO_FAILURE) return null;
-  return calculateOneRepMax(weight, repsToFailure, formula);
+  return reps + RPE_SCALE_MAX - effectiveRpe;
+}
+
+// Null when the reps to failure are outside 1 to MAX_E1RM_REPS_TO_FAILURE.
+export function calculateEstimatedOneRepMax(weight, reps, rpe, formula) {
+  const toFailure = repsToFailure(reps, rpe);
+  if (toFailure < 1 || toFailure > MAX_E1RM_REPS_TO_FAILURE) return null;
+  return calculateOneRepMax(weight, toFailure, formula);
+}
+
+// The estimate however many reps to failure, as far as the formula goes at all (its maxReps);
+// null past that. Only Kalkulator shows these, as rough past MAX_E1RM_REPS_TO_FAILURE: sets in
+// Trening and the records still stop there.
+export function calculateRoughOneRepMax(weight, reps, rpe, formula) {
+  const toFailure = repsToFailure(reps, rpe);
+  const { maxReps = Infinity } = E1RM_FORMULAS[formula] ?? E1RM_FORMULAS[DEFAULT_E1RM_FORMULA];
+  if (toFailure < 1 || toFailure > maxReps) return null;
+  return calculateOneRepMax(weight, toFailure, formula);
 }
 
 export function findBestSetByE1rm(sets, formula) {
