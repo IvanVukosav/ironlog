@@ -7,6 +7,24 @@ const READING_LINE_PX = 140;
 const SETTLE_MS = 150;
 
 /**
+ * The section being read, from where the sections' tops are (in page order, px from the top of
+ * the window; undefined for one not on the page): the last one up at the reading line, the first
+ * while none has got there, and the last of all once the page is scrolled to its end.
+ */
+export function pickReadingSection(
+  ids,
+  tops,
+  { readingLine = READING_LINE_PX, atEnd = false } = {},
+) {
+  if (atEnd) return ids.at(-1);
+  let reading = ids[0];
+  ids.forEach((id, index) => {
+    if (tops[index] !== undefined && tops[index] <= readingLine) reading = id;
+  });
+  return reading;
+}
+
+/**
  * Which of the elements with these ids is being read: the last one whose top has scrolled up to
  * the reading line, or the last of all once the page is scrolled to its end. The first until the
  * page scrolls. `select(id)` marks one at once, for a jump to it: until the page stops, the
@@ -33,12 +51,8 @@ export function useScrollSpy(ids, enabled) {
       const page = document.documentElement;
       const canScroll = page.scrollHeight > window.innerHeight + 2;
       const atEnd = canScroll && window.innerHeight + window.scrollY >= page.scrollHeight - 2;
-      let reading = ids[0];
-      for (const id of ids) {
-        const top = document.getElementById(id)?.getBoundingClientRect().top;
-        if (top !== undefined && top <= READING_LINE_PX) reading = id;
-      }
-      setCurrent(atEnd ? ids.at(-1) : reading);
+      const tops = ids.map((id) => document.getElementById(id)?.getBoundingClientRect().top);
+      setCurrent(pickReadingSection(ids, tops, { atEnd }));
     };
     const onScroll = () => {
       if (isJumping.current) endJumpWhenStill();

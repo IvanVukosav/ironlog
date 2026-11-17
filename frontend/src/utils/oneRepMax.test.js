@@ -4,11 +4,46 @@ import {
   calculateEstimatedOneRepMax,
   calculateOneRepMax,
   E1RM_FORMULAS,
+  estimateFromText,
   findBestSetByE1rm,
   formulaMaxReps,
   isRoughEstimate,
   repsToFailure,
 } from "./oneRepMax";
+
+describe("estimateFromText", () => {
+  it("has nothing until there is a weight and reps", () => {
+    expect(estimateFromText("", "", "", "brzycki")).toBeNull();
+    expect(estimateFromText("100", "", "", "brzycki")).toBeNull();
+    expect(estimateFromText("", "5", "", "brzycki")).toBeNull();
+  });
+
+  it("works out the e1RM, with a decimal comma or point and an optional RPE", () => {
+    expect(estimateFromText("100", "5", "", "brzycki")).toEqual({ e1rm: 112.5, isRough: false });
+    expect(estimateFromText("102,5", "3", "", "brzycki").e1rm).toBeCloseTo((102.5 * 36) / 34);
+    expect(estimateFromText("100", "5", "8", "brzycki").e1rm).toBeCloseTo(120);
+    expect(estimateFromText("100", "5", "7,5", "brzycki").e1rm).toBeCloseTo((100 * 36) / 29.5);
+  });
+
+  it("takes no weight of 0 or less, no reps that are not whole or below 1, no RPE outside 1 to 10", () => {
+    expect(estimateFromText("0", "5", "", "brzycki")).toBeNull();
+    expect(estimateFromText("-5", "5", "", "brzycki")).toBeNull();
+    expect(estimateFromText("abc", "5", "", "brzycki")).toBeNull();
+    expect(estimateFromText("100", "5,5", "", "brzycki")).toBeNull();
+    expect(estimateFromText("100", "0", "", "brzycki")).toBeNull();
+    expect(estimateFromText("100", "5", "11", "brzycki")).toBeNull();
+    expect(estimateFromText("100", "5", "0,5", "brzycki")).toBeNull();
+    expect(estimateFromText("100", "5", "osam", "brzycki")).toBeNull();
+  });
+
+  it("is rough past 15 reps to failure, and has no number past the formula's own end", () => {
+    const rough = estimateFromText("100", "14", "8", "brzycki");
+    expect(rough.isRough).toBe(true);
+    expect(rough.e1rm).toBeCloseTo((100 * 36) / 21);
+    expect(estimateFromText("100", "37", "", "brzycki")).toEqual({ e1rm: null, isRough: true });
+    expect(estimateFromText("100", "37", "", "epley").e1rm).toBeCloseTo(100 * (1 + 37 / 30));
+  });
+});
 
 const day = (date) => `${date}T00:00:00.000Z`;
 

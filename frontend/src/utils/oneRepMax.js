@@ -1,3 +1,5 @@
+import { parseDecimal } from "./numbers";
+
 const RPE_SCALE_MAX = 10;
 const TIMELINE_DECIMAL_PLACES = 1;
 // The most reps to failure where an e1RM is still a fair guess. Past it the e1RM is still worked
@@ -45,6 +47,24 @@ export function calculateEstimatedOneRepMax(weight, reps, rpe, formula) {
 // An e1RM from more than MAX_RELIABLE_REPS_TO_FAILURE reps to failure is only a rough guess.
 export function isRoughEstimate(reps, rpe) {
   return repsToFailure(reps, rpe) > MAX_RELIABLE_REPS_TO_FAILURE;
+}
+
+export const MIN_RPE = 1;
+export const MAX_RPE = RPE_SCALE_MAX;
+
+// The e1RM for what is typed in Kalkulator ("102,5" with a comma too), worked out the way a set
+// in Trening gets its own. Null until there is a weight, a whole number of reps from 1 and an RPE
+// from 1 to 10 or none; then { e1rm, isRough }, with e1rm null past what the formula takes.
+export function estimateFromText(weightText, repsText, rpeText, formula) {
+  const weight = parseDecimal(weightText);
+  const reps = parseDecimal(repsText);
+  const rpe = rpeText.trim() === "" ? null : parseDecimal(rpeText);
+  if (!(weight > 0) || !Number.isInteger(reps) || reps < 1) return null;
+  if (rpe !== null && !(rpe >= MIN_RPE && rpe <= MAX_RPE)) return null;
+  return {
+    e1rm: calculateEstimatedOneRepMax(weight, reps, rpe, formula),
+    isRough: isRoughEstimate(reps, rpe),
+  };
 }
 
 export function findBestSetByE1rm(sets, formula) {

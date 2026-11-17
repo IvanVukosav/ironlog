@@ -1,14 +1,15 @@
 import { useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  calculateEstimatedOneRepMax,
   DEFAULT_E1RM_FORMULA,
   E1RM_FORMULAS,
-  isRoughEstimate,
+  estimateFromText,
   MAX_RELIABLE_REPS_TO_FAILURE,
+  MAX_RPE,
+  MIN_RPE,
 } from "../utils/oneRepMax";
 import { loadPlateSetup, PLATE_SETUP_STORAGE_KEY } from "../utils/plates";
-import { formatNumber, formatPercent, parseDecimal, toInputText } from "../utils/numbers";
+import { formatNumber, formatPercent, toInputText } from "../utils/numbers";
 import { useSettings } from "../context/useSettings";
 import LoadList from "../components/LoadList";
 import NumberField from "../components/NumberField";
@@ -21,29 +22,11 @@ const PERCENT_STEPS = [2.5, 5, 10];
 const PERCENT_FLOORS = [50, 60, 70];
 const DEFAULT_PERCENT_STEP = 5;
 const DEFAULT_PERCENT_FLOOR = 70;
-const MIN_RPE = 1;
-const MAX_RPE = 10;
 // − and + on a phone: how far a tap moves each field, and where an empty one starts.
 const WEIGHT_STEP_KG = 2.5;
 const REPS_START = 5;
 const RPE_STEP = 0.5;
 const RPE_START = 8;
-
-// The e1RM for what was typed, worked out the way a set in Trening gets its own: the RPE adds the
-// reps left in reserve. Past MAX_RELIABLE_REPS_TO_FAILURE reps to failure it is marked rough;
-// past what the formula takes at all there is none (e1rm null). Null until there is a weight, a
-// whole number of reps, and an RPE from 1 to 10 or none.
-function estimateFromText(weightText, repsText, rpeText, formula) {
-  const weight = parseDecimal(weightText);
-  const reps = parseDecimal(repsText);
-  const rpe = rpeText.trim() === "" ? null : parseDecimal(rpeText);
-  if (!(weight > 0) || !Number.isInteger(reps) || reps < 1) return null;
-  if (rpe !== null && !(rpe >= MIN_RPE && rpe <= MAX_RPE)) return null;
-  return {
-    e1rm: calculateEstimatedOneRepMax(weight, reps, rpe, formula),
-    isRough: isRoughEstimate(reps, rpe),
-  };
-}
 
 // 100 % down to the floor, a step at a time.
 const percentagesDownTo = (floor, step) =>
