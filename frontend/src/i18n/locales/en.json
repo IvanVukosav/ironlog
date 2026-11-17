@@ -36,7 +36,7 @@
     "trainingSection": "Training",
     "restLabel": "Rest after a set",
     "restHint": "Starts by itself when you tick off or log a set.",
-    "restOff": "Off",
+    "restOff": "No rest",
     "showE1rm": "Show e1RM next to each set",
     "e1rmFormula": "e1RM formula",
     "exercisePicker": "Exercise picker",

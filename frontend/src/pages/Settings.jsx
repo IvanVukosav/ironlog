@@ -8,7 +8,6 @@ import { useSettings } from "../context/useSettings";
 import { useReportError } from "../hooks/useReportError";
 import NumberField from "../components/NumberField";
 import PowerliftingSetup from "../components/PowerliftingSetup";
-import PreviewTiles, { TemplatePreview, ThemePreview } from "../components/PreviewTiles";
 import SegmentedControl from "../components/SegmentedControl";
 import SwitchRow from "../components/SwitchRow";
 import styles from "./Settings.module.css";
@@ -30,15 +29,19 @@ const LANGUAGES = [
 
 const THEMES = [
   // Follows the device: Graphite in dark mode, Daylight in light mode.
-  { value: "auto", labelKey: "settings.themeAuto" },
-  { value: "graphite", label: "Graphite" },
-  { value: "daylight", label: "Daylight" },
-  { value: "dark-red", label: "Dark Red" },
-  { value: "light", label: "Light" },
-  { value: "dark-blue", label: "Dark Blue" },
-  { value: "dark-green", label: "Dark Green" },
-  { value: "amber", label: "Amber" },
-  { value: "pure-black", label: "Pure Black" },
+  {
+    value: "auto",
+    labelKey: "settings.themeAuto",
+    swatch: "linear-gradient(90deg, #0f1115 50%, #f4f5f7 50%)",
+  },
+  { value: "graphite", label: "Graphite", swatch: "#5b9bff" },
+  { value: "daylight", label: "Daylight", swatch: "#c2361c" },
+  { value: "dark-red", label: "Dark Red", swatch: "#ff3b3b" },
+  { value: "light", label: "Light", swatch: "#c62828" },
+  { value: "dark-blue", label: "Dark Blue", swatch: "#3ba7ff" },
+  { value: "dark-green", label: "Dark Green", swatch: "#3ec95c" },
+  { value: "amber", label: "Amber", swatch: "#ffb020" },
+  { value: "pure-black", label: "Pure Black", swatch: "#ffffff" },
 ];
 
 const TEMPLATES = [
@@ -59,6 +62,32 @@ function Section({ title, children }) {
       </h2>
       {children}
     </section>
+  );
+}
+
+// One choice out of several, as chips that wrap; `options` are { value, label, swatch? }.
+function ChipGroup({ label, options, value, onChange }) {
+  return (
+    <div className={styles.chips} role="group" aria-label={label}>
+      {options.map((option) => (
+        <button
+          key={option.value}
+          type="button"
+          className={styles.chip}
+          aria-pressed={option.value === value}
+          onClick={() => onChange(option.value)}
+        >
+          {option.swatch && (
+            <span
+              className={styles.swatch}
+              style={{ background: option.swatch }}
+              aria-hidden="true"
+            />
+          )}
+          {option.label}
+        </button>
+      ))}
+    </div>
   );
 }
 
@@ -155,25 +184,24 @@ function Settings() {
             <span className={styles.rowLabel}>{t("settings.theme")}</span>
             <span className={styles.rowHint}>{t("settings.themeHint")}</span>
           </span>
-          <PreviewTiles
+          <ChipGroup
             label={t("settings.theme")}
             options={THEMES.map((theme) => ({
               value: theme.value,
               label: theme.labelKey ? t(theme.labelKey) : theme.label,
+              swatch: theme.swatch,
             }))}
             value={settings?.theme || DEFAULT_THEME}
             onChange={change("theme")}
-            preview={(theme) => <ThemePreview theme={theme} />}
           />
         </div>
         <div className={styles.block}>
           <span className={styles.rowLabel}>{t("settings.template")}</span>
-          <PreviewTiles
+          <ChipGroup
             label={t("settings.template")}
             options={TEMPLATES}
             value={settings?.template || DEFAULT_TEMPLATE}
             onChange={change("template")}
-            preview={(template) => <TemplatePreview template={template} />}
           />
         </div>
       </Section>
@@ -197,13 +225,12 @@ function Settings() {
       </Section>
 
       <Section title={t("settings.trainingSection")}>
-        <div className={styles.row}>
+        <div className={styles.block}>
           <span className={styles.rowText}>
             <span className={styles.rowLabel}>{t("settings.restLabel")}</span>
             <span className={styles.rowHint}>{t("settings.restHint")}</span>
           </span>
-          <SegmentedControl
-            compact
+          <ChipGroup
             label={t("settings.restLabel")}
             options={REST_CHOICES_SECONDS.map((seconds) => ({
               value: seconds,

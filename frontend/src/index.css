@@ -1,9 +1,6 @@
 /* The default look: the Moderna template in Graphite (dark) colours. With no theme chosen yet, or
-   "auto", the colours follow the device and switch to Daylight when it is in light mode. Every
-   theme and template is also an attribute, so a part of a page can show another look: Postavke
-   draws its previews that way. */
-:root,
-[data-theme="graphite"] {
+   "auto", the colours follow the device and switch to Daylight when it is in light mode. */
+:root {
   --color-bg: #0f1115;
   --color-bg-card: #181b21;
   --color-bg-elevated: #22262e;
@@ -13,6 +10,7 @@
   --color-accent-rgb: 91, 155, 255;
   --color-text: #f3f4f6;
   --color-text-dim: #a1a7b3;
+  --font-mono: ui-monospace, "Cascadia Code", "Consolas", monospace;
   --color-border: #2e333c;
   --color-border-subtle: #22262e;
   --color-text-placeholder: #7c8391;
@@ -31,11 +29,7 @@
   --color-input-bg: var(--color-bg-elevated);
   --elevation-card: none;
   --elevation-dropdown: 0 12px 32px rgba(0, 0, 0, 0.45);
-}
 
-:root,
-[data-template="moderna"] {
-  --font-mono: ui-monospace, "Cascadia Code", "Consolas", monospace;
   --page-font: var(--font-body);
   --font-body: "Inter Variable", Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
   --heading-weight: 700;
