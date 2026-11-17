@@ -57,6 +57,13 @@ const ICONS = {
       <path d="m14 6 4 4" />
     </>
   ),
+  // Two chain links: things joined together (a superset).
+  link: (
+    <>
+      <path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1 1" />
+      <path d="M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1-1" />
+    </>
+  ),
 };
 
 function Icon({ name, size = 20 }) {

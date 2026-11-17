@@ -2,6 +2,7 @@ import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import Sheet from "./Sheet";
 import Icon from "./Icon";
+import StepperField from "./StepperField";
 import SwitchRow from "./SwitchRow";
 import { formatNumber, toDecimalText, toInputText } from "../utils/numbers";
 import styles from "./SetSheet.module.css";
@@ -51,38 +52,11 @@ function changesFrom(values, set) {
   );
 }
 
-// A number box with − and + inside it, under its label.
-function StepperField({ id, label, value, inputMode, placeholder, less, more, onChange }) {
-  return (
-    <div className={styles.field}>
-      <label className={styles.label} htmlFor={id}>
-        {label}
-      </label>
-      <div className={styles.stepper}>
-        <button type="button" className={styles.step} aria-label={less.label} onClick={less.run}>
-          <Icon name="minus" />
-        </button>
-        <input
-          id={id}
-          className={styles.input}
-          inputMode={inputMode}
-          autoComplete="off"
-          placeholder={placeholder}
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-        />
-        <button type="button" className={styles.step} aria-label={more.label} onClick={more.run}>
-          <Icon name="plus" />
-        </button>
-      </div>
-    </div>
-  );
-}
-
 /**
  * Everything about one set: its weight, reps and RPE (typed, or stepped with − and +), whether it
- * is a warm-up or a drop set, a copy of it, or deleting it. A change is saved when the sheet closes, by "Done",
- * a tap beside it or Escape; while a field holds something that is not a number, closing drops it.
+ * is a warm-up or a drop set, a copy of it, or deleting it. A change is saved when the sheet
+ * closes, by "Done", a tap beside it or Escape; while a field holds something that is not a
+ * number, closing drops it.
  */
 function SetSheet({ set, title, onSave, onCopy, onDelete, onClose }) {
   const { t, i18n } = useTranslation();
