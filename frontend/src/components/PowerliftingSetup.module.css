@@ -1,10 +1,8 @@
-/* Sits in the Powerlifting card under its switch, set off from it by a line. */
+/* Sits in the Powerlifting section under its switch; Postavke sets it off from the switch. */
 .setup {
   display: flex;
   flex-direction: column;
   gap: 18px;
-  padding-top: 14px;
-  border-top: 1px solid var(--color-border-subtle);
 }
 
 .group {

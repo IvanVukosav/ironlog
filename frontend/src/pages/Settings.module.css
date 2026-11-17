@@ -1,3 +1,5 @@
+/* A screen narrower than WIDE_SCREEN (Settings.jsx), as on a phone: a list of the sections,
+   each opening on its own as a card. The wide page is at the end of this file. */
 .page {
   padding: 1.5rem;
   max-width: calc(640px + 3rem);
@@ -25,15 +27,95 @@
   font-size: 0.85rem;
 }
 
-/* On a phone, and a screen too narrow for the menu, every section follows the other as a card
-   under a small title. A wide screen is at the end of this file. */
-.content {
+/* The list of sections, as a phone's settings: an icon, the name, how it is set now, and ›. */
+.list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  overflow: hidden;
+  border: var(--card-border);
+  border-radius: var(--card-radius);
+  background: var(--card-bg);
+  box-shadow: var(--card-shadow);
 }
 
-.section {
+.listItem {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 64px;
+  padding: 0 14px 0 16px;
+  border: none;
+  background: transparent;
+  color: var(--color-text);
+  font-family: var(--font-body);
+  text-align: left;
+  cursor: pointer;
+}
+
+.listItem + .listItem {
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.listItem:hover {
+  background: var(--color-bg-hover);
+}
+
+.listIcon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--input-bg);
+}
+
+.listText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.listTitle {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.listSummary {
+  overflow: hidden;
+  color: var(--color-text-dim);
+  font-size: 0.8rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.listChevron {
+  display: flex;
+  flex: none;
+  color: var(--color-text-dim);
+}
+
+/* An open section: back to the list, its name, and its settings in a card. */
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 44px;
+  margin: -0.75rem 0 0.25rem -6px;
+  padding: 0 8px 0 0;
+  border: none;
+  background: transparent;
+  color: var(--color-accent);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.card {
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -44,57 +126,6 @@
   box-shadow: var(--card-shadow);
   backdrop-filter: var(--card-blur);
   font-family: var(--font-body);
-}
-
-.sectionTitle {
-  color: var(--color-text-dim);
-  font-family: var(--font-body);
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-
-/* What the section holds: said only on a wide screen, under its big title. */
-.sectionAbout {
-  display: none;
-}
-
-.sectionBody {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-/* The menu of sections only shows on a wide screen. */
-.sectionNav {
-  display: none;
-}
-
-.sectionLink {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 44px;
-  padding: 0 12px;
-  border: none;
-  border-radius: var(--input-radius);
-  background: transparent;
-  color: var(--color-text-dim);
-  font-family: var(--font-body);
-  font-size: 0.9rem;
-  font-weight: 600;
-  text-align: left;
-  cursor: pointer;
-}
-
-.sectionLink:hover {
-  color: var(--color-text);
-}
-
-/* The open one: raised a little and in the text colour, without the accent. */
-.sectionLink[aria-current="true"] {
-  background: var(--color-bg-elevated);
-  box-shadow: var(--card-shadow);
-  color: var(--color-text);
 }
 
 /* A name and its control side by side; the control drops under the name when it can't fit. */
@@ -182,17 +213,10 @@
   gap: 12px;
 }
 
-.text {
-  color: var(--color-text-dim);
-  font-family: var(--font-body);
-  font-size: 0.85rem;
-  line-height: 1.5;
-}
-
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+/* The powerlifting setup under its switch, set off from it by a line. */
+.subsection {
+  padding-top: 14px;
+  border-top: 1px solid var(--color-border-subtle);
 }
 
 .secondaryButton {
@@ -228,76 +252,150 @@
 .logoutButton {
   composes: button buttonSecondary from "../styles/shared.module.css";
   min-height: 44px;
+  margin-top: 16px;
+}
+
+/* A wide screen: one page, in the middle of the screen. A menu that stays in view jumps to a
+   section and shows which one is being read. Each section is a table with a row for every
+   setting: what it is on the left, its control on the right, a hairline between. */
+.wide {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  align-items: start;
+  column-gap: 48px;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 2rem 2rem 4rem;
+}
+
+.aside {
+  position: sticky;
+  top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.sectionNav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sectionLink {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+  padding: 0 10px;
+  border-radius: var(--input-radius);
+  color: var(--color-text-dim);
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.sectionLink:hover {
+  color: var(--color-text);
+}
+
+/* The section being read: raised a little and in the text colour, without the accent. */
+.sectionLink[aria-current="true"] {
+  background: var(--color-bg-elevated);
+  box-shadow: var(--card-shadow);
+  color: var(--color-text);
+}
+
+.sections {
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+  padding-top: 4px;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  scroll-margin-top: 1.5rem;
+}
+
+.sectionTitle {
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 1.15rem;
+  font-weight: var(--heading-weight);
+}
+
+.sectionAbout {
   margin-top: 4px;
+  color: var(--color-text-dim);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
 }
 
-/* On a phone the backup buttons go one under the other, each as wide as the card. */
-@media (max-width: 640px) {
-  .actions {
-    flex-direction: column;
-  }
+.table {
+  overflow: hidden;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--card-radius);
+  background: var(--card-bg);
+  box-shadow: var(--card-shadow);
+  backdrop-filter: var(--card-blur);
+  font-family: var(--font-body);
 }
 
-/* A wide screen: the menu of sections on the left and the open one beside it, the two together
-   in the middle of the screen. The section's title is a heading over its card, with what it
-   holds; the other sections are hidden. */
-@media (min-width: 900px) {
-  .page {
-    display: grid;
-    grid-template-columns: 220px minmax(0, 1fr);
-    align-items: start;
-    column-gap: 40px;
-    max-width: 1120px;
-    margin: 0 auto;
-    padding: 2rem;
-  }
+/* Every child is a row; switches (SwitchRow) get the same padding as the rest. */
+.wide .table > * {
+  padding: 14px 20px;
+}
 
-  .sectionNav {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
+.wide .table > * + * {
+  border-top: 1px solid var(--color-border-subtle);
+}
 
-  .content {
-    gap: 16px;
-    padding-top: 6px;
-  }
+.wide .table > [role="switch"] {
+  min-height: 0;
+}
 
-  .section {
-    gap: 16px;
-    padding: 0;
-    border: none;
-    border-radius: 0;
-    background: none;
-    box-shadow: none;
-    backdrop-filter: none;
-  }
+.wide .table .row {
+  flex-wrap: nowrap;
+  min-height: 0;
+}
 
-  .section[data-open="false"] {
-    display: none;
-  }
+.wide .table .block {
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px 24px;
+}
 
-  .sectionTitle {
-    color: var(--color-text);
-    font-size: 1.4rem;
-    font-weight: var(--heading-weight);
-    letter-spacing: -0.01em;
-  }
+.wide .table .rowText {
+  flex: 1 1 200px;
+  min-width: 0;
+}
 
-  .sectionAbout {
-    display: block;
-    margin-top: 4px;
-    color: var(--color-text-dim);
-    font-family: var(--font-body);
-    font-size: 0.875rem;
-  }
+.wide .table .rowLabel {
+  font-size: 0.9rem;
+}
 
-  .sectionBody {
-    padding: calc(var(--card-padding) + 4px);
-    border: var(--card-border);
-    border-radius: var(--card-radius);
-    background: var(--card-bg);
-    box-shadow: var(--card-shadow);
-    backdrop-filter: var(--card-blur);
-  }
+.wide .table .chips {
+  flex: 0 1 520px;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.wide .table .chip {
+  min-height: 34px;
+  padding: 0 12px;
+  font-size: 0.8rem;
+}
+
+.wide .table .goals {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.wide .table .secondaryButton,
+.wide .table .fileButton {
+  flex: none;
+  min-height: 36px;
 }
