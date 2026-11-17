@@ -15,6 +15,10 @@
   white-space: nowrap;
 }
 
+.control {
+  display: flex;
+}
+
 .input {
   composes: input from "../styles/shared.module.css";
   width: 100%;
@@ -24,4 +28,73 @@
   font-size: 1.05rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+}
+
+/* − and + show only on a phone, below, and so does the placeholder of a field with them ("—"
+   for an RPE not given): a computer keeps its plain, empty box. */
+.step {
+  display: none;
+}
+
+.stepped .input::placeholder {
+  color: transparent;
+}
+
+/* On a phone a field with steps is one row, the row itself the box: its name, then − number +.
+   A computer keeps the plain box above. */
+@media (max-width: 640px) {
+  .stepped {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 6px 6px 14px;
+    border-radius: var(--row-radius);
+    background: var(--input-bg);
+  }
+
+  .stepped:focus-within {
+    box-shadow: var(--input-focus-ring);
+  }
+
+  .stepped .label {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.875rem;
+  }
+
+  .stepped .control {
+    flex: none;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .stepped .step {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: none;
+    border-radius: var(--button-radius);
+    background: var(--color-border);
+    color: var(--color-text);
+    cursor: pointer;
+  }
+
+  .stepped .input,
+  .stepped .input:focus {
+    width: 5.5rem;
+    height: 44px;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    font-size: 1.35rem;
+    text-align: center;
+  }
+
+  .stepped .input::placeholder {
+    color: var(--color-text-placeholder);
+  }
 }

@@ -23,6 +23,11 @@ const DEFAULT_PERCENT_STEP = 5;
 const DEFAULT_PERCENT_FLOOR = 70;
 const MIN_RPE = 1;
 const MAX_RPE = 10;
+// − and + on a phone: how far a tap moves each field, and where an empty one starts.
+const WEIGHT_STEP_KG = 2.5;
+const REPS_START = 5;
+const RPE_STEP = 0.5;
+const RPE_START = 8;
 
 // The e1RM for what was typed, worked out the way a set in Trening gets its own: the RPE adds the
 // reps left in reserve. Past MAX_E1RM_REPS_TO_FAILURE reps to failure, where Trening has none,
@@ -113,14 +118,44 @@ function Calculator() {
       <section className={styles.card}>
         <h2 className={styles.cardTitle}>{t("calculator.oneRepMaxTitle")}</h2>
         <div className={styles.fields}>
-          <NumberField label={t("calculator.weightLabel")} value={weight} onChange={setWeight} />
+          <NumberField
+            label={t("calculator.weightLabel")}
+            value={weight}
+            onChange={setWeight}
+            step={{
+              by: WEIGHT_STEP_KG,
+              start: plateSetup.barWeight,
+              less: t("log.lessWeightBy", { step: kg(WEIGHT_STEP_KG) }),
+              more: t("log.moreWeightBy", { step: kg(WEIGHT_STEP_KG) }),
+            }}
+          />
           <NumberField
             label={t("calculator.repsLabel")}
             value={reps}
             onChange={setReps}
             inputMode="numeric"
+            step={{
+              by: 1,
+              start: REPS_START,
+              min: 1,
+              less: t("log.lessReps"),
+              more: t("log.moreReps"),
+            }}
           />
-          <NumberField label={t("calculator.rpeLabel")} value={rpe} onChange={setRpe} />
+          <NumberField
+            label={t("calculator.rpeLabel")}
+            value={rpe}
+            onChange={setRpe}
+            placeholder="—"
+            step={{
+              by: RPE_STEP,
+              start: RPE_START,
+              min: MIN_RPE,
+              max: MAX_RPE,
+              less: t("log.lessRpeBy", { step: kg(RPE_STEP) }),
+              more: t("log.moreRpeBy", { step: kg(RPE_STEP) }),
+            }}
+          />
         </div>
         <div className={styles.result} aria-live="polite">
           <p

@@ -14,6 +14,15 @@ export function parseDecimal(text) {
   return parseFloat(toDecimalText(text));
 }
 
+// The number after a tap on − or + beside a field holding `text`: `by` added (negative takes
+// away), kept within `min` and `max`, and rounded to two decimals so steps of 0,5 or 2,5 add up
+// exactly. An empty field, or one without a number, starts at `start` instead.
+export function stepNumber(text, by, { start, min = 0, max = Infinity }) {
+  const current = parseDecimal(text);
+  if (!Number.isFinite(current)) return start;
+  return Math.min(max, Math.max(min, Math.round((current + by) * 100) / 100));
+}
+
 // A saved number put back in a field to be changed: "90,6" in Croatian, "90.6" in English, and
 // never a thousands separator, so toDecimalText reads it back as the same number. Nothing saved
 // gives an empty field.

@@ -5,11 +5,15 @@ import {
   PLATE_STYLES,
   STANDARD_PLATES_KG,
   calculatePlates,
+  smallestJumpKg,
 } from "../utils/plates";
 import { formatNumber, parseDecimal } from "../utils/numbers";
 import NumberField from "./NumberField";
 import SegmentedControl from "./SegmentedControl";
 import styles from "./PlateCalculator.module.css";
+
+// The step for − and + when no plates are chosen at all.
+const FALLBACK_STEP_KG = 2.5;
 
 function Barbell({ plates }) {
   const renderPlate = (plate, index) => (
@@ -47,6 +51,8 @@ function PlateCalculator({ target, onTargetChange, setup, onSetupChange }) {
   const hasTarget = Number.isFinite(targetKg);
   const result = hasTarget ? calculatePlates(targetKg, setup) : null;
   const emptyBarKg = setup.barWeight + (setup.useCollars ? COLLAR_WEIGHT_KG * 2 : 0);
+  // On a phone − and + move by the smallest load the plates allow, from the empty bar up.
+  const jumpKg = smallestJumpKg(setup) || FALLBACK_STEP_KG;
 
   const togglePlate = (plate) => {
     const availablePlates = setup.availablePlates.includes(plate)
@@ -62,6 +68,12 @@ function PlateCalculator({ target, onTargetChange, setup, onSetupChange }) {
           label={t("calculator.targetWeightLabel")}
           value={target}
           onChange={onTargetChange}
+          step={{
+            by: jumpKg,
+            start: emptyBarKg,
+            less: t("log.lessWeightBy", { step: kg(jumpKg) }),
+            more: t("log.moreWeightBy", { step: kg(jumpKg) }),
+          }}
         />
       </div>
 

@@ -6,6 +6,9 @@ import LoadList from "./LoadList";
 import NumberField from "./NumberField";
 import styles from "./WarmupGenerator.module.css";
 
+// How far − and + move the working weight on a phone.
+const WEIGHT_STEP_KG = 2.5;
+
 // The ramp up to a working weight, each step with the plates for one side of the bar.
 function WarmupGenerator({ setup, onSelectWeight }) {
   const { t, i18n } = useTranslation();
@@ -21,6 +24,12 @@ function WarmupGenerator({ setup, onSelectWeight }) {
           label={t("calculator.workingWeightLabel")}
           value={workingWeight}
           onChange={setWorkingWeight}
+          step={{
+            by: WEIGHT_STEP_KG,
+            start: setup.barWeight,
+            less: t("log.lessWeightBy", { step: kg(WEIGHT_STEP_KG) }),
+            more: t("log.moreWeightBy", { step: kg(WEIGHT_STEP_KG) }),
+          }}
         />
       </div>
       {warmupSets.length > 0 && (

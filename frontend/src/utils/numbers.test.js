@@ -5,9 +5,34 @@ import {
   formatSet,
   formatVolume,
   parseDecimal,
+  stepNumber,
   toDecimalText,
   toInputText,
 } from "./numbers";
+
+describe("stepNumber", () => {
+  it("adds the step to the number typed, with a decimal comma or point", () => {
+    expect(stepNumber("100", 2.5, { start: 20 })).toBe(102.5);
+    expect(stepNumber("102,5", -2.5, { start: 20 })).toBe(100);
+    expect(stepNumber("7.5", 0.5, { start: 8, max: 10 })).toBe(8);
+  });
+
+  it("starts an empty field, or one without a number, at its start", () => {
+    expect(stepNumber("", 2.5, { start: 20 })).toBe(20);
+    expect(stepNumber("", -2.5, { start: 20 })).toBe(20);
+    expect(stepNumber("abc", 1, { start: 5 })).toBe(5);
+  });
+
+  it("stays within min and max, and never below 0 without a min", () => {
+    expect(stepNumber("1", -1, { start: 5, min: 1 })).toBe(1);
+    expect(stepNumber("10", 0.5, { start: 8, min: 1, max: 10 })).toBe(10);
+    expect(stepNumber("1", -2.5, { start: 20 })).toBe(0);
+  });
+
+  it("adds steps up exactly", () => {
+    expect(stepNumber("0,1", 0.2, { start: 0 })).toBe(0.3);
+  });
+});
 
 describe("formatSet", () => {
   it("writes weight, reps and RPE in the language's numbers", () => {

@@ -2,6 +2,13 @@
   max-width: 12rem;
 }
 
+/* On a phone the field is a full row with − and + (NumberField). */
+@media (max-width: 640px) {
+  .target {
+    max-width: none;
+  }
+}
+
 /* The loaded bar, drawn to scale by plate, then the plates for one side in words. */
 
 .result {
