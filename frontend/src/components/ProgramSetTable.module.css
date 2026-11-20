@@ -1,0 +1,217 @@
+/* A narrow window lets the table scroll sideways instead of squeezing the boxes. */
+.scroll {
+  overflow-x: auto;
+}
+
+.table {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 420px;
+  font-family: var(--font-body);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 0.7fr) minmax(0, 1.5fr) minmax(0, 1.1fr) 84px;
+  gap: 6px;
+  align-items: center;
+}
+
+.head {
+  align-items: end;
+  color: var(--color-text-dim);
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--badge-radius);
+  background: rgba(var(--color-accent-rgb), 0.12);
+  color: var(--color-accent);
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.cell {
+  display: flex;
+  min-width: 0;
+}
+
+.box {
+  composes: input from "../styles/shared.module.css";
+  width: 100%;
+  min-width: 0;
+  height: 40px;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.numberBox {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+/* A box holding an input and something beside it (the RPE/% switch, "kg"). */
+.pair {
+  display: flex;
+  align-items: center;
+  padding: 0;
+  overflow: hidden;
+}
+
+.pair:focus-within {
+  border-bottom-color: var(--color-accent);
+  box-shadow: var(--input-focus-ring);
+}
+
+.inner {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0 6px 0 10px;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.inner::placeholder {
+  color: var(--color-text-placeholder);
+  font-weight: 600;
+}
+
+.toggle {
+  flex: none;
+  display: flex;
+  gap: 2px;
+  margin-right: 4px;
+  padding: 2px;
+  border-radius: 8px;
+  background: var(--color-bg);
+}
+
+.toggle button {
+  min-width: 34px;
+  height: 28px;
+  padding: 0 6px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-text-placeholder);
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.toggle button[aria-pressed="true"] {
+  background: var(--color-border);
+  color: var(--color-text);
+}
+
+.unit {
+  flex: none;
+  margin-right: 10px;
+  color: var(--color-text-placeholder);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+/* The weight of a percentage set: worked out, so shown rather than typed. */
+.worked {
+  border-style: dashed;
+  background: transparent;
+}
+
+.workedValue {
+  flex: 1;
+  padding-right: 6px;
+  color: var(--color-text-dim);
+  font-size: 1rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.invalid,
+.invalid:focus-within,
+.invalid:focus {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 1px var(--color-accent);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.iconButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--color-text-dim);
+  cursor: pointer;
+}
+
+.iconButton:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text);
+}
+
+/* A drop set, under the set it follows. */
+.dropRow {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) 40px;
+  gap: 6px;
+  align-items: center;
+  margin-left: 34px;
+}
+
+.dropBadge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: 1px solid rgba(var(--color-accent-rgb), 0.5);
+  border-radius: var(--badge-radius);
+  color: var(--color-accent);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.dropText {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  height: 36px;
+  padding: 0 12px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: rgba(var(--color-accent-rgb), 0.08);
+  color: var(--color-text-dim);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

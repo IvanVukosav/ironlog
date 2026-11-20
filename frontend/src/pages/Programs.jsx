@@ -64,7 +64,7 @@ function Programs() {
 
   if (editingId !== null) {
     return (
-      <div className={styles.page}>
+      <div className={`${styles.page} ${styles.editingPage}`}>
         <div className={styles.editorHeader}>
           <button type="button" className={styles.backButton} onClick={() => setEditingId(null)}>
             <Icon name="chevronLeft" size={18} />

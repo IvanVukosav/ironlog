@@ -6,6 +6,13 @@
   gap: 1rem;
 }
 
+/* On a wide screen the editor takes the room of two days side by side. */
+@media (min-width: 900px) {
+  .editingPage {
+    max-width: calc(1120px + 3rem);
+  }
+}
+
 .heading {
   color: var(--color-text);
   font-family: var(--font-body);
