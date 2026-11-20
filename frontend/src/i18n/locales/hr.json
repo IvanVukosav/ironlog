@@ -322,7 +322,20 @@
     "finished": "Program je završen, kreće ispočetka od 1. tjedna.",
     "missingE1rm": "Nema e1RM-a za ovu vježbu, upiši kilažu ručno nakon učitavanja.",
     "nothingThisDay": "Za ovaj dan i tjedan nema vježbi.",
-    "load": "Učitaj"
+    "load": "Učitaj",
+    "exportExcel": "Izvezi u Excel",
+    "exporting": "Izvozim…",
+    "exportOverview": "Pregled",
+    "exportedOn": "izvezeno iz Iron Loga {{date}}",
+    "exportNote": "Kilaže su iz tvojih e1RM-ova: postotak preko trening maxa, RPE po tablici RPE → %, zaokruženo na 2,5 kg. Gdje kilaže nema, biraš je na treningu.",
+    "exportWeekNote": "kilaže iz e1RM-a, % 1RM je kilaža / e1RM",
+    "exportSet": "SET",
+    "exportWeight": "KILAŽA",
+    "exportReps": "PON.",
+    "exportRpe": "RPE",
+    "exportShare": "% 1RM",
+    "exportTotalReps": "PONAVLJANJA",
+    "exportVolume": "VOLUMEN"
   },
   "errors": {
     "weight": "Kilaža mora biti broj, 0 ili više.",

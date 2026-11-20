@@ -129,6 +129,17 @@ export function plannedWeight(set, e1rm, trainingMaxPercent) {
   return roundToIncrement((e1rm * share) / 100, PROGRAM_ROUNDING_KG);
 }
 
+/** The weights of a set's drop sets: each 20 % lighter than the one before, rounded the same way. */
+export function dropWeights(weight, drops) {
+  const weights = [];
+  let dropWeight = weight;
+  for (let drop = 0; drop < drops; drop += 1) {
+    dropWeight = roundToIncrement(dropWeight * DROP_SHARE, PROGRAM_ROUNDING_KG);
+    weights.push(dropWeight);
+  }
+  return weights;
+}
+
 /**
  * Expands set groups into concrete sets, each with its plannedWeight. `missingE1rm` is true when
  * a set would have worked its weight out from an e1RM there isn't (those sets get weight 0 so the
@@ -140,12 +151,15 @@ export function buildProgramSets(groups, e1rm, trainingMaxPercent) {
   const sets = groups.flatMap((group) => {
     if (!e1rm && worksFromE1rm(group)) missingE1rm = true;
     const weight = plannedWeight(group, e1rm, trainingMaxPercent) ?? 0;
-    const withDrops = [{ weight, reps: group.reps, rpe: group.rpe }];
-    let dropWeight = weight;
-    for (let drop = 0; drop < (group.drops ?? 0); drop += 1) {
-      dropWeight = roundToIncrement(dropWeight * DROP_SHARE, PROGRAM_ROUNDING_KG);
-      withDrops.push({ weight: dropWeight, reps: group.reps, rpe: null, isDrop: true });
-    }
+    const withDrops = [
+      { weight, reps: group.reps, rpe: group.rpe },
+      ...dropWeights(weight, group.drops ?? 0).map((dropWeight) => ({
+        weight: dropWeight,
+        reps: group.reps,
+        rpe: null,
+        isDrop: true,
+      })),
+    ];
     return Array.from({ length: group.sets }, () => withDrops.map((set) => ({ ...set }))).flat();
   });
   return { sets, missingE1rm };

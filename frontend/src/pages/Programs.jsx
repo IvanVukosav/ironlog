@@ -1,9 +1,13 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { fetchJson } from "../api";
+import { useSettings } from "../context/useSettings";
 import { useToast } from "../context/useToast";
+import { fetchBestE1rms } from "../hooks/useBestE1rms";
 import { useReportError } from "../hooks/useReportError";
 import { formatPercent } from "../utils/numbers";
+import { DEFAULT_E1RM_FORMULA } from "../utils/oneRepMax";
+import { exportProgramToExcel } from "../utils/programExport";
 import Icon from "../components/Icon";
 import ProgramEditor from "../components/ProgramEditor";
 import styles from "./Programs.module.css";
@@ -18,6 +22,9 @@ function Programs() {
   const [programs, setPrograms] = useState(null);
   const [exerciseNames, setExerciseNames] = useState([]);
   const [editingId, setEditingId] = useState(null);
+  // The program being made into an Excel file, while it is.
+  const [exportingId, setExportingId] = useState(null);
+  const { settings } = useSettings();
 
   useEffect(() => {
     fetchJson("/api/programs").then(setPrograms).catch(reportError);
@@ -50,6 +57,19 @@ function Programs() {
     fetchJson(`/api/programs/${program.id}`, { method: "DELETE" })
       .then(() => setPrograms((prev) => prev.filter((other) => other.id !== program.id)))
       .catch(reportError);
+  };
+
+  // The program as an Excel file, its weights worked out from today's best e1RMs.
+  const exportProgram = async (program) => {
+    setExportingId(program.id);
+    try {
+      const e1rms = await fetchBestE1rms(settings?.e1rmFormula ?? DEFAULT_E1RM_FORMULA);
+      await exportProgramToExcel(program, { e1rms, t, language: i18n.language });
+    } catch (error) {
+      reportError(error);
+    } finally {
+      setExportingId(null);
+    }
   };
 
   // "4 tjedna · 3 dana · TM 90 %"
@@ -131,6 +151,15 @@ function Programs() {
                   </li>
                 ))}
               </ul>
+              <button
+                type="button"
+                className={styles.exportButton}
+                onClick={() => exportProgram(program)}
+                disabled={exportingId !== null}
+              >
+                <Icon name="download" size={16} />
+                {exportingId === program.id ? t("programs.exporting") : t("programs.exportExcel")}
+              </button>
             </li>
           ))}
         </ul>

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildProgramSets,
+  dropWeights,
   isValidScheme,
   parseScheme,
   plannedWeight,
@@ -64,6 +65,13 @@ describe("schemeToSets and setsToScheme", () => {
 
   it("are null for a scheme that can't be read", () => {
     expect(schemeToSets("five by five")).toBeNull();
+  });
+});
+
+describe("dropWeights", () => {
+  it("takes 20 % off each drop set, rounded to 2,5 kg", () => {
+    expect(dropWeights(75, 2)).toEqual([60, 47.5]);
+    expect(dropWeights(100, 0)).toEqual([]);
   });
 });
 

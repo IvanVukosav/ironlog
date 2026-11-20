@@ -1,3 +1,5 @@
+import { saveBlob } from "./utils/saveFile";
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
 const TOKEN_KEY = "ironlog-token";
 
@@ -67,12 +69,5 @@ export async function downloadFile(path, fallbackName) {
 
   const disposition = response.headers.get("Content-Disposition") || "";
   const fileName = /filename="([^"]+)"/.exec(disposition)?.[1] || fallbackName;
-  const url = URL.createObjectURL(await response.blob());
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = fileName;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(url);
+  saveBlob(await response.blob(), fileName);
 }

@@ -315,7 +315,20 @@
     "finished": "Program finished, starting over from week 1.",
     "missingE1rm": "No e1RM for this exercise yet, fill in the weight after loading.",
     "nothingThisDay": "No exercises for this day and week.",
-    "load": "Load"
+    "load": "Load",
+    "exportExcel": "Export to Excel",
+    "exporting": "Exporting…",
+    "exportOverview": "Overview",
+    "exportedOn": "exported from Iron Log on {{date}}",
+    "exportNote": "The weights come from your e1RMs: a percentage through the training max, an RPE by the RPE → % chart, rounded to 2.5 kg. Where there is no weight, you pick it on the day.",
+    "exportWeekNote": "weights from the e1RM, % 1RM is weight / e1RM",
+    "exportSet": "SET",
+    "exportWeight": "WEIGHT",
+    "exportReps": "REPS",
+    "exportRpe": "RPE",
+    "exportShare": "% 1RM",
+    "exportTotalReps": "TOTAL REPS",
+    "exportVolume": "VOLUME"
   },
   "errors": {
     "weight": "Weight must be a number, 0 or more.",
