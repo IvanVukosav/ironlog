@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { fetchJson, UNAUTHORIZED_EVENT } from "./api";
 import PageErrorBoundary from "./components/PageErrorBoundary";
+import { useOutboxSync } from "./hooks/useOutbox";
 import { ToastProvider } from "./context/ToastContext";
 import { SettingsProvider } from "./context/SettingsContext";
 import { RestTimerProvider } from "./context/RestTimerContext";
@@ -62,6 +63,12 @@ function PageLoadError() {
       </div>
     </div>
   );
+}
+
+// Sends the workout changes made without a connection once it is back, whatever page is open.
+function OutboxSync() {
+  useOutboxSync();
+  return null;
 }
 
 function PageRoutes() {
@@ -139,6 +146,7 @@ function App() {
           </BrowserRouter>
           <ToastContainer />
           <RestTimer />
+          <OutboxSync />
         </RestTimerProvider>
       </SettingsProvider>
     </ToastProvider>

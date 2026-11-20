@@ -11,6 +11,27 @@
 }
 
 /* Before the first set is done: what the ticks are for. */
+/* Changes made without a connection, waiting to be sent: a quiet note, not an error. */
+.offlineNote {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0 0 1rem;
+  padding: 10px 12px;
+  background: var(--row-bg);
+  border-radius: var(--row-radius);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.offlineNote svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--color-text-dim);
+}
+
 .hint {
   margin: -0.25rem 0 1rem;
   padding: 0 4px;

@@ -94,6 +94,14 @@ function refuseWarmupDrop(set) {
   }
 }
 
+// When a set was done, sent by the app when it saves later what was logged without a connection.
+// Without one, the set is done the moment the server hears of it.
+function parseCompletedAt(body, into) {
+  if (body && body.completedAt !== undefined && body.completedAt !== null) {
+    into.completedAt = parseOptionalDateTime(body.completedAt, "completedAt");
+  }
+}
+
 // A logged set: weight and reps, and RPE when one was given; a warm-up or a drop set (done right
 // after the set before it, with less weight) says so. `isDone` is there only when the body says
 // it: a set from a program is a plan (false) until it is ticked off.
@@ -107,6 +115,7 @@ function parseSet(body) {
   };
   refuseWarmupDrop(set);
   if (body && "isDone" in body) set.isDone = parseBoolean(body.isDone, "isDone");
+  parseCompletedAt(body, set);
   return set;
 }
 
@@ -124,6 +133,8 @@ function parseSetChange(body) {
   if ("isDrop" in body) change.isDrop = parseBoolean(body.isDrop, "isDrop");
   if ("isDone" in body) change.isDone = parseBoolean(body.isDone, "isDone");
   if (Object.keys(change).length === 0) throw new HttpError(400, "Nothing to change in the set");
+  // Only with the change it dates (a set ticked off), so it is never all a change holds.
+  parseCompletedAt(body, change);
   refuseWarmupDrop(change);
   return change;
 }

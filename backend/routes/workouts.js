@@ -245,7 +245,8 @@ router.delete("/exercises/:id", async (req, res) => {
   res.json({ success: true });
 });
 
-// A set is done when it is logged, unless the body makes it a plan (`isDone: false`).
+// A set is done when it is logged, unless the body makes it a plan (`isDone: false`). A body
+// saved later (logged offline) brings the moment it was done as `completedAt`.
 router.post("/exercises/:id/sets", async (req, res) => {
   const data = parseSet(req.body);
   const isDone = data.isDone ?? true;
@@ -255,7 +256,7 @@ router.post("/exercises/:id/sets", async (req, res) => {
     data: {
       ...data,
       isDone,
-      completedAt: isDone ? new Date() : null,
+      completedAt: isDone ? (data.completedAt ?? new Date()) : null,
       order: existingSetCount,
       exercise: { connect: { id: exerciseId } },
     },
@@ -296,7 +297,7 @@ router.post("/exercises/:id/sets/bulk", async (req, res) => {
     await tx.set.createMany({
       data: rows.map((set, index) => ({
         ...set,
-        completedAt: set.isDone ? now : null,
+        completedAt: set.isDone ? (set.completedAt ?? now) : null,
         order: startOrder + index,
         exerciseId,
       })),
@@ -325,10 +326,11 @@ router.patch("/exercises/:id/sets/reorder", async (req, res) => {
 });
 
 // Changes only the fields that were sent: { isDone: true } ticks a set off, and the time it was
-// done is kept with it.
+// done is kept with it (now, or the `completedAt` a change saved later brings).
 router.patch("/sets/:id", async (req, res) => {
   const change = parseSetChange(req.body);
-  if ("isDone" in change) change.completedAt = change.isDone ? new Date() : null;
+  if ("isDone" in change)
+    change.completedAt = change.isDone ? (change.completedAt ?? new Date()) : null;
   const set = await prisma.set.update({ where: { id: parseId(req.params.id) }, data: change });
   res.json(set);
 });

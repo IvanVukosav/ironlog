@@ -3,6 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const { isAuthEnabled, requireAuth } = require("./utils/auth");
 const { errorHandler } = require("./utils/errorHandler");
+const { createIdempotency } = require("./utils/idempotency");
 
 const app = express();
 
@@ -51,7 +52,8 @@ const backupRouter = require("./routes/backup");
 
 app.use("/api/auth", authRouter);
 app.use("/api", requireAuth);
-app.use("/api/workouts", workoutsRouter);
+// The app sends changes to a workout again after a lost connection; a key keeps them single.
+app.use("/api/workouts", createIdempotency(), workoutsRouter);
 app.use("/api/nutrition", nutritionRouter);
 app.use("/api/settings", settingsRouter);
 app.use("/api/stats", statsRouter);

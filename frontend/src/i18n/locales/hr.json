@@ -340,6 +340,12 @@
     "exportTotalReps": "PONAVLJANJA",
     "exportVolume": "VOLUMEN"
   },
+  "offline": {
+    "waiting_one": "Nema veze sa serverom: {{count}} promjena čeka. Spremit će se čim se veza vrati.",
+    "waiting_few": "Nema veze sa serverom: {{count}} promjene čekaju. Spremit će se čim se veza vrati.",
+    "waiting_other": "Nema veze sa serverom: {{count}} promjena čeka. Spremit će se čim se veza vrati.",
+    "saved": "Promjene su spremljene."
+  },
   "errors": {
     "weight": "Kilaža mora biti broj, 0 ili više.",
     "reps": "Ponavljanja moraju biti cijeli broj, 0 ili više.",

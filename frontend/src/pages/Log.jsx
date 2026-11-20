@@ -12,6 +12,7 @@ import { useToast } from "../context/useToast";
 import { useSettings } from "../context/useSettings";
 import { useDateParam } from "../hooks/useDateParam";
 import { useDragReorder } from "../hooks/useDragReorder";
+import { usePendingChanges } from "../hooks/useOutbox";
 import { useReportError } from "../hooks/useReportError";
 import { useWorkout } from "../hooks/useWorkout";
 import {
@@ -36,6 +37,8 @@ function Log() {
   const { t, i18n } = useTranslation();
   const { showError } = useToast();
   const reportError = useReportError();
+  // Changes made without a connection, still on their way to the server.
+  const pendingChanges = usePendingChanges();
   const [date, setDate] = useDateParam();
   const { workout, isLoading, ...actions } = useWorkout(date);
   const [exerciseName, setExerciseName] = useState("");
@@ -357,6 +360,13 @@ function Log() {
           </div>
         )}
       </header>
+
+      {pendingChanges > 0 && (
+        <p className={styles.offlineNote} role="status">
+          <Icon name="cloudOff" size={16} />
+          <span>{t("offline.waiting", { count: pendingChanges })}</span>
+        </p>
+      )}
 
       {workout && showWorkoutNotes && (
         <textarea

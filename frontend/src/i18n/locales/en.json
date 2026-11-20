@@ -333,6 +333,11 @@
     "exportTotalReps": "TOTAL REPS",
     "exportVolume": "VOLUME"
   },
+  "offline": {
+    "waiting_one": "No connection to the server: {{count}} change is waiting. It will be saved once the connection is back.",
+    "waiting_other": "No connection to the server: {{count}} changes are waiting. They will be saved once the connection is back.",
+    "saved": "Changes saved."
+  },
   "errors": {
     "weight": "Weight must be a number, 0 or more.",
     "reps": "Reps must be a whole number, 0 or more.",

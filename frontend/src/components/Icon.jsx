@@ -57,6 +57,14 @@ const ICONS = {
       <path d="m14 6 4 4" />
     </>
   ),
+  // A struck-out cloud: no connection to the server.
+  cloudOff: (
+    <>
+      <path d="m2 2 20 20" />
+      <path d="M5.78 5.78A7 7 0 0 0 9 19h8.5a4.5 4.5 0 0 0 1.31-.19" />
+      <path d="M21.53 16.5A4.5 4.5 0 0 0 17 11h-1.79A7 7 0 0 0 10 5.07" />
+    </>
+  ),
   // An arrow down into a tray: saved as a file.
   download: (
     <>

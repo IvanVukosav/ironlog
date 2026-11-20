@@ -126,6 +126,16 @@ test("parseSet passes isDone on only when the body names it, and then only as tr
   assert.throws(() => parseSet({ weight: "100", reps: "5", isDone: "false" }), isBadRequest);
 });
 
+test("a set saved later brings the moment it was done", () => {
+  const done = parseSet({ weight: "100", reps: "5", completedAt: "2026-11-20T17:04:00.000Z" });
+  assert.equal(done.completedAt.toISOString(), "2026-11-20T17:04:00.000Z");
+  assert.equal("completedAt" in parseSet({ weight: "100", reps: "5", completedAt: null }), false);
+  assert.throws(() => parseSet({ weight: "100", reps: "5", completedAt: "jučer" }), isBadRequest);
+  const ticked = parseSetChange({ isDone: true, completedAt: "2026-11-20T17:05:00.000Z" });
+  assert.equal(ticked.completedAt.toISOString(), "2026-11-20T17:05:00.000Z");
+  assert.throws(() => parseSetChange({ completedAt: "2026-11-20T17:05:00.000Z" }), isBadRequest);
+});
+
 test("parseSetChange checks and returns only the fields that were sent", () => {
   assert.deepEqual(parseSetChange({ isDone: true }), { isDone: true });
   assert.deepEqual(parseSetChange({ weight: "142,5" }), { weight: 142.5 });

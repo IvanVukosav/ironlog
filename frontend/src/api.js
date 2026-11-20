@@ -44,6 +44,8 @@ async function authorizedFetch(path, options = {}) {
 }
 
 // `json` is the request body as a plain value: it is sent as JSON with the matching header.
+// A refused request throws an Error with the server's message and the HTTP `status`; no
+// connection at all throws fetch's TypeError.
 export async function fetchJson(path, { json, ...options } = {}) {
   if (json !== undefined) {
     options.headers = { "Content-Type": "application/json", ...options.headers };
@@ -53,7 +55,9 @@ export async function fetchJson(path, { json, ...options } = {}) {
   const data = await response.json().catch(() => null);
 
   if (!response.ok) {
-    throw new Error(data?.error || `Request failed with status ${response.status}`);
+    const error = new Error(data?.error || `Request failed with status ${response.status}`);
+    error.status = response.status;
+    throw error;
   }
 
   return data;
