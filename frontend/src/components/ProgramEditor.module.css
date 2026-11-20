@@ -188,6 +188,15 @@
   font-weight: 700;
 }
 
+/* The e1RM the exercise's weights are worked out from. */
+.e1rm {
+  margin-top: -2px;
+  color: var(--color-text-dim);
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
 .note {
   color: var(--color-accent);
   font-family: var(--font-body);

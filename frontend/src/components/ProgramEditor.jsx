@@ -1,6 +1,9 @@
 import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { schemeToSets, setsToScheme } from "../utils/programScheme";
+import { useSettings } from "../context/useSettings";
+import { useBestE1rms } from "../hooks/useBestE1rms";
+import { DEFAULT_E1RM_FORMULA } from "../utils/oneRepMax";
+import { plannedWeight, schemeToSets, setsToScheme } from "../utils/programScheme";
 import { supersetLabels, tidySupersets, toggleSuperset } from "../utils/supersets";
 import { formatNumber, formatPercent, parseDecimal, toInputText } from "../utils/numbers";
 import Icon from "./Icon";
@@ -83,6 +86,10 @@ function ProgramEditor({ program, exerciseNames, onSave, onCancel }) {
   const weekIndex = currentWeek - 1;
   const trainingMax = parseDecimal(draft.trainingMaxPercent) || DEFAULT_TRAINING_MAX_PERCENT;
   const exerciseListId = `${id}exercises`;
+  const { settings } = useSettings();
+  // Each exercise's best e1RM, which the weights of its sets are worked out from.
+  const bestE1rms = useBestE1rms(settings?.e1rmFormula ?? DEFAULT_E1RM_FORMULA);
+  const e1rmOf = (exercise) => bestE1rms[exercise.name.trim()] ?? null;
 
   const updateDay = (dayKey, update) => {
     setDraft((prev) => ({
@@ -172,21 +179,34 @@ function ProgramEditor({ program, exerciseNames, onSave, onCancel }) {
     });
   };
 
-  // "75 % × 5", "60 kg × 10", or "8 ponavljanja" for a set without a weight.
-  const describeMain = (set) => {
+  // "60 kg × 10" for a weight of its own, "≈ 85 kg × 8" for one worked out from the e1RM, and
+  // without a weight "75 % × 5" or "8 ponavljanja".
+  const describeMain = (set, e1rm) => {
+    const weight = plannedWeight(set, e1rm, trainingMax);
+    if (weight !== null) {
+      const text = t("log.setWeightReps", {
+        weight: formatNumber(weight, language),
+        reps: set.reps,
+      });
+      return set.weight !== null ? text : t("programs.worked", { text });
+    }
     if (set.percent !== null) {
       return t("programs.setPercentReps", {
         percent: formatPercent(set.percent, language),
         reps: set.reps,
       });
     }
-    if (set.weight !== null) {
-      return t("log.setWeightReps", { weight: formatNumber(set.weight, language), reps: set.reps });
-    }
     return t("programs.repsOnly", { count: set.reps });
   };
-  const describeRpe = (set) =>
-    set.rpe !== null ? t("log.setRpe", { rpe: formatNumber(set.rpe, language) }) : null;
+  // The intensity beside it: "RPE 7", or "75 %" when the main text shows the weight.
+  const describeIntensity = (set, e1rm) => {
+    if (set.percent !== null) {
+      return plannedWeight(set, e1rm, trainingMax) !== null
+        ? formatPercent(set.percent, language)
+        : null;
+    }
+    return set.rpe !== null ? t("log.setRpe", { rpe: formatNumber(set.rpe, language) }) : null;
+  };
   const describeDrops = (set) =>
     set.drops > 0 ? t("programs.dropCount", { count: set.drops }) : null;
 
@@ -301,6 +321,7 @@ function ProgramEditor({ program, exerciseNames, onSave, onCancel }) {
                 const isLinkedToPrevious =
                   index > 0 && Boolean(group) && group === day.exercises[index - 1].supersetGroup;
                 const exerciseName = exercise.name || t("programs.exercise");
+                const e1rm = e1rmOf(exercise);
                 return (
                   <li
                     key={exercise.key}
@@ -353,6 +374,12 @@ function ProgramEditor({ program, exerciseNames, onSave, onCancel }) {
                       </button>
                     </div>
 
+                    {e1rm !== null && (
+                      <p className={styles.e1rm}>
+                        {t("programs.e1rmNote", { e1rm: formatNumber(e1rm, language) })}
+                      </p>
+                    )}
+
                     {copiedFor === exercise.key && (
                       <p className={styles.note} role="status">
                         {t("programs.weekCopied", { number: currentWeek })}
@@ -362,7 +389,11 @@ function ProgramEditor({ program, exerciseNames, onSave, onCancel }) {
                     {sets.length > 0 ? (
                       <ol className={styles.sets}>
                         {sets.map((set, setIndex) => {
-                          const parts = [describeMain(set), describeRpe(set), describeDrops(set)];
+                          const parts = [
+                            describeMain(set, e1rm),
+                            describeIntensity(set, e1rm),
+                            describeDrops(set),
+                          ];
                           const name = t("log.setNumberLabel", { number: setIndex + 1 });
                           return (
                             <li key={setIndex}>
@@ -483,6 +514,7 @@ function ProgramEditor({ program, exerciseNames, onSave, onCancel }) {
             "programs.dayNumber",
             { number: openDayIndex + 1 },
           )}`}
+          e1rm={e1rmOf(openExercise)}
           trainingMaxPercent={trainingMax}
           onSave={(values) =>
             updateSets(openSet.dayKey, openSet.exerciseKey, (sets) =>

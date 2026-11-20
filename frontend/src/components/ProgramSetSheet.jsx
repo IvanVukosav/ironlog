@@ -3,9 +3,9 @@ import { useTranslation } from "react-i18next";
 import Sheet from "./Sheet";
 import Icon from "./Icon";
 import StepperField from "./StepperField";
-import SwitchRow from "./SwitchRow";
-import { MAX_DROPS } from "../utils/programScheme";
+import { MAX_DROPS, plannedWeight } from "../utils/programScheme";
 import { MAX_RPE, MIN_RPE } from "../utils/oneRepMax";
+import { percentForRpe, rpeForPercent } from "../utils/rpeChart";
 import {
   formatNumber,
   formatPercent,
@@ -19,12 +19,13 @@ const MAX_REPS = 100;
 const MAX_PERCENT = 120;
 const REPS_STEP = 1;
 const REPS_START = 8;
-const LOAD_STEP = 2.5;
-const PERCENT_START = 75;
-// A weight in kg stepped from an empty field starts at the empty bar.
-const WEIGHT_START = 20;
 const RPE_STEP = 0.5;
 const RPE_START = 8;
+const PERCENT_STEP = 2.5;
+const PERCENT_START = 75;
+const WEIGHT_STEP = 2.5;
+// A weight stepped from an empty box starts at the empty bar, unless the e1RM gives one.
+const WEIGHT_START = 20;
 const DROP_CHOICES = Array.from({ length: MAX_DROPS + 1 }, (_, count) => count);
 
 // What a field says as a number: NaN for an empty field or anything that is not a number.
@@ -33,13 +34,17 @@ function readNumber(text) {
   return decimal === "" ? NaN : Number(decimal);
 }
 
+const toHalf = (value) => Math.round(value * 2) / 2;
+
+// The set in the form: its intensity is an RPE or a percentage (an old set with both shows its
+// percentage), and a weight of its own only goes with an RPE or none.
 function draftFromSet(set, language) {
+  const mode = set.percent !== null ? "percent" : "rpe";
   return {
     reps: String(set.reps),
-    load: set.percent !== null ? "percent" : set.weight !== null ? "weight" : "none",
-    loadText: toInputText(set.percent ?? set.weight, language),
-    hasRpe: set.rpe !== null,
-    rpe: toInputText(set.rpe, language),
+    mode,
+    intensity: toInputText(mode === "percent" ? set.percent : set.rpe, language),
+    weight: mode === "rpe" ? toInputText(set.weight, language) : "",
     drops: set.drops,
   };
 }
@@ -48,21 +53,24 @@ function draftFromSet(set, language) {
 function readDraft(draft) {
   const reps = readNumber(draft.reps);
   if (!Number.isInteger(reps) || reps < 1 || reps > MAX_REPS) return null;
-  const load = readNumber(draft.loadText);
-  if (draft.load === "percent" && !(load > 0 && load <= MAX_PERCENT)) return null;
-  if (draft.load === "weight" && !(load > 0)) return null;
-  const rpe = readNumber(draft.rpe);
-  if (draft.hasRpe && !(rpe >= MIN_RPE && rpe <= MAX_RPE)) return null;
+  const intensity = draft.intensity.trim() === "" ? null : readNumber(draft.intensity);
+  if (intensity !== null) {
+    if (draft.mode === "rpe" && !(intensity >= MIN_RPE && intensity <= MAX_RPE)) return null;
+    if (draft.mode === "percent" && !(intensity > 0 && intensity <= MAX_PERCENT)) return null;
+  }
+  const weight =
+    draft.mode === "rpe" && draft.weight.trim() !== "" ? readNumber(draft.weight) : null;
+  if (weight !== null && !(weight > 0)) return null;
   return {
     reps,
-    percent: draft.load === "percent" ? load : null,
-    weight: draft.load === "weight" ? load : null,
-    rpe: draft.hasRpe ? rpe : null,
+    percent: draft.mode === "percent" ? intensity : null,
+    rpe: draft.mode === "rpe" ? intensity : null,
+    weight,
     drops: draft.drops,
   };
 }
 
-// Buttons filling a row, one of them pressed: how the weight is given, how many drop sets.
+// Buttons filling a row, one of them pressed: RPE or a percentage, how many drop sets.
 function Choices({ labelledBy, options, value, onChange, square = false }) {
   return (
     <div
@@ -87,15 +95,17 @@ function Choices({ labelledBy, options, value, onChange, square = false }) {
 }
 
 /**
- * One set of a program. Only the reps are a must; the rest is up to the set: a weight as a
- * percentage of the training max or in kg (or none, picked on the day), an RPE, and drop sets
- * after it. Changes are kept when the sheet closes (Gotovo, a tap beside it, Escape); while a
- * field holds something a set can't have, closing drops them.
+ * One set of a program. Only the reps are a must. Its intensity is an RPE or a percentage of the
+ * training max (switching carries the number over by the RPE chart), and its weight is worked out
+ * from the exercise's e1RM unless one is typed (for an RPE or no intensity). Drop sets can follow
+ * it. Changes are kept when the sheet closes (Gotovo, a tap beside it, Escape); while a field
+ * holds something a set can't have, closing drops them.
  */
 function ProgramSetSheet({
   set,
   title,
   subtitle,
+  e1rm,
   trainingMaxPercent,
   onSave,
   onCopy,
@@ -108,8 +118,12 @@ function ProgramSetSheet({
   const [draft, setDraft] = useState(() => draftFromSet(set, language));
   const values = readDraft(draft);
   const change = (fields) => setDraft((current) => ({ ...current, ...fields }));
-  const step = (amount) => formatNumber(amount, language);
-  const isPercent = draft.load === "percent";
+  const number = (value) => formatNumber(value, language);
+  const isPercent = draft.mode === "percent";
+  // The weight the e1RM gives, whether or not one is typed.
+  const worked = values
+    ? plannedWeight({ ...values, weight: null }, e1rm, trainingMaxPercent)
+    : null;
 
   const close = () => {
     if (values) onSave(values);
@@ -122,42 +136,65 @@ function ProgramSetSheet({
         stepNumber(draft.reps, direction * REPS_STEP, { start: REPS_START, min: 1, max: MAX_REPS }),
       ),
     });
-  const stepLoad = (direction) =>
+  const stepIntensity = (direction) =>
     change({
-      loadText: toInputText(
-        stepNumber(draft.loadText, direction * LOAD_STEP, {
-          start: isPercent ? PERCENT_START : WEIGHT_START,
-          min: LOAD_STEP,
-          max: isPercent ? MAX_PERCENT : Infinity,
-        }),
+      intensity: toInputText(
+        isPercent
+          ? stepNumber(draft.intensity, direction * PERCENT_STEP, {
+              start: PERCENT_START,
+              min: PERCENT_STEP,
+              max: MAX_PERCENT,
+            })
+          : stepNumber(draft.intensity, direction * RPE_STEP, {
+              start: RPE_START,
+              min: MIN_RPE,
+              max: MAX_RPE,
+            }),
         language,
       ),
     });
-  const stepRpe = (direction) =>
+  const stepWeight = (direction) =>
     change({
-      rpe: toInputText(
-        stepNumber(draft.rpe, direction * RPE_STEP, {
-          start: RPE_START,
-          min: MIN_RPE,
-          max: MAX_RPE,
+      weight: toInputText(
+        stepNumber(draft.weight, direction * WEIGHT_STEP, {
+          start: worked ?? WEIGHT_START,
+          min: WEIGHT_STEP,
         }),
         language,
       ),
     });
 
-  // A percentage starts at 75 %; a weight in kg waits to be typed, there being no telling it.
-  const pickLoad = (load) => {
-    if (load === draft.load) return;
-    change({ load, loadText: load === "percent" ? String(PERCENT_START) : "" });
+  // An RPE and a percentage say the same thing for given reps: the chart carries the number over
+  // (a percentage is of the training max, the chart's of the 1RM). A weight typed goes with RPE.
+  const pickMode = (mode) => {
+    if (mode === draft.mode) return;
+    const reps = readNumber(draft.reps);
+    const value = readNumber(draft.intensity);
+    let intensity = "";
+    if (Number.isFinite(value) && Number.isInteger(reps)) {
+      if (mode === "percent") {
+        const ofMax = percentForRpe(reps, value);
+        if (ofMax !== null)
+          intensity = toInputText(toHalf((ofMax * 100) / trainingMaxPercent), language);
+      } else {
+        const rpe = rpeForPercent(reps, (value * trainingMaxPercent) / 100);
+        if (rpe !== null) intensity = toInputText(rpe, language);
+      }
+    }
+    change({ mode, intensity, weight: mode === "percent" ? "" : draft.weight });
   };
 
-  const loadHints = {
-    none: t("programs.noLoadHint"),
-    percent: t("programs.percentHint", {
-      percent: formatPercent(trainingMaxPercent, language),
-    }),
-    weight: t("programs.weightHint"),
-  };
+  // What the weight will be, said under it: typed, worked out, or left to the day (and why).
+  const hasIntensity = Boolean(values) && (values.rpe !== null || values.percent !== null);
+  let weightHint = t("programs.noLoadHint");
+  if (!isPercent && draft.weight.trim() !== "") weightHint = t("programs.weightHint");
+  else if (worked !== null) {
+    weightHint = isPercent
+      ? null
+      : t("programs.workedWeightHint", { weight: number(worked), e1rm: number(e1rm) });
+  } else if (!e1rm && hasIntensity) {
+    weightHint = t("programs.noE1rmHint");
+  }
 
   return (
     <Sheet labelledBy={`${id}title`} closeLabel={t("programs.closeSet")} onClose={close}>
@@ -179,66 +216,78 @@ function ProgramSetSheet({
       />
 
       <div className={styles.section}>
-        <span id={`${id}load`} className={styles.sectionLabel}>
-          {t("programs.loadLabel")}
+        <span id={`${id}intensity`} className={styles.sectionLabel}>
+          {t("programs.intensityLabel")}
         </span>
         <Choices
-          labelledBy={`${id}load`}
+          labelledBy={`${id}intensity`}
           options={[
-            { value: "none", label: t("programs.loadNone") },
+            { value: "rpe", label: t("log.rpeLabel") },
             { value: "percent", label: t("programs.loadPercent") },
-            { value: "weight", label: t("programs.loadWeight") },
           ]}
-          value={draft.load}
-          onChange={pickLoad}
+          value={draft.mode}
+          onChange={pickMode}
         />
-        {draft.load !== "none" && (
-          <StepperField
-            id={`${id}loadValue`}
-            label={isPercent ? t("programs.percentLabel") : t("log.weightLabel")}
-            value={draft.loadText}
-            inputMode="decimal"
-            placeholder="—"
-            less={{
-              label: isPercent
-                ? t("programs.lessPercentBy", { step: step(LOAD_STEP) })
-                : t("log.lessWeightBy", { step: step(LOAD_STEP) }),
-              run: () => stepLoad(-1),
-            }}
-            more={{
-              label: isPercent
-                ? t("programs.morePercentBy", { step: step(LOAD_STEP) })
-                : t("log.moreWeightBy", { step: step(LOAD_STEP) }),
-              run: () => stepLoad(1),
-            }}
-            onChange={(loadText) => change({ loadText })}
-          />
-        )}
-        <p className={styles.hint}>{loadHints[draft.load]}</p>
+        <StepperField
+          id={`${id}intensityValue`}
+          label={isPercent ? t("programs.percentLabel") : t("log.rpeLabel")}
+          value={draft.intensity}
+          inputMode="decimal"
+          placeholder="—"
+          less={{
+            label: isPercent
+              ? t("programs.lessPercentBy", { step: number(PERCENT_STEP) })
+              : t("log.lessRpeBy", { step: number(RPE_STEP) }),
+            run: () => stepIntensity(-1),
+          }}
+          more={{
+            label: isPercent
+              ? t("programs.morePercentBy", { step: number(PERCENT_STEP) })
+              : t("log.moreRpeBy", { step: number(RPE_STEP) }),
+            run: () => stepIntensity(1),
+          }}
+          onChange={(intensity) => change({ intensity })}
+        />
+        <p className={styles.hint}>
+          {isPercent
+            ? t("programs.percentHint", { percent: formatPercent(trainingMaxPercent, language) })
+            : t("programs.rpeModeHint")}
+        </p>
       </div>
 
       <div className={styles.divider} aria-hidden="true" />
 
-      <SwitchRow
-        label={t("programs.targetRpe")}
-        hint={t("programs.rpeHint")}
-        checked={draft.hasRpe}
-        onChange={(hasRpe) =>
-          change({ hasRpe, rpe: hasRpe && draft.rpe === "" ? String(RPE_START) : draft.rpe })
-        }
-      />
-      {draft.hasRpe && (
-        <StepperField
-          id={`${id}rpe`}
-          label={t("log.rpeLabel")}
-          value={draft.rpe}
-          inputMode="decimal"
-          less={{ label: t("log.lessRpeBy", { step: step(RPE_STEP) }), run: () => stepRpe(-1) }}
-          more={{ label: t("log.moreRpeBy", { step: step(RPE_STEP) }), run: () => stepRpe(1) }}
-          onChange={(rpe) => change({ rpe })}
-        />
+      {isPercent ? (
+        <div className={styles.section}>
+          <div className={styles.sectionRow}>
+            <span className={styles.sectionLabel}>{t("log.weightLabel")}</span>
+            <span className={styles.worked}>
+              {worked !== null ? t("programs.workedWeight", { weight: number(worked) }) : "—"}
+            </span>
+          </div>
+          {weightHint && <p className={styles.hint}>{weightHint}</p>}
+        </div>
+      ) : (
+        <div className={styles.section}>
+          <StepperField
+            id={`${id}weight`}
+            label={t("log.weightLabel")}
+            value={draft.weight}
+            inputMode="decimal"
+            placeholder={worked !== null ? `≈ ${number(worked)}` : "—"}
+            less={{
+              label: t("log.lessWeightBy", { step: number(WEIGHT_STEP) }),
+              run: () => stepWeight(-1),
+            }}
+            more={{
+              label: t("log.moreWeightBy", { step: number(WEIGHT_STEP) }),
+              run: () => stepWeight(1),
+            }}
+            onChange={(weight) => change({ weight })}
+          />
+          <p className={styles.hint}>{weightHint}</p>
+        </div>
       )}
-
       <div className={styles.divider} aria-hidden="true" />
 
       <div className={styles.section}>
