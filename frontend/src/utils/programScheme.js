@@ -1,4 +1,5 @@
 import { roundToIncrement } from "./plates";
+import { percentForRpe } from "./rpeChart";
 
 export const PROGRAM_ROUNDING_KG = 2.5;
 // Each drop set takes this share of the weight before it (20 % off).
@@ -107,25 +108,38 @@ export function setsToScheme(sets) {
   return runs.map(({ set, count }) => formatGroup(set, count)).join(", ");
 }
 
+// Whether a set's weight comes from the e1RM: a percentage, or an RPE the chart has a share for.
+function worksFromE1rm(set) {
+  if (set.weight !== null) return false;
+  return set.percent !== null || (set.rpe !== null && percentForRpe(set.reps, set.rpe) !== null);
+}
+
 /**
- * Expands set groups into concrete sets. Percentages are taken of
- * e1RM × trainingMaxPercent and rounded to PROGRAM_ROUNDING_KG.
- * `missingE1rm` is true when a percentage set had no e1RM to work from
- * (those sets get weight 0 so the user fills them in). A set's drop sets follow it, each 20 %
- * lighter than the one before (rounded the same way) and marked `isDrop`.
+ * The weight a program's set loads with: its own weight in kg, or one worked out from the e1RM,
+ * a percentage of the training max (e1RM × trainingMaxPercent) or an RPE by the chart (its share
+ * of the e1RM), rounded to PROGRAM_ROUNDING_KG. Null when the weight is left to the day.
+ */
+export function plannedWeight(set, e1rm, trainingMaxPercent) {
+  if (set.weight !== null) return set.weight;
+  if (!e1rm || !worksFromE1rm(set)) return null;
+  const share =
+    set.percent !== null
+      ? (trainingMaxPercent * set.percent) / 100
+      : percentForRpe(set.reps, set.rpe);
+  return roundToIncrement((e1rm * share) / 100, PROGRAM_ROUNDING_KG);
+}
+
+/**
+ * Expands set groups into concrete sets, each with its plannedWeight. `missingE1rm` is true when
+ * a set would have worked its weight out from an e1RM there isn't (those sets get weight 0 so the
+ * user fills them in, as do sets left to the day). A set's drop sets follow it, each 20 % lighter
+ * than the one before (rounded the same way) and marked `isDrop`.
  */
 export function buildProgramSets(groups, e1rm, trainingMaxPercent) {
   let missingE1rm = false;
   const sets = groups.flatMap((group) => {
-    let weight = group.weight ?? 0;
-    if (group.percent !== null) {
-      if (e1rm) {
-        const trainingMax = (e1rm * trainingMaxPercent) / 100;
-        weight = roundToIncrement((trainingMax * group.percent) / 100, PROGRAM_ROUNDING_KG);
-      } else {
-        missingE1rm = true;
-      }
-    }
+    if (!e1rm && worksFromE1rm(group)) missingE1rm = true;
+    const weight = plannedWeight(group, e1rm, trainingMaxPercent) ?? 0;
     const withDrops = [{ weight, reps: group.reps, rpe: group.rpe }];
     let dropWeight = weight;
     for (let drop = 0; drop < (group.drops ?? 0); drop += 1) {

@@ -3,6 +3,7 @@ import {
   buildProgramSets,
   isValidScheme,
   parseScheme,
+  plannedWeight,
   schemeToSets,
   setsToScheme,
 } from "./programScheme";
@@ -102,5 +103,36 @@ describe("buildProgramSets", () => {
       { weight: 0, reps: 8, rpe: 9 },
       { weight: 0, reps: 8, rpe: null, isDrop: true },
     ]);
+  });
+
+  it("gives an RPE set its weight from the chart, a share of the e1RM itself", () => {
+    // 8 @ RPE 7 is 70.7 % (11 reps to failure): 120 × 0.707 = 84.8, rounded to 85.
+    const { sets, missingE1rm } = buildProgramSets(parseScheme("1x8 rpe7"), 120, 90);
+    expect(sets).toEqual([{ weight: 85, reps: 8, rpe: 7 }]);
+    expect(missingE1rm).toBe(false);
+  });
+
+  it("says the e1RM is missing for an RPE set the chart covers, and not for one it doesn't", () => {
+    expect(buildProgramSets(parseScheme("1x8 rpe7"), null, 100).missingE1rm).toBe(true);
+    expect(buildProgramSets(parseScheme("1x12 rpe7"), null, 100).missingE1rm).toBe(false);
+    expect(buildProgramSets(parseScheme("1x12 rpe7"), 120, 100).sets[0].weight).toBe(0);
+  });
+});
+
+describe("plannedWeight", () => {
+  const set = (fields) => ({ reps: 5, percent: null, weight: null, rpe: null, ...fields });
+
+  it("keeps a set's own weight, and works the others out from the e1RM", () => {
+    expect(plannedWeight(set({ weight: 60, rpe: 9 }), 200, 90)).toBe(60);
+    // 75 % of a training max of 90 % of 160 = 108, rounded to 107.5.
+    expect(plannedWeight(set({ percent: 75 }), 160, 90)).toBe(107.5);
+    // 5 @ RPE 8 is 81.1 %: 160 × 0.811 = 129.8, rounded to 130.
+    expect(plannedWeight(set({ rpe: 8 }), 160, 90)).toBe(130);
+  });
+
+  it("is null when the weight is left to the day", () => {
+    expect(plannedWeight(set({ rpe: 8 }), null, 100)).toBeNull();
+    expect(plannedWeight(set({}), 160, 100)).toBeNull();
+    expect(plannedWeight(set({ reps: 15, rpe: 8 }), 160, 100)).toBeNull();
   });
 });

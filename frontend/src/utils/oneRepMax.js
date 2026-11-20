@@ -1,4 +1,5 @@
 import { parseDecimal } from "./numbers";
+import { CHART_MAX_REPS_TO_FAILURE, percentAtRepsToFailure } from "./rpeChart";
 
 const RPE_SCALE_MAX = 10;
 const TIMELINE_DECIMAL_PLACES = 1;
@@ -17,6 +18,12 @@ export const E1RM_FORMULAS = {
     maxReps: 36,
   },
   lombardi: { label: "Lombardi", estimate: (weight, reps) => weight * reps ** 0.1 },
+  // The RPE chart (utils/rpeChart.js), the same one a program's RPE sets get their weight from.
+  rts: {
+    label: "RTS",
+    estimate: (weight, reps) => (weight * 100) / percentAtRepsToFailure(reps),
+    maxReps: CHART_MAX_REPS_TO_FAILURE,
+  },
 };
 export const DEFAULT_E1RM_FORMULA = "brzycki";
 

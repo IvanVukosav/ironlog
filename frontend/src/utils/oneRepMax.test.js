@@ -93,6 +93,13 @@ describe("calculateEstimatedOneRepMax", () => {
     expect(calculateEstimatedOneRepMax(100, 0, 10, "brzycki")).toBeNull();
     expect(calculateEstimatedOneRepMax(100, 1, 11, "lombardi")).toBeNull();
   });
+
+  it("takes RTS from the RPE chart, up to its 14 reps to failure", () => {
+    // 5 @ RPE 8 is 81.1 % of the 1RM.
+    expect(calculateEstimatedOneRepMax(100, 5, 8, "rts")).toBeCloseTo(100 / 0.811);
+    expect(calculateEstimatedOneRepMax(140, 1, null, "rts")).toBeCloseTo(140);
+    expect(calculateEstimatedOneRepMax(100, 12, 7, "rts")).toBeNull();
+  });
 });
 
 describe("repsToFailure", () => {
@@ -113,8 +120,9 @@ describe("isRoughEstimate", () => {
 });
 
 describe("formulaMaxReps", () => {
-  it("is Brzycki's 36, and no end for the others", () => {
+  it("is Brzycki's 36, the RPE chart's 14, and no end for the others", () => {
     expect(formulaMaxReps("brzycki")).toBe(36);
+    expect(formulaMaxReps("rts")).toBe(14);
     expect(formulaMaxReps("epley")).toBe(Infinity);
     expect(formulaMaxReps("made-up")).toBe(36);
   });
