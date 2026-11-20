@@ -7,6 +7,29 @@
   margin-inline: auto;
 }
 
+/* In place of a page that could not load: a message and a way to try again. */
+.pageError {
+  max-width: calc(640px + 3rem);
+  padding: 1.5rem;
+}
+
+.pageErrorCard {
+  composes: card from "./styles/shared.module.css";
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.retryButton {
+  composes: button from "./styles/shared.module.css";
+  min-height: 44px;
+}
+
 /* Room for the fixed phone tab bar (NavBar) so it never covers the end of a page. */
 @media (max-width: 640px) {
   .routes {

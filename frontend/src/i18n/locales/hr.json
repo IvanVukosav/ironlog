@@ -95,6 +95,7 @@
   },
   "common": {
     "closeMessage": "Zatvori obavijest",
+    "tryAgain": "Pokušaj ponovno",
     "save": "Spremi",
     "delete": "Obriši",
     "cancel": "Odustani",
@@ -365,6 +366,7 @@
     "wrongPassword": "Kriva lozinka.",
     "server": "Greška na serveru. Probaj ponovno.",
     "network": "Nema veze sa serverom. Provjeri internet.",
+    "pageLoad": "Stranica se nije učitala. Provjeri internet pa pokušaj ponovno.",
     "status": "Zahtjev nije uspio ({{status}}).",
     "other": "Nešto nije uspjelo: {{message}}"
   },

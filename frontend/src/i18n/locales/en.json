@@ -95,6 +95,7 @@
   },
   "common": {
     "closeMessage": "Close message",
+    "tryAgain": "Try again",
     "save": "Save",
     "delete": "Delete",
     "cancel": "Cancel",
@@ -358,6 +359,7 @@
     "wrongPassword": "Wrong password.",
     "server": "The server had a problem. Try again.",
     "network": "Can't reach the server. Check the connection.",
+    "pageLoad": "The page didn't load. Check the connection and try again.",
     "status": "The request failed ({{status}}).",
     "other": "Something went wrong: {{message}}"
   },
