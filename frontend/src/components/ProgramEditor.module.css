@@ -373,6 +373,16 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* A back-off set: its number and "−20 %" in the back-off colour. */
+.setNumberBackoff {
+  background: color-mix(in srgb, var(--color-backoff) 16%, transparent);
+  color: var(--color-backoff);
+}
+
+.setBackoff {
+  color: var(--color-backoff);
+}
+
 .setDrops {
   color: var(--color-accent);
   font-size: 0.8rem;

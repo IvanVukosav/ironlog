@@ -122,6 +122,22 @@
   color: var(--color-text);
 }
 
+/* "−%": a back-off set, in its own colour. A set with no set before it can't be one. */
+.toggle .backoffToggle[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--color-backoff) 18%, transparent);
+  color: var(--color-backoff);
+}
+
+.toggle button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.backoffNumber {
+  background: color-mix(in srgb, var(--color-backoff) 16%, transparent);
+  color: var(--color-backoff);
+}
+
 .unit {
   flex: none;
   margin-right: 10px;
@@ -144,6 +160,19 @@
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   text-align: right;
+}
+
+.backoffWorked .workedValue {
+  color: var(--color-backoff);
+  font-weight: 700;
+}
+
+/* Under the first back-off set of a run: what it is lighter than. */
+.backoffNote {
+  margin: -2px 0 2px 34px;
+  color: var(--color-backoff);
+  font-size: 0.75rem;
+  font-weight: 600;
 }
 
 .invalid,

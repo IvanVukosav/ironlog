@@ -102,6 +102,37 @@ describe("describeSet", () => {
     expect(describeSet(set({ reps: 8 }), hr, "hr")).toBe("8 ponavljanja");
     expect(describeSet(set({ reps: 8 }), en, "en")).toBe("8 reps");
   });
+
+  it("writes a back-off with the set it is lighter than", () => {
+    const backoff = set({ backoff: 20, topNumber: 1, weight: 132.5 });
+    expect(plain(describeSet(backoff, hr, "hr"))).toBe("5 × −20 % od seta 1 · 132,5 kg");
+    expect(plain(describeSet(backoff, en, "en"))).toBe("5 × −20% of set 1 · 132.5 kg");
+  });
+});
+
+describe("a program with back-off sets", () => {
+  it("works their weights out from the top set, and says which set that is", () => {
+    const strength = {
+      name: "12 Week Strength",
+      weeks: 1,
+      trainingMaxPercent: 100,
+      days: [
+        {
+          dayNumber: 1,
+          name: "",
+          exercises: [{ name: "Squat", supersetGroup: null, weekSchemes: ["1x1 rpe8, 2x5@-20%"] }],
+        },
+      ],
+    };
+    const [week] = planProgram(strength, { Squat: 180 });
+    const sets = week.days[0].exercises[0].sets;
+    expect(sets.map((s) => [s.weight, s.backoff, s.topNumber])).toEqual([
+      [165, null, null],
+      [132.5, 20, 1],
+      [132.5, 20, 1],
+    ]);
+    expect(plain(describeSet(sets[1], hr, "hr"))).toBe("5 × −20 % od seta 1 · 132,5 kg");
+  });
 });
 
 describe("buildProgramWorkbook", () => {

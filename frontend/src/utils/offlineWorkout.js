@@ -27,6 +27,10 @@ function setFields(values) {
   if ("isWarmup" in values) fields.isWarmup = Boolean(values.isWarmup);
   if ("isDrop" in values) fields.isDrop = Boolean(values.isDrop);
   if ("isDone" in values) fields.isDone = Boolean(values.isDone);
+  if ("backoffPercent" in values) {
+    const none = values.backoffPercent === null || values.backoffPercent === "";
+    fields.backoffPercent = none ? null : toNumber(values.backoffPercent);
+  }
   return fields;
 }
 
@@ -107,6 +111,7 @@ export function localSet(exercise, values, id, now) {
     isDrop: (fields.isDrop ?? false) && !isWarmup,
     isDone,
     completedAt: isDone ? now : null,
+    backoffPercent: fields.backoffPercent ?? null,
     order: exercise.sets.length,
     exerciseId: exercise.id,
   };
@@ -134,6 +139,7 @@ export function localSets(exercise, sets, position, ids, now) {
 // A program day's set, read the way the bulk route reads it.
 function programSet(values, id, exerciseId, order) {
   const rpe = parseFloat(values.rpe);
+  const backoff = parseFloat(values.backoffPercent);
   return {
     id,
     weight: parseFloat(values.weight) || 0,
@@ -143,6 +149,7 @@ function programSet(values, id, exerciseId, order) {
     isDrop: values.isDrop === true && values.isWarmup !== true,
     isDone: values.isDone !== false,
     completedAt: null,
+    backoffPercent: backoff > 0 && backoff < 100 ? backoff : null,
     order,
     exerciseId,
   };

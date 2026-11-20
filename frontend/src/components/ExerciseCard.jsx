@@ -17,11 +17,13 @@ import { useToast } from "../context/useToast";
 import { formatDayMonth } from "../utils/dates";
 import {
   formatNumber,
+  formatPercent,
   parseDecimal,
   stepNumber,
   toDecimalText,
   toInputText,
 } from "../utils/numbers";
+import { backoffUpdates } from "../utils/backoffSets";
 import { buildWarmupSets, loadPlateSetup } from "../utils/plates";
 import { useDragReorder } from "../hooks/useDragReorder";
 import Icon from "./Icon";
@@ -356,9 +358,31 @@ function Exercise({
   const duplicateSet = ({ weight, reps, rpe, isWarmup, isDrop }) =>
     actions.addSet(exercise.id, { weight, reps, rpe, isWarmup, isDrop, isDone: !isLiveDay });
 
+  // The back-off sets after a top set follow the weight it is really done with (from a program:
+  // "20 % lighter than the top set"); see backoffUpdates.
+  const followBackoffs = (saved) => {
+    const sets = exercise.sets.map((other) => (other.id === saved.id ? saved : other));
+    for (const { id, weight } of backoffUpdates(sets, saved.id)) actions.updateSet(id, { weight });
+  };
+
   const toggleDone = async (workoutSet) => {
     const saved = await actions.updateSet(workoutSet.id, { isDone: !workoutSet.isDone });
-    if (saved?.isDone) onSetDone(saved);
+    if (saved?.isDone) {
+      onSetDone(saved);
+      followBackoffs(saved);
+    }
+  };
+
+  // A set changed in its sheet. A back-off set whose weight is changed by hand stays as typed and
+  // no longer follows its top set (nor leads the ones after it); a top set whose weight changes
+  // takes its back-off sets along.
+  const saveFromSheet = async (workoutSet, changes) => {
+    const byHand = "weight" in changes && workoutSet.backoffPercent != null;
+    const saved = await actions.updateSet(
+      workoutSet.id,
+      byHand ? { ...changes, backoffPercent: null } : changes,
+    );
+    if (saved && "weight" in changes && !byHand) followBackoffs(saved);
   };
 
   const updateSupersetGroup = async (value) => {
@@ -480,6 +504,13 @@ function Exercise({
             >
               {weightReps(workoutSet)}
             </span>
+            {workoutSet.backoffPercent != null && (
+              <span className={styles.setBackoff}>
+                {t("programs.backoffPercent", {
+                  percent: formatPercent(workoutSet.backoffPercent, language),
+                })}
+              </span>
+            )}
             {hasRpe && (
               <span className={styles.setRpe}>
                 {t("log.setRpe", { rpe: formatNumber(workoutSet.rpe, language) })}
@@ -667,7 +698,7 @@ function Exercise({
           key={optionsSet.id}
           set={optionsSet}
           title={`${setNameAt(optionsIndex)} · ${exercise.name}`}
-          onSave={(changes) => actions.updateSet(optionsSet.id, changes)}
+          onSave={(changes) => saveFromSheet(optionsSet, changes)}
           onCopy={duplicateSet}
           onDelete={() => actions.deleteSet(optionsSet.id)}
           onClose={() => setOptionsSetId(null)}

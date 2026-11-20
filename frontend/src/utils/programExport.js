@@ -1,5 +1,5 @@
 import { formatNumber, formatPercent } from "./numbers";
-import { dropWeights, plannedWeight, schemeToSets } from "./programScheme";
+import { dropWeights, isBackoff, plannedWeights, schemeToSets, topSetIndex } from "./programScheme";
 import { percentForRpe } from "./rpeChart";
 import { saveBlob } from "./saveFile";
 import { supersetLabels, tidySupersets } from "./supersets";
@@ -28,9 +28,9 @@ const TABLE_WIDTHS = [6, 11, 8, 7, 9];
 const BLOCK = TABLE_WIDTHS.length;
 
 // A set's share of the e1RM in percent, for the overview: a fixed weight's share, or the chart's
-// for an RPE. A percentage of the training max is shown as it is, so it has none.
+// for an RPE. A percentage of the training max or a back-off is shown as it is, so it has none.
 function shareOf(set, e1rm) {
-  if (set.percent !== null) return null;
+  if (set.percent !== null || isBackoff(set)) return null;
   if (set.weight !== null) return e1rm ? (set.weight * 100) / e1rm : null;
   return set.rpe !== null ? percentForRpe(set.reps, set.rpe) : null;
 }
@@ -38,8 +38,8 @@ function shareOf(set, e1rm) {
 /**
  * The program week by week: each day with the exercises that have sets that week, each with its
  * superset label (A1, …), best e1RM (null without one) and sets. A set has its reps, RPE,
- * percentage of the training max, weight (null when it is left to the day), share of the e1RM
- * and its drop sets' weights.
+ * percentage of the training max, back-off and the number of its top set, weight (null when it is
+ * left to the day), share of the e1RM and its drop sets' weights.
  */
 export function planProgram(program, e1rms) {
   return Array.from({ length: program.weeks }, (_, weekIndex) => ({
@@ -52,17 +52,21 @@ export function planProgram(program, e1rms) {
         const sets = schemeToSets(exercise.weekSchemes[weekIndex]) ?? [];
         if (sets.length === 0) return [];
         const e1rm = e1rms[exercise.name.trim()] ?? null;
+        const weights = plannedWeights(sets, e1rm, program.trainingMaxPercent);
         return [
           {
             name: exercise.name,
             label: labels[index],
             e1rm,
-            sets: sets.map((set) => {
-              const weight = plannedWeight(set, e1rm, program.trainingMaxPercent);
+            sets: sets.map((set, setIndex) => {
+              const weight = weights[setIndex];
+              const top = isBackoff(set) ? topSetIndex(sets, setIndex) : -1;
               return {
                 reps: set.reps,
                 rpe: set.rpe,
                 percent: set.percent,
+                backoff: set.backoff ?? null,
+                topNumber: top === -1 ? null : top + 1,
                 weight,
                 share: shareOf(set, e1rm),
                 drops:
@@ -77,12 +81,21 @@ export function planProgram(program, e1rms) {
   }));
 }
 
-/** A set as a line of the overview: "5 × RPE 7 · 79 % · 142,5 kg", "5 × 74 % TM · 132,5 kg". */
+/**
+ * A set as a line of the overview: "5 × RPE 7 · 79 % · 142,5 kg", "5 × 74 % TM · 132,5 kg",
+ * "5 × −20 % od seta 1 · 132,5 kg".
+ */
 export function describeSet(set, t, language) {
   const kg = set.weight !== null ? `${formatNumber(set.weight, language)} kg` : null;
   const rpe = set.rpe !== null ? `RPE ${formatNumber(set.rpe, language)}` : null;
   let parts;
-  if (set.percent !== null) {
+  if (set.backoff !== null && set.backoff !== undefined) {
+    const backoff = t("programs.backoffPercent", {
+      percent: formatPercent(set.backoff, language),
+    });
+    const of = set.topNumber ? ` ${t("programs.backoffOfSet", { number: set.topNumber })}` : "";
+    parts = [`${set.reps} × ${backoff}${of}`, kg];
+  } else if (set.percent !== null) {
     parts = [`${set.reps} × ${formatPercent(set.percent, language)} TM`, rpe, kg];
   } else if (rpe) {
     const share = set.share !== null ? formatPercent(Math.round(set.share), language) : null;

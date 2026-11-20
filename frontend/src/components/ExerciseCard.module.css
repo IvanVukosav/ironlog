@@ -396,6 +396,18 @@
   font-weight: 600;
 }
 
+/* A back-off set from a program: "−20 %" lighter than its top set, whose weight it follows. */
+.setBackoff {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-backoff) 16%, transparent);
+  color: var(--color-backoff);
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 .e1rmText {
   color: var(--color-text-dim);
   font-size: 0.75rem;

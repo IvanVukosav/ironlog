@@ -4,7 +4,14 @@ import { useSettings } from "../context/useSettings";
 import { useBestE1rms } from "../hooks/useBestE1rms";
 import { useMediaQuery } from "../hooks/useMediaQuery";
 import { DEFAULT_E1RM_FORMULA } from "../utils/oneRepMax";
-import { MAX_DROPS, plannedWeight, schemeToSets, setsToScheme } from "../utils/programScheme";
+import {
+  MAX_DROPS,
+  isBackoff,
+  plannedWeights,
+  schemeToSets,
+  setsToScheme,
+  topSetIndex,
+} from "../utils/programScheme";
 import { supersetLabels, tidySupersets, toggleSuperset } from "../utils/supersets";
 import { formatNumber, formatPercent, parseDecimal, toInputText } from "../utils/numbers";
 import Icon from "./Icon";
@@ -22,7 +29,7 @@ const MAX_WEEKS = 52;
 const DEFAULT_WEEKS = 4;
 const DEFAULT_TRAINING_MAX_PERCENT = 100;
 // An exercise's first set: 8 reps at RPE 8, the weight picked on the day.
-const FIRST_SET = { reps: 8, percent: null, weight: null, rpe: 8, drops: 0 };
+const FIRST_SET = { reps: 8, percent: null, weight: null, backoff: null, rpe: 8, drops: 0 };
 
 let nextKey = 0;
 const makeKey = () => ++nextKey;
@@ -202,10 +209,10 @@ function ProgramEditor({ program, exerciseNames, onSave, onCancel }) {
     });
   };
 
-  // "60 kg × 10" for a weight of its own, "≈ 85 kg × 8" for one worked out from the e1RM, and
-  // without a weight "75 % × 5" or "8 ponavljanja".
-  const describeMain = (set, e1rm) => {
-    const weight = plannedWeight(set, e1rm, trainingMax);
+  // "60 kg × 10" for a weight of its own, "≈ 85 kg × 8" for one worked out (from the e1RM or a
+  // back-off's top set: `weight`, from plannedWeights), and without a weight "75 % × 5" or
+  // "8 ponavljanja".
+  const describeMain = (set, weight) => {
     if (weight !== null) {
       const text = t("log.setWeightReps", {
         weight: formatNumber(weight, language),
@@ -221,12 +228,14 @@ function ProgramEditor({ program, exerciseNames, onSave, onCancel }) {
     }
     return t("programs.repsOnly", { count: set.reps });
   };
-  // The intensity beside it: "RPE 7", or "75 %" when the main text shows the weight.
-  const describeIntensity = (set, e1rm) => {
+  // The intensity beside it: "RPE 7", "−20 %" for a back-off, or "75 %" when the main text shows
+  // the weight.
+  const describeIntensity = (set, weight) => {
+    if (isBackoff(set)) {
+      return t("programs.backoffPercent", { percent: formatPercent(set.backoff, language) });
+    }
     if (set.percent !== null) {
-      return plannedWeight(set, e1rm, trainingMax) !== null
-        ? formatPercent(set.percent, language)
-        : null;
+      return weight !== null ? formatPercent(set.percent, language) : null;
     }
     return set.rpe !== null ? t("log.setRpe", { rpe: formatNumber(set.rpe, language) }) : null;
   };
@@ -238,6 +247,16 @@ function ProgramEditor({ program, exerciseNames, onSave, onCancel }) {
     (exercise) => exercise.key === openSet.exerciseKey,
   );
   const openSetValues = openExercise?.weeks[weekIndex]?.[openSet.index];
+  // The open set's top set (for a back-off): { number, weight }, or null with no set before it.
+  let openTop = null;
+  if (openSetValues) {
+    const openSets = openExercise.weeks[weekIndex];
+    const topIndex = topSetIndex(openSets, openSet.index);
+    if (topIndex !== -1) {
+      const weights = plannedWeights(openSets, e1rmOf(openExercise), trainingMax);
+      openTop = { number: topIndex + 1, weight: weights[topIndex] };
+    }
+  }
 
   return (
     <div className={styles.editor}>
@@ -377,6 +396,7 @@ function ProgramEditor({ program, exerciseNames, onSave, onCancel }) {
                     index > 0 && Boolean(group) && group === day.exercises[index - 1].supersetGroup;
                   const exerciseName = exercise.name || t("programs.exercise");
                   const e1rm = e1rmOf(exercise);
+                  const weights = plannedWeights(sets, e1rm, trainingMax);
                   return (
                     <li
                       key={exercise.key}
@@ -460,9 +480,10 @@ function ProgramEditor({ program, exerciseNames, onSave, onCancel }) {
                       {sets.length > 0 && !isWide && (
                         <ol className={styles.sets}>
                           {sets.map((set, setIndex) => {
+                            const weight = weights[setIndex];
                             const parts = [
-                              describeMain(set, e1rm),
-                              describeIntensity(set, e1rm),
+                              describeMain(set, weight),
+                              describeIntensity(set, weight),
                               describeDrops(set),
                             ];
                             const name = t("log.setNumberLabel", { number: setIndex + 1 });
@@ -483,10 +504,28 @@ function ProgramEditor({ program, exerciseNames, onSave, onCancel }) {
                                     })
                                   }
                                 >
-                                  <span className={styles.setNumber}>{setIndex + 1}</span>
+                                  <span
+                                    className={
+                                      isBackoff(set)
+                                        ? `${styles.setNumber} ${styles.setNumberBackoff}`
+                                        : styles.setNumber
+                                    }
+                                  >
+                                    {setIndex + 1}
+                                  </span>
                                   <span className={styles.setText}>
                                     <span className={styles.setMain}>{parts[0]}</span>
-                                    {parts[1] && <span className={styles.setRpe}>{parts[1]}</span>}
+                                    {parts[1] && (
+                                      <span
+                                        className={
+                                          isBackoff(set)
+                                            ? `${styles.setRpe} ${styles.setBackoff}`
+                                            : styles.setRpe
+                                        }
+                                      >
+                                        {parts[1]}
+                                      </span>
+                                    )}
                                     {parts[2] && (
                                       <span className={styles.setDrops}>{parts[2]}</span>
                                     )}
@@ -606,6 +645,7 @@ function ProgramEditor({ program, exerciseNames, onSave, onCancel }) {
           )}`}
           e1rm={e1rmOf(openExercise)}
           trainingMaxPercent={trainingMax}
+          top={openTop}
           onSave={(values) =>
             updateSets(openSet.dayKey, openSet.exerciseKey, (sets) =>
               sets.map((set, index) =>

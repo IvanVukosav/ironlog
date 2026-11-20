@@ -1,19 +1,35 @@
 import { describe, expect, it } from "vitest";
 import {
+  backoffWeight,
   buildProgramSets,
   dropWeights,
   isValidScheme,
   parseScheme,
   plannedWeight,
+  plannedWeights,
   schemeToSets,
   setsToScheme,
+  topSetIndex,
 } from "./programScheme";
 
 describe("parseScheme", () => {
   it("reads sets, reps and a percentage", () => {
     expect(parseScheme("5x5@75")).toEqual([
-      { sets: 5, reps: 5, percent: 75, weight: null, rpe: null, drops: 0 },
+      { sets: 5, reps: 5, percent: 75, weight: null, backoff: null, rpe: null, drops: 0 },
     ]);
+  });
+
+  it("reads back-off sets: a minus before the percentage", () => {
+    expect(parseScheme("1x1 rpe8, 5x5@-20%")).toEqual([
+      { sets: 1, reps: 1, percent: null, weight: null, backoff: null, rpe: 8, drops: 0 },
+      { sets: 5, reps: 5, percent: null, weight: null, backoff: 20, rpe: null, drops: 0 },
+    ]);
+    expect(parseScheme("3x5 @ −12,5 %")[0].backoff).toBe(12.5);
+    expect(parseScheme("3x5@-10% drop1")[0]).toMatchObject({ backoff: 10, drops: 1 });
+    // Not in kg, and not lighter than nothing or by more than 90 %.
+    expect(parseScheme("5x5@-20kg")).toBeNull();
+    expect(parseScheme("5x5@-0%")).toBeNull();
+    expect(parseScheme("5x5@-95%")).toBeNull();
   });
 
   it("reads several groups, with a decimal comma inside one", () => {
@@ -27,8 +43,8 @@ describe("parseScheme", () => {
 
   it("reads an RPE without any load, and the drop sets after a set", () => {
     expect(parseScheme("1x8 rpe7, 2x10@60kg rpe9 drop2")).toEqual([
-      { sets: 1, reps: 8, percent: null, weight: null, rpe: 7, drops: 0 },
-      { sets: 2, reps: 10, percent: null, weight: 60, rpe: 9, drops: 2 },
+      { sets: 1, reps: 8, percent: null, weight: null, backoff: null, rpe: 7, drops: 0 },
+      { sets: 2, reps: 10, percent: null, weight: 60, backoff: null, rpe: 9, drops: 2 },
     ]);
   });
 
@@ -47,11 +63,22 @@ describe("schemeToSets and setsToScheme", () => {
   it("give one entry per set, and alike sets in a row back as one group", () => {
     const sets = schemeToSets("1x8 rpe7, 2x8 rpe4");
     expect(sets).toEqual([
-      { reps: 8, percent: null, weight: null, rpe: 7, drops: 0 },
-      { reps: 8, percent: null, weight: null, rpe: 4, drops: 0 },
-      { reps: 8, percent: null, weight: null, rpe: 4, drops: 0 },
+      { reps: 8, percent: null, weight: null, backoff: null, rpe: 7, drops: 0 },
+      { reps: 8, percent: null, weight: null, backoff: null, rpe: 4, drops: 0 },
+      { reps: 8, percent: null, weight: null, backoff: null, rpe: 4, drops: 0 },
     ]);
     expect(setsToScheme(sets)).toBe("1x8 rpe7, 2x8 rpe4");
+  });
+
+  it("write a back-off with its minus, and keep it a group of its own", () => {
+    expect(setsToScheme(schemeToSets("1x1 rpe8, 5x5@-20%"))).toBe("1x1 rpe8, 5x5@-20%");
+    expect(setsToScheme(schemeToSets("1x3@85%, 1x3@-12,5%, 1x3@-12,5% drop1"))).toBe(
+      "1x3@85%, 1x3@-12.5%, 1x3@-12.5% drop1",
+    );
+    // A set made in the editor before back-off sets existed has no `backoff` at all.
+    expect(setsToScheme([{ reps: 5, percent: null, weight: null, rpe: 8, drops: 0 }])).toBe(
+      "1x5 rpe8",
+    );
   });
 
   it("write a percentage with its sign, a weight in kg, decimals with a point, and drops", () => {
@@ -120,6 +147,23 @@ describe("buildProgramSets", () => {
     expect(missingE1rm).toBe(false);
   });
 
+  it("gives back-off sets their weight from the top set before them, and keeps their percentage", () => {
+    // 1 @ RPE 8 is 92,2 % of 180: 166, rounded to 165; 20 % off that is 132, rounded to 132,5.
+    const { sets } = buildProgramSets(parseScheme("1x1 rpe8, 2x5@-20%"), 180, 100);
+    expect(sets).toEqual([
+      { weight: 165, reps: 1, rpe: 8 },
+      { weight: 132.5, reps: 5, rpe: null, backoffPercent: 20 },
+      { weight: 132.5, reps: 5, rpe: null, backoffPercent: 20 },
+    ]);
+    // Without an e1RM the top set is picked on the day, and so is the back-off: 0 kg for now.
+    const unknown = buildProgramSets(parseScheme("1x1 rpe8, 1x5@-20%"), null, 100);
+    expect(unknown.sets.map((set) => set.weight)).toEqual([0, 0]);
+    expect(unknown.missingE1rm).toBe(true);
+    // A back-off's drop sets go on from its weight.
+    const dropped = buildProgramSets(parseScheme("1x5@100kg, 1x5@-20% drop1"), null, 100).sets;
+    expect(dropped.map((set) => set.weight)).toEqual([100, 80, 65]);
+  });
+
   it("says the e1RM is missing for an RPE set the chart covers, and not for one it doesn't", () => {
     expect(buildProgramSets(parseScheme("1x8 rpe7"), null, 100).missingE1rm).toBe(true);
     expect(buildProgramSets(parseScheme("1x12 rpe7"), null, 100).missingE1rm).toBe(false);
@@ -142,5 +186,45 @@ describe("plannedWeight", () => {
     expect(plannedWeight(set({ rpe: 8 }), null, 100)).toBeNull();
     expect(plannedWeight(set({}), 160, 100)).toBeNull();
     expect(plannedWeight(set({ reps: 15, rpe: 8 }), 160, 100)).toBeNull();
+  });
+});
+
+describe("back-off sets", () => {
+  const set = (fields) => ({
+    reps: 5,
+    percent: null,
+    weight: null,
+    backoff: null,
+    rpe: null,
+    drops: 0,
+    ...fields,
+  });
+
+  it("take their weight from the top set before them: the last set that isn't a back-off", () => {
+    const sets = [
+      set({ reps: 1, rpe: 8 }),
+      set({ backoff: 20 }),
+      set({ backoff: 20 }),
+      set({ weight: 100 }),
+      set({ backoff: 10 }),
+    ];
+    expect(plannedWeights(sets, 180, 100)).toEqual([165, 132.5, 132.5, 100, 90]);
+    expect([1, 2, 4].map((index) => topSetIndex(sets, index))).toEqual([0, 0, 3]);
+  });
+
+  it("have no weight without a top set, or without a weight for it", () => {
+    // 5 @ RPE 8 is 81,1 % of 180: 146, rounded to 145.
+    expect(plannedWeights([set({ backoff: 20 }), set({ rpe: 8 })], 180, 100)).toEqual([null, 145]);
+    expect(topSetIndex([set({ backoff: 20 })], 0)).toBe(-1);
+    expect(plannedWeights([set({ rpe: 8 }), set({ backoff: 20 })], null, 100)).toEqual([
+      null,
+      null,
+    ]);
+  });
+
+  it("are rounded to 2,5 kg like every planned weight", () => {
+    expect(backoffWeight(170, 20)).toBe(135);
+    expect(backoffWeight(165, 20)).toBe(132.5);
+    expect(backoffWeight(100, 12.5)).toBe(87.5);
   });
 });

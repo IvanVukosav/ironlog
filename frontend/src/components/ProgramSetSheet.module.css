@@ -77,12 +77,27 @@
   color: var(--color-on-accent);
 }
 
+/* Back-off, in its own colour; a set with no set before it can't be one. */
+.backoffChoice[aria-pressed="true"] {
+  background: var(--color-backoff);
+  color: var(--color-bg);
+}
+
+.choice:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 /* A weight worked out from the e1RM, for a percentage set: shown, not typed. */
 .worked {
   color: var(--color-text-dim);
   font-size: 1.05rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+}
+
+.backoffWorked {
+  color: var(--color-backoff);
 }
 
 .hint {

@@ -20,6 +20,8 @@
   --color-success: #4ade80;
   /* The training streak's flame; at least 3:1 on the theme's cards. */
   --color-streak: #f5a524;
+  /* A back-off set (lighter than its top set) in Programi and Trening. */
+  --color-backoff: #f0b35a;
   /* Main-lift chart series, validated as a categorical set on the dark surfaces. */
   --color-lift-squat: #3987e5;
   --color-lift-bench: #d95926;
@@ -99,6 +101,7 @@
   --color-border-subtle: #eef0f3;
   --color-success: #067647;
   --color-streak: #c2410c;
+  --color-backoff: #b45309;
   --color-lift-squat: #2a78d6;
   --color-lift-bench: #eb6834;
   --color-lift-deadlift: #1baf7a;
@@ -124,6 +127,7 @@
     --color-border-subtle: #eef0f3;
     --color-success: #067647;
     --color-streak: #c2410c;
+    --color-backoff: #b45309;
     --color-lift-squat: #2a78d6;
     --color-lift-bench: #eb6834;
     --color-lift-deadlift: #1baf7a;
@@ -153,6 +157,7 @@
   --color-border-subtle: #222;
   --color-text-placeholder: #888;
   --color-success: #5cb87a;
+  --color-backoff: #e0a14a;
 }
 
 [data-theme="light"] {

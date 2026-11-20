@@ -54,6 +54,10 @@ model Set {
   // records and volume; "Finish" deletes the ones that were never done.
   isDone      Boolean   @default(true)
   completedAt DateTime?
+  // A back-off set from a program: this many percent lighter than the top set before it, whose
+  // weight it follows when that set is done with another weight. Null for any other set, and
+  // for one whose weight was changed by hand.
+  backoffPercent Float?
   exerciseId Int
   exercise   Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
 

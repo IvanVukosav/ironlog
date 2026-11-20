@@ -3,7 +3,14 @@ import { useTranslation } from "react-i18next";
 import Sheet from "./Sheet";
 import Icon from "./Icon";
 import StepperField from "./StepperField";
-import { MAX_DROPS, plannedWeight } from "../utils/programScheme";
+import {
+  DEFAULT_BACKOFF,
+  MAX_BACKOFF,
+  MAX_DROPS,
+  backoffWeight,
+  isBackoff,
+  plannedWeight,
+} from "../utils/programScheme";
 import { MAX_RPE, MIN_RPE } from "../utils/oneRepMax";
 import { percentForRpe, rpeForPercent } from "../utils/rpeChart";
 import {
@@ -23,6 +30,7 @@ const RPE_STEP = 0.5;
 const RPE_START = 8;
 const PERCENT_STEP = 2.5;
 const PERCENT_START = 75;
+const BACKOFF_STEP = 2.5;
 const WEIGHT_STEP = 2.5;
 // A weight stepped from an empty box starts at the empty bar, unless the e1RM gives one.
 const WEIGHT_START = 20;
@@ -36,27 +44,32 @@ function readNumber(text) {
 
 const toHalf = (value) => Math.round(value * 2) / 2;
 
-// The set in the form: its intensity is an RPE or a percentage (an old set with both shows its
-// percentage), and a weight of its own only goes with an RPE or none.
+// The set in the form: its intensity is an RPE, a percentage or a back-off (an old set with an
+// RPE and a percentage shows its percentage), and a weight of its own only goes with an RPE or
+// none.
 function draftFromSet(set, language) {
-  const mode = set.percent !== null ? "percent" : "rpe";
+  const mode = isBackoff(set) ? "backoff" : set.percent !== null ? "percent" : "rpe";
+  const intensity = { backoff: set.backoff, percent: set.percent, rpe: set.rpe }[mode];
   return {
     reps: String(set.reps),
     mode,
-    intensity: toInputText(mode === "percent" ? set.percent : set.rpe, language),
+    intensity: toInputText(intensity, language),
     weight: mode === "rpe" ? toInputText(set.weight, language) : "",
     drops: set.drops,
   };
 }
 
-// The draft as a set, or null while a field holds something a set can't have.
+// The draft as a set, or null while a field holds something a set can't have. A back-off needs
+// its number; an RPE or a percentage may be left out.
 function readDraft(draft) {
   const reps = readNumber(draft.reps);
   if (!Number.isInteger(reps) || reps < 1 || reps > MAX_REPS) return null;
   const intensity = draft.intensity.trim() === "" ? null : readNumber(draft.intensity);
+  if (intensity === null && draft.mode === "backoff") return null;
   if (intensity !== null) {
     if (draft.mode === "rpe" && !(intensity >= MIN_RPE && intensity <= MAX_RPE)) return null;
     if (draft.mode === "percent" && !(intensity > 0 && intensity <= MAX_PERCENT)) return null;
+    if (draft.mode === "backoff" && !(intensity > 0 && intensity <= MAX_BACKOFF)) return null;
   }
   const weight =
     draft.mode === "rpe" && draft.weight.trim() !== "" ? readNumber(draft.weight) : null;
@@ -65,12 +78,14 @@ function readDraft(draft) {
     reps,
     percent: draft.mode === "percent" ? intensity : null,
     rpe: draft.mode === "rpe" ? intensity : null,
+    backoff: draft.mode === "backoff" ? intensity : null,
     weight,
     drops: draft.drops,
   };
 }
 
-// Buttons filling a row, one of them pressed: RPE or a percentage, how many drop sets.
+// Buttons filling a row, one of them pressed: RPE, a percentage or a back-off, how many drop
+// sets. An option can be `disabled`, with a `title` saying why.
 function Choices({ labelledBy, options, value, onChange, square = false }) {
   return (
     <div
@@ -82,9 +97,11 @@ function Choices({ labelledBy, options, value, onChange, square = false }) {
         <button
           key={option.value}
           type="button"
-          className={styles.choice}
+          className={option.className ? `${styles.choice} ${option.className}` : styles.choice}
           aria-pressed={option.value === value}
           aria-label={option.ariaLabel}
+          title={option.title}
+          disabled={option.disabled}
           onClick={() => onChange(option.value)}
         >
           {option.label}
@@ -96,10 +113,12 @@ function Choices({ labelledBy, options, value, onChange, square = false }) {
 
 /**
  * One set of a program. Only the reps are a must. Its intensity is an RPE or a percentage of the
- * training max (switching carries the number over by the RPE chart), and its weight is worked out
- * from the exercise's e1RM unless one is typed (for an RPE or no intensity). Drop sets can follow
- * it. Changes are kept when the sheet closes (Gotovo, a tap beside it, Escape); while a field
- * holds something a set can't have, closing drops them.
+ * training max (switching carries the number over by the RPE chart), or a back-off: that many
+ * percent lighter than its top set (`top`: { number, weight }, null for a set with no set before
+ * it, which can't be one). Its weight is worked out from the exercise's e1RM or the top set unless
+ * one is typed (for an RPE or no intensity). Drop sets can follow it. Changes are kept when the
+ * sheet closes (Gotovo, a tap beside it, Escape); while a field holds something a set can't have,
+ * closing drops them.
  */
 function ProgramSetSheet({
   set,
@@ -107,6 +126,7 @@ function ProgramSetSheet({
   subtitle,
   e1rm,
   trainingMaxPercent,
+  top,
   onSave,
   onCopy,
   onDelete,
@@ -120,10 +140,14 @@ function ProgramSetSheet({
   const change = (fields) => setDraft((current) => ({ ...current, ...fields }));
   const number = (value) => formatNumber(value, language);
   const isPercent = draft.mode === "percent";
-  // The weight the e1RM gives, whether or not one is typed.
-  const worked = values
-    ? plannedWeight({ ...values, weight: null }, e1rm, trainingMaxPercent)
-    : null;
+  const isBackoffMode = draft.mode === "backoff";
+  // The weight the e1RM (or for a back-off, the top set) gives, whether or not one is typed.
+  let worked = null;
+  if (values && isBackoffMode) {
+    worked = top?.weight != null ? backoffWeight(top.weight, values.backoff) : null;
+  } else if (values) {
+    worked = plannedWeight({ ...values, weight: null }, e1rm, trainingMaxPercent);
+  }
 
   const close = () => {
     if (values) onSave(values);
@@ -136,23 +160,17 @@ function ProgramSetSheet({
         stepNumber(draft.reps, direction * REPS_STEP, { start: REPS_START, min: 1, max: MAX_REPS }),
       ),
     });
-  const stepIntensity = (direction) =>
+  const stepIntensity = (direction) => {
+    const steps = {
+      percent: { by: PERCENT_STEP, start: PERCENT_START, min: PERCENT_STEP, max: MAX_PERCENT },
+      backoff: { by: BACKOFF_STEP, start: DEFAULT_BACKOFF, min: BACKOFF_STEP, max: MAX_BACKOFF },
+      rpe: { by: RPE_STEP, start: RPE_START, min: MIN_RPE, max: MAX_RPE },
+    };
+    const { by, ...range } = steps[draft.mode];
     change({
-      intensity: toInputText(
-        isPercent
-          ? stepNumber(draft.intensity, direction * PERCENT_STEP, {
-              start: PERCENT_START,
-              min: PERCENT_STEP,
-              max: MAX_PERCENT,
-            })
-          : stepNumber(draft.intensity, direction * RPE_STEP, {
-              start: RPE_START,
-              min: MIN_RPE,
-              max: MAX_RPE,
-            }),
-        language,
-      ),
+      intensity: toInputText(stepNumber(draft.intensity, direction * by, range), language),
     });
+  };
   const stepWeight = (direction) =>
     change({
       weight: toInputText(
@@ -165,13 +183,16 @@ function ProgramSetSheet({
     });
 
   // An RPE and a percentage say the same thing for given reps: the chart carries the number over
-  // (a percentage is of the training max, the chart's of the 1RM). A weight typed goes with RPE.
+  // (a percentage is of the training max, the chart's of the 1RM). A back-off starts
+  // DEFAULT_BACKOFF lighter. A weight typed goes with RPE.
   const pickMode = (mode) => {
-    if (mode === draft.mode) return;
+    if (mode === draft.mode || (mode === "backoff" && !top)) return;
     const reps = readNumber(draft.reps);
     const value = readNumber(draft.intensity);
     let intensity = "";
-    if (Number.isFinite(value) && Number.isInteger(reps)) {
+    if (mode === "backoff") {
+      intensity = toInputText(DEFAULT_BACKOFF, language);
+    } else if (!isBackoffMode && Number.isFinite(value) && Number.isInteger(reps)) {
       if (mode === "percent") {
         const ofMax = percentForRpe(reps, value);
         if (ofMax !== null)
@@ -181,13 +202,15 @@ function ProgramSetSheet({
         if (rpe !== null) intensity = toInputText(rpe, language);
       }
     }
-    change({ mode, intensity, weight: mode === "percent" ? "" : draft.weight });
+    change({ mode, intensity, weight: mode === "rpe" ? draft.weight : "" });
   };
 
   // What the weight will be, said under it: typed, worked out, or left to the day (and why).
   const hasIntensity = Boolean(values) && (values.rpe !== null || values.percent !== null);
   let weightHint = t("programs.noLoadHint");
-  if (!isPercent && draft.weight.trim() !== "") weightHint = t("programs.weightHint");
+  if (isBackoffMode)
+    weightHint = top ? t("programs.backoffWeightHint", { number: top.number }) : null;
+  else if (!isPercent && draft.weight.trim() !== "") weightHint = t("programs.weightHint");
   else if (worked !== null) {
     weightHint = isPercent
       ? null
@@ -224,44 +247,70 @@ function ProgramSetSheet({
           options={[
             { value: "rpe", label: t("log.rpeLabel") },
             { value: "percent", label: t("programs.loadPercent") },
+            {
+              value: "backoff",
+              label: t("programs.backoffChoice"),
+              className: styles.backoffChoice,
+              disabled: !top && !isBackoffMode,
+              title:
+                top || isBackoffMode ? t("programs.backoffTitle") : t("programs.backoffNeedsTop"),
+            },
           ]}
           value={draft.mode}
           onChange={pickMode}
         />
         <StepperField
           id={`${id}intensityValue`}
-          label={isPercent ? t("programs.percentLabel") : t("log.rpeLabel")}
+          label={
+            isBackoffMode
+              ? t("programs.backoffLabel")
+              : isPercent
+                ? t("programs.percentLabel")
+                : t("log.rpeLabel")
+          }
           value={draft.intensity}
           inputMode="decimal"
           placeholder="—"
           less={{
-            label: isPercent
-              ? t("programs.lessPercentBy", { step: number(PERCENT_STEP) })
-              : t("log.lessRpeBy", { step: number(RPE_STEP) }),
+            label: isBackoffMode
+              ? t("programs.lessBackoffBy", { step: number(BACKOFF_STEP) })
+              : isPercent
+                ? t("programs.lessPercentBy", { step: number(PERCENT_STEP) })
+                : t("log.lessRpeBy", { step: number(RPE_STEP) }),
             run: () => stepIntensity(-1),
           }}
           more={{
-            label: isPercent
-              ? t("programs.morePercentBy", { step: number(PERCENT_STEP) })
-              : t("log.moreRpeBy", { step: number(RPE_STEP) }),
+            label: isBackoffMode
+              ? t("programs.moreBackoffBy", { step: number(BACKOFF_STEP) })
+              : isPercent
+                ? t("programs.morePercentBy", { step: number(PERCENT_STEP) })
+                : t("log.moreRpeBy", { step: number(RPE_STEP) }),
             run: () => stepIntensity(1),
           }}
           onChange={(intensity) => change({ intensity })}
         />
         <p className={styles.hint}>
-          {isPercent
-            ? t("programs.percentHint", { percent: formatPercent(trainingMaxPercent, language) })
-            : t("programs.rpeModeHint")}
+          {isBackoffMode && top
+            ? top.weight !== null
+              ? t("programs.backoffHint", { number: top.number, weight: number(top.weight) })
+              : t("programs.backoffHintNoWeight", { number: top.number })
+            : isPercent
+              ? t("programs.percentHint", { percent: formatPercent(trainingMaxPercent, language) })
+              : isBackoffMode
+                ? t("programs.backoffNeedsTop")
+                : t("programs.rpeModeHint")}
         </p>
       </div>
 
       <div className={styles.divider} aria-hidden="true" />
 
-      {isPercent ? (
+      {isPercent || isBackoffMode ? (
         <div className={styles.section}>
           <div className={styles.sectionRow}>
             <span className={styles.sectionLabel}>{t("log.weightLabel")}</span>
-            <span className={styles.worked}>
+            <span
+              className={isBackoffMode ? `${styles.worked} ${styles.backoffWorked}` : styles.worked}
+            >
               {worked !== null ? t("programs.workedWeight", { weight: number(worked) }) : "—"}
             </span>
           </div>

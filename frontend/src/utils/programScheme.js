@@ -5,15 +5,20 @@ export const PROGRAM_ROUNDING_KG = 2.5;
 // Each drop set takes this share of the weight before it (20 % off).
 export const DROP_SHARE = 0.8;
 export const MAX_DROPS = 3;
+// A back-off set is at most this many percent lighter than its top set, and a set made one
+// starts DEFAULT_BACKOFF lighter.
+export const MAX_BACKOFF = 90;
+export const DEFAULT_BACKOFF = 20;
 
 const MAX_SETS = 20;
 const MAX_REPS = 100;
 const MAX_PERCENT = 120;
 
 // "5x5", "5x5@75", "5x5@75%", "4x8@60kg", "3x3@85 rpe8", "5x5 @rpe 7.5", "3x5@72,5", "1x8 rpe7",
-// "1x10@60kg rpe9 drop2" (the set is followed by two drop sets)
+// "1x10@60kg rpe9 drop2" (the set is followed by two drop sets), "5x5@-20%" (back-off sets, 20 %
+// lighter than the top set before them)
 const GROUP_PATTERN =
-  /^(\d+)\s*[x×*]\s*(\d+)(?:\s*@\s*(\d+(?:[.,]\d+)?)\s*(%|kg)?)?(?:\s*@?\s*rpe\s*(\d+(?:[.,]\d+)?))?(?:\s*\+?\s*drops?\s*(\d+))?$/i;
+  /^(\d+)\s*[x×*]\s*(\d+)(?:\s*@\s*([-−])?\s*(\d+(?:[.,]\d+)?)\s*(%|kg)?)?(?:\s*@?\s*rpe\s*(\d+(?:[.,]\d+)?))?(?:\s*\+?\s*drops?\s*(\d+))?$/i;
 // Groups are separated by , ; or + — but only where a new "NxM" group starts,
 // so a decimal comma ("72,5") stays part of its number.
 const GROUP_SEPARATOR = /\s*[,;+]\s*(?=\d+\s*[x×*])/;
@@ -25,8 +30,9 @@ function toNumber(text) {
 /**
  * Parses one week's scheme into set groups, e.g. "1x1@90, 3x5@75" →
  * [{ sets: 1, reps: 1, percent: 90, … }, { sets: 3, reps: 5, percent: 75, … }].
- * A bare load number is a percentage; "kg" makes it a fixed weight. Each group also says its
- * RPE (or null) and how many drop sets follow each of its sets.
+ * A bare load number is a percentage; "kg" makes it a fixed weight, and a minus ("@-20%") a
+ * back-off: that many percent lighter than the top set before it (`backoff`). Each group also
+ * says its RPE (or null) and how many drop sets follow each of its sets.
  * Returns [] for an empty scheme (exercise skipped that week) and null when
  * the text can't be parsed.
  */
@@ -42,14 +48,17 @@ export function parseScheme(text) {
     const match = part.match(GROUP_PATTERN);
     if (!match) return null;
 
-    const [, sets, reps, load, unit, rpe, drops] = match;
+    const [, sets, reps, minus, load, unit, rpe, drops] = match;
     const loadValue = toNumber(load);
     const isFixedWeight = unit?.toLowerCase() === "kg";
+    const isBackoff = Boolean(minus);
+    if (isBackoff && isFixedWeight) return null;
     const group = {
       sets: parseInt(sets),
       reps: parseInt(reps),
-      percent: loadValue !== null && !isFixedWeight ? loadValue : null,
+      percent: loadValue !== null && !isFixedWeight && !isBackoff ? loadValue : null,
       weight: isFixedWeight ? loadValue : null,
+      backoff: isBackoff ? loadValue : null,
       rpe: toNumber(rpe),
       drops: drops ? parseInt(drops) : 0,
     };
@@ -57,6 +66,7 @@ export function parseScheme(text) {
     if (group.sets < 1 || group.sets > MAX_SETS || group.reps < 1 || group.reps > MAX_REPS)
       return null;
     if (group.percent !== null && (group.percent <= 0 || group.percent > MAX_PERCENT)) return null;
+    if (group.backoff !== null && (group.backoff <= 0 || group.backoff > MAX_BACKOFF)) return null;
     if (group.rpe !== null && (group.rpe < 1 || group.rpe > 10)) return null;
     if (group.drops > MAX_DROPS) return null;
     groups.push(group);
@@ -70,21 +80,25 @@ export function isValidScheme(text) {
 
 /**
  * One week's scheme as the editor shows it: one entry per set, each with its reps, a percentage of
- * the training max or a weight in kg (or neither), an RPE or null, and its drop sets. Null when
- * the text can't be parsed.
+ * the training max, a weight in kg or a back-off (or none of them), an RPE or null, and its drop
+ * sets. Null when the text can't be parsed.
  */
 export function schemeToSets(text) {
   const groups = parseScheme(text);
   if (!groups) return null;
-  return groups.flatMap(({ sets, reps, percent, weight, rpe, drops }) =>
-    Array.from({ length: sets }, () => ({ reps, percent, weight, rpe, drops })),
+  return groups.flatMap(({ sets, reps, percent, weight, backoff, rpe, drops }) =>
+    Array.from({ length: sets }, () => ({ reps, percent, weight, backoff, rpe, drops })),
   );
 }
+
+/** Whether a set is a back-off set: that many percent lighter than the top set before it. */
+export const isBackoff = (set) => set.backoff !== null && set.backoff !== undefined;
 
 const isSameSet = (a, b) =>
   a.reps === b.reps &&
   a.percent === b.percent &&
   a.weight === b.weight &&
+  (a.backoff ?? null) === (b.backoff ?? null) &&
   a.rpe === b.rpe &&
   a.drops === b.drops;
 
@@ -92,12 +106,13 @@ function formatGroup(set, count) {
   let text = `${count}x${set.reps}`;
   if (set.percent !== null) text += `@${set.percent}%`;
   else if (set.weight !== null) text += `@${set.weight}kg`;
+  else if (isBackoff(set)) text += `@-${set.backoff}%`;
   if (set.rpe !== null) text += ` rpe${set.rpe}`;
   if (set.drops > 0) text += ` drop${set.drops}`;
   return text;
 }
 
-/** The sets back as a scheme, alike sets in a row as one group: "1x8 rpe7, 2x8 rpe4". */
+/** The sets back as a scheme, alike sets in a row as one group: "1x1 rpe8, 5x5@-20%". */
 export function setsToScheme(sets) {
   const runs = [];
   for (const set of sets) {
@@ -109,15 +124,27 @@ export function setsToScheme(sets) {
 }
 
 // Whether a set's weight comes from the e1RM: a percentage, or an RPE the chart has a share for.
+// A back-off set's comes from its top set instead.
 function worksFromE1rm(set) {
-  if (set.weight !== null) return false;
+  if (set.weight !== null || isBackoff(set)) return false;
   return set.percent !== null || (set.rpe !== null && percentForRpe(set.reps, set.rpe) !== null);
+}
+
+/** A back-off set's weight: `percent` lighter than its top set's, rounded like every weight. */
+export function backoffWeight(topWeight, percent) {
+  return roundToIncrement(topWeight * (1 - percent / 100), PROGRAM_ROUNDING_KG);
+}
+
+/** The top set of the set at `index`: the last set before it that isn't a back-off, or -1. */
+export function topSetIndex(sets, index) {
+  return sets.slice(0, index).findLastIndex((set) => !isBackoff(set));
 }
 
 /**
  * The weight a program's set loads with: its own weight in kg, or one worked out from the e1RM,
  * a percentage of the training max (e1RM × trainingMaxPercent) or an RPE by the chart (its share
- * of the e1RM), rounded to PROGRAM_ROUNDING_KG. Null when the weight is left to the day.
+ * of the e1RM), rounded to PROGRAM_ROUNDING_KG. Null when the weight is left to the day, and for
+ * a back-off set, whose weight comes from its top set (see plannedWeights).
  */
 export function plannedWeight(set, e1rm, trainingMaxPercent) {
   if (set.weight !== null) return set.weight;
@@ -141,18 +168,45 @@ export function dropWeights(weight, drops) {
 }
 
 /**
+ * The planned weights of an exercise's sets in a week, in order: each set's plannedWeight, and a
+ * back-off set's worked out from its top set's (null without a top set or a weight for it).
+ */
+export function plannedWeights(sets, e1rm, trainingMaxPercent) {
+  let top = null;
+  return sets.map((set) => {
+    if (!isBackoff(set)) {
+      top = plannedWeight(set, e1rm, trainingMaxPercent);
+      return top;
+    }
+    return top === null ? null : backoffWeight(top, set.backoff);
+  });
+}
+
+/**
  * Expands set groups into concrete sets, each with its plannedWeight. `missingE1rm` is true when
  * a set would have worked its weight out from an e1RM there isn't (those sets get weight 0 so the
  * user fills them in, as do sets left to the day). A set's drop sets follow it, each 20 % lighter
- * than the one before (rounded the same way) and marked `isDrop`.
+ * than the one before (rounded the same way) and marked `isDrop`. A back-off set gets its weight
+ * from the top set before it and keeps its `backoffPercent`, so that Trening can work it out again
+ * from what the top set is really done with.
  */
 export function buildProgramSets(groups, e1rm, trainingMaxPercent) {
   let missingE1rm = false;
+  // The planned weight of the last set that wasn't a back-off (null: none, or left to the day).
+  let top = null;
   const sets = groups.flatMap((group) => {
-    if (!e1rm && worksFromE1rm(group)) missingE1rm = true;
-    const weight = plannedWeight(group, e1rm, trainingMaxPercent) ?? 0;
+    let weight;
+    if (isBackoff(group)) {
+      weight = top === null ? 0 : backoffWeight(top, group.backoff);
+    } else {
+      if (!e1rm && worksFromE1rm(group)) missingE1rm = true;
+      top = plannedWeight(group, e1rm, trainingMaxPercent);
+      weight = top ?? 0;
+    }
+    const main = { weight, reps: group.reps, rpe: group.rpe };
+    if (isBackoff(group)) main.backoffPercent = group.backoff;
     const withDrops = [
-      { weight, reps: group.reps, rpe: group.rpe },
+      main,
       ...dropWeights(weight, group.drops ?? 0).map((dropWeight) => ({
         weight: dropWeight,
         reps: group.reps,

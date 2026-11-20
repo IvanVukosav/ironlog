@@ -44,6 +44,7 @@ describe("a set worked out without a connection", () => {
       isDrop: false,
       isDone: true,
       completedAt: NOW,
+      backoffPercent: null,
       order: 2,
       exerciseId: 10,
     });
@@ -101,6 +102,32 @@ describe("a set worked out without a connection", () => {
       reps: 5,
       isDone: false,
     });
+  });
+});
+
+describe("a back-off set without a connection", () => {
+  it("keeps its percentage, and loses it when its weight is changed by hand", () => {
+    const backoff = localSet(bench, { weight: 132.5, reps: 5, backoffPercent: 20 }, -4, NOW);
+    expect(backoff.backoffPercent).toBe(20);
+    expect(localSetChange(backoff, { weight: 125, backoffPercent: null }, NOW)).toMatchObject({
+      weight: 125,
+      backoffPercent: null,
+    });
+  });
+
+  it("comes in with a program day like the server takes it", () => {
+    let next = 0;
+    const day = [
+      {
+        name: "Čučanj",
+        sets: [
+          { weight: 165, reps: 1, rpe: 8, isDone: false },
+          { weight: 132.5, reps: 5, rpe: null, backoffPercent: 20, isDone: false },
+        ],
+      },
+    ];
+    const { answer } = localProgramDay(workout, null, day, () => --next);
+    expect(answer.exercises[1].sets.map((s) => s.backoffPercent)).toEqual([null, 20]);
   });
 });
 

@@ -148,15 +148,20 @@ router.post("/:id/exercises/bulk", async (req, res) => {
 
     for (const { name, sets, supersetGroup } of exercises) {
       const setData = (startOrder) =>
-        sets.map((set, index) => ({
-          weight: parseFloat(set.weight) || 0,
-          reps: parseInt(set.reps) || 0,
-          rpe: Number.isFinite(parseFloat(set.rpe)) ? parseFloat(set.rpe) : null,
-          isWarmup: set.isWarmup === true,
-          isDrop: set.isDrop === true && set.isWarmup !== true,
-          isDone: set.isDone !== false,
-          order: startOrder + index,
-        }));
+        sets.map((set, index) => {
+          const backoff = parseFloat(set.backoffPercent);
+          return {
+            weight: parseFloat(set.weight) || 0,
+            reps: parseInt(set.reps) || 0,
+            rpe: Number.isFinite(parseFloat(set.rpe)) ? parseFloat(set.rpe) : null,
+            isWarmup: set.isWarmup === true,
+            isDrop: set.isDrop === true && set.isWarmup !== true,
+            isDone: set.isDone !== false,
+            // A back-off set keeps its percentage, so it can follow its top set's real weight.
+            backoffPercent: backoff > 0 && backoff < 100 ? backoff : null,
+            order: startOrder + index,
+          };
+        });
       const match = existingByName.get(name.trim().toLowerCase());
       if (match) {
         await tx.set.createMany({

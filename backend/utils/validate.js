@@ -94,6 +94,17 @@ function refuseWarmupDrop(set) {
   }
 }
 
+// A back-off set's percentage, how much lighter it is than its top set: more than 0 and less than
+// 100. No percentage (null) makes it an ordinary set.
+function parseBackoffPercent(value) {
+  if (value === undefined || value === null || value === "") return null;
+  const percent = toNumber(value);
+  if (!(percent > 0 && percent < 100)) {
+    throw new HttpError(400, "A back-off must be more than 0 and less than 100 percent");
+  }
+  return percent;
+}
+
 // When a set was done, sent by the app when it saves later what was logged without a connection.
 // Without one, the set is done the moment the server hears of it.
 function parseCompletedAt(body, into) {
@@ -115,6 +126,9 @@ function parseSet(body) {
   };
   refuseWarmupDrop(set);
   if (body && "isDone" in body) set.isDone = parseBoolean(body.isDone, "isDone");
+  if (body && "backoffPercent" in body) {
+    set.backoffPercent = parseBackoffPercent(body.backoffPercent);
+  }
   parseCompletedAt(body, set);
   return set;
 }
@@ -132,6 +146,8 @@ function parseSetChange(body) {
   if ("isWarmup" in body) change.isWarmup = parseBoolean(body.isWarmup, "isWarmup");
   if ("isDrop" in body) change.isDrop = parseBoolean(body.isDrop, "isDrop");
   if ("isDone" in body) change.isDone = parseBoolean(body.isDone, "isDone");
+  // null: a back-off set whose weight was changed by hand stops following its top set.
+  if ("backoffPercent" in body) change.backoffPercent = parseBackoffPercent(body.backoffPercent);
   if (Object.keys(change).length === 0) throw new HttpError(400, "Nothing to change in the set");
   // Only with the change it dates (a set ticked off), so it is never all a change holds.
   parseCompletedAt(body, change);

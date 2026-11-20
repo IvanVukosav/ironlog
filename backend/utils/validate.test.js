@@ -126,6 +126,21 @@ test("parseSet passes isDone on only when the body names it, and then only as tr
   assert.throws(() => parseSet({ weight: "100", reps: "5", isDone: "false" }), isBadRequest);
 });
 
+test("a back-off set keeps how much lighter it is than its top set", () => {
+  assert.equal(parseSet({ weight: "132,5", reps: "5", backoffPercent: "20" }).backoffPercent, 20);
+  assert.equal(parseSet({ weight: "130", reps: "5", backoffPercent: 12.5 }).backoffPercent, 12.5);
+  assert.equal("backoffPercent" in parseSet({ weight: "100", reps: "5" }), false);
+  for (const backoffPercent of [0, 100, -5, "dvadeset"]) {
+    assert.throws(() => parseSet({ weight: "100", reps: "5", backoffPercent }), isBadRequest);
+  }
+  // Changed by hand, it stops following its top set.
+  assert.deepEqual(parseSetChange({ backoffPercent: null }), { backoffPercent: null });
+  assert.deepEqual(parseSetChange({ weight: "135", backoffPercent: null }), {
+    weight: 135,
+    backoffPercent: null,
+  });
+});
+
 test("a set saved later brings the moment it was done", () => {
   const done = parseSet({ weight: "100", reps: "5", completedAt: "2026-11-20T17:04:00.000Z" });
   assert.equal(done.completedAt.toISOString(), "2026-11-20T17:04:00.000Z");
