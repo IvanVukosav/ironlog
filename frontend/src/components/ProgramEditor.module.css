@@ -157,11 +157,83 @@
   gap: 8px;
 }
 
+/* "Dan 1", then its name: a box that reads as part of the heading until it is clicked. */
+.dayHeading {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
 .dayTitle {
+  flex-shrink: 0;
   color: var(--color-text);
   font-family: var(--font-body);
   font-size: 1.05rem;
   font-weight: var(--heading-weight);
+  white-space: nowrap;
+}
+
+.dayNameDot {
+  color: var(--color-text-dim);
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+}
+
+.dayNameInput {
+  flex: 1;
+  min-width: 0;
+  min-height: 36px;
+  padding: 4px 8px;
+  margin-left: -4px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  font-weight: 600;
+  /* A long name on a phone ends in "…" until it is clicked. */
+  text-overflow: ellipsis;
+}
+
+.dayNameInput::placeholder {
+  color: var(--color-text-placeholder);
+  font-weight: 500;
+}
+
+.dayNameInput:hover {
+  background: var(--color-bg-hover);
+}
+
+.dayNameInput:focus {
+  outline: none;
+  background: var(--input-bg);
+  border-color: var(--color-accent);
+  box-shadow: var(--input-focus-ring);
+}
+
+.addNameButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 32px;
+  padding: 0 10px 0 8px;
+  background: transparent;
+  border: 1px dashed var(--color-border);
+  border-radius: 999px;
+  color: var(--color-text-dim);
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.addNameButton:hover {
+  border-color: var(--color-text-dim);
+  color: var(--color-text);
 }
 
 .exercises {

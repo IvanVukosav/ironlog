@@ -90,6 +90,8 @@ function ProgramEditor({ program, exerciseNames, onSave, onCancel }) {
   const [openSet, setOpenSet] = useState(null);
   // The exercise whose week was just copied to the others, for the note under it.
   const [copiedFor, setCopiedFor] = useState(null);
+  // The day whose name box was just opened with "+ Naziv", while it is still empty.
+  const [namingDayKey, setNamingDayKey] = useState(null);
   const weeks = Math.min(Math.max(parseInt(draft.weeks) || MIN_WEEKS, MIN_WEEKS), MAX_WEEKS);
   const weekNumbers = Array.from({ length: weeks }, (_, index) => index + 1);
   const currentWeek = Math.min(week, weeks);
@@ -306,9 +308,49 @@ function ProgramEditor({ program, exerciseNames, onSave, onCancel }) {
           return (
             <section key={day.key} className={styles.card}>
               <div className={styles.dayHeader}>
-                <h2 className={styles.dayTitle}>
-                  {t("programs.dayNumber", { number: dayIndex + 1 })}
-                </h2>
+                {/* "Dan 1 · Čučanj": the name is typed in place beside the day's number; a day
+                    without one offers "+ Naziv". */}
+                <div className={styles.dayHeading}>
+                  <h2 className={styles.dayTitle}>
+                    {t("programs.dayNumber", { number: dayIndex + 1 })}
+                  </h2>
+                  {day.name || namingDayKey === day.key ? (
+                    <>
+                      <span className={styles.dayNameDot} aria-hidden="true">
+                        ·
+                      </span>
+                      <input
+                        type="text"
+                        className={styles.dayNameInput}
+                        aria-label={t("programs.dayNameFor", { number: dayIndex + 1 })}
+                        placeholder={t("programs.dayNamePlaceholder")}
+                        autoComplete="off"
+                        autoFocus={namingDayKey === day.key}
+                        value={day.name}
+                        onChange={(event) =>
+                          updateDay(day.key, () => ({ name: event.target.value }))
+                        }
+                        onBlur={() => {
+                          setNamingDayKey(null);
+                          // Only spaces is no name: "+ Naziv" comes back.
+                          if (!day.name.trim()) updateDay(day.key, () => ({ name: "" }));
+                        }}
+                      />
+                    </>
+                  ) : (
+                    <button
+                      type="button"
+                      className={styles.addNameButton}
+                      aria-label={t("programs.addDayNameTo", {
+                        day: t("programs.dayNumber", { number: dayIndex + 1 }),
+                      })}
+                      onClick={() => setNamingDayKey(day.key)}
+                    >
+                      <Icon name="plus" size={14} />
+                      {t("programs.addDayName")}
+                    </button>
+                  )}
+                </div>
                 {draft.days.length > 1 && (
                   <button
                     type="button"
@@ -323,20 +365,6 @@ function ProgramEditor({ program, exerciseNames, onSave, onCancel }) {
                     {t("programs.removeDay")}
                   </button>
                 )}
-              </div>
-              <div className={styles.field}>
-                <label className={styles.fieldLabel} htmlFor={`${id}day${day.key}`}>
-                  {t("programs.dayNameLabel")}
-                </label>
-                <input
-                  id={`${id}day${day.key}`}
-                  type="text"
-                  className={styles.textInput}
-                  placeholder={t("programs.dayNamePlaceholder")}
-                  autoComplete="off"
-                  value={day.name}
-                  onChange={(event) => updateDay(day.key, () => ({ name: event.target.value }))}
-                />
               </div>
 
               <ol className={styles.exercises}>
