@@ -152,6 +152,25 @@ model FoodItemTemplate {
   fat     Float
 }
 
+// A packaged food found by its barcode: Open Food Facts' values, kept after the first lookup, or
+// the user's own for a product it doesn't have. Values are per 100 g (or 100 ml, `unit`).
+model FoodProduct {
+  id          Int      @id @default(autoincrement())
+  barcode     String   @unique
+  name        String
+  brand       String?
+  kcal        Float
+  protein     Float
+  carbs       Float
+  fat         Float
+  unit        String   @default("g")
+  packageSize Float?
+  servingSize Float?
+  // "openfoodfacts" or "user".
+  source      String   @default("user")
+  updatedAt   DateTime @updatedAt
+}
+
 model WorkoutTemplate {
   id        Int                       @id @default(autoincrement())
   name      String                    @unique

@@ -12,6 +12,7 @@ const MODELS = [
   "settings",
   "exerciseTemplate",
   "foodItemTemplate",
+  "foodProduct",
   "bodyweight",
   "bodyMeasurement",
   "program",
