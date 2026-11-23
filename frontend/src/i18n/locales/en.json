@@ -441,7 +441,7 @@
     "aim": "Point the camera at the barcode",
     "aimHint": "It's read by itself, nothing to tap. The data comes from Open Food Facts.",
     "camera": {
-      "unsupported": "The camera can't read barcodes here. Type the number under the barcode.",
+      "unsupported": "The camera can't be used here. Type the number under the barcode.",
       "denied": "The camera isn't allowed. Allow it in the browser's settings, or type the number under the barcode.",
       "nocamera": "No camera found. Type the number under the barcode."
     },

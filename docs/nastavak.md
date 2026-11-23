@@ -17,7 +17,7 @@ npm start                   # API na :3001
 
 # u drugom terminalu
 cd frontend
-npm install                 # nova ovisnost: exceljs
+npm install                 # nove ovisnosti: exceljs, zxing-wasm
 npm run dev                 # aplikacija na :5173
 ```
 
@@ -81,11 +81,12 @@ Napravljeno po mockupu Brzi unos, Skener i Proizvod:
 
 Što treba znati:
 
-- **Kamera** čita barkod samo kad je stranica na https adresi (ili `localhost`) i u pregledniku
-  koji sam čita barkodove, a to je Chrome na Androidu. Na računalu (Chrome na Windowsima) i na
-  iPhoneu skener odmah nudi upis broja ispod barkoda.
-- Za kameru i na tim preglednicima trebao bi paket `zxing-wasm` (oko 1 MB, učitava se tek kad se
-  skener otvori). Instalacija nije odobrena, pa ga nema.
+- **Kamera** radi samo kad je stranica na https adresi (ili `localhost`). Na mobitelu to znači
+  tek kad je aplikacija na internetu.
+- Barkod čita preglednik sam ako to zna (Chrome na Androidu), a inače paket `zxing-wasm` (Chrome
+  na računalu, iPhone). Njegova `.wasm` datoteka ima oko 1 MB i učita se tek kad se skener
+  otvori.
+- Prehrana je izgubila polje „Dodaj namirnicu po nazivu”: namirnica se dodaje u svoj obrok.
 - `OPEN_FOOD_FACTS_URL` na backendu služi samo testovima: usmjerava traženje na zamjenski server.
 
 ## 3. Aplikacija na internetu (nije odobreno, košta)

@@ -449,7 +449,7 @@
     "aim": "Usmjeri kameru na barkod",
     "aimHint": "Prepozna se sam, ne treba ništa kliknuti. Podaci dolaze iz Open Food Facts.",
     "camera": {
-      "unsupported": "Ovdje kamera ne može čitati barkod. Upiši broj ispod barkoda.",
+      "unsupported": "Ovdje se kamera ne može upaliti. Upiši broj ispod barkoda.",
       "denied": "Kamera nije dopuštena. Dopusti je u postavkama preglednika ili upiši broj ispod barkoda.",
       "nocamera": "Kamera nije pronađena. Upiši broj ispod barkoda."
     },

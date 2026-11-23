@@ -1,50 +1,44 @@
 import { useEffect, useEffectEvent, useRef, useState } from "react";
+import { createBarcodeReader } from "../utils/barcodeReader";
 
-// The barcodes on food packages, as the browser's BarcodeDetector names them.
-const FOOD_FORMATS = ["ean_13", "ean_8", "upc_a", "upc_e"];
 const SCAN_EVERY_MS = 200;
 
-// The camera needs a secure page (https, or localhost) and the browser's own barcode reading,
-// which Chrome on Android has and Safari, Firefox and Chrome on a computer don't.
-function canScan() {
-  return (
-    window.isSecureContext &&
-    Boolean(navigator.mediaDevices?.getUserMedia) &&
-    "BarcodeDetector" in window
-  );
-}
-
-async function foodDetector() {
-  const supported = await window.BarcodeDetector.getSupportedFormats();
-  const formats = FOOD_FORMATS.filter((format) => supported.includes(format));
-  return formats.length > 0 ? new window.BarcodeDetector({ formats }) : null;
+// The camera needs a secure page (https, or localhost) in a browser that has one.
+function canUseCamera() {
+  return window.isSecureContext && Boolean(navigator.mediaDevices?.getUserMedia);
 }
 
 /**
- * The back camera shown in `videoRef`'s video and read for food barcodes while `isScanning`.
- * `onRead({ rawValue, format })` hears of each barcode read; returning false (not one it can
- * use) keeps scanning, anything else stops until scanning is asked for again.
+ * The back camera shown in `videoRef`'s video and read for food barcodes while `isScanning`
+ * (utils/barcodeReader.js: the browser's own reading, or ZXing). `onRead({ rawValue, format })`
+ * hears of each barcode read; returning false (not one it can use) keeps scanning, anything else
+ * stops until scanning is asked for again.
  *
  * `status` is "starting", "on", or why there is no scanning: "unsupported" (no camera here, or
- * no barcode reading in this browser), "denied" (the camera wasn't allowed) or "nocamera".
- * `torch` is null while the camera has no light, else { on, toggle }.
+ * the reader didn't load), "denied" (the camera wasn't allowed) or "nocamera". `torch` is null
+ * while the camera has no light, else { on, toggle }.
  */
 export function useBarcodeCamera({ videoRef, isScanning, onRead }) {
-  const [status, setStatus] = useState(() => (canScan() ? "starting" : "unsupported"));
+  const [status, setStatus] = useState(() => (canUseCamera() ? "starting" : "unsupported"));
   const [torchOn, setTorchOn] = useState(null);
-  const detectorRef = useRef(null);
+  const readerRef = useRef(null);
   const trackRef = useRef(null);
   const read = useEffectEvent((barcode) => onRead(barcode));
 
   useEffect(() => {
-    if (!canScan()) return undefined;
+    if (!canUseCamera()) return undefined;
     let isStopped = false;
     let stream = null;
 
     (async () => {
+      let reader;
       try {
-        const detector = await foodDetector();
-        if (!detector) throw Object.assign(new Error("No food barcodes"), { name: "Unsupported" });
+        reader = await createBarcodeReader();
+      } catch {
+        if (!isStopped) setStatus("unsupported");
+        return;
+      }
+      try {
         stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 } },
           audio: false,
@@ -53,7 +47,7 @@ export function useBarcodeCamera({ videoRef, isScanning, onRead }) {
         const video = videoRef.current;
         video.srcObject = stream;
         await video.play().catch(() => {});
-        detectorRef.current = detector;
+        readerRef.current = reader;
         trackRef.current = stream.getVideoTracks()[0];
         const capabilities = trackRef.current?.getCapabilities?.() ?? {};
         setTorchOn(capabilities.torch ? false : null);
@@ -79,11 +73,9 @@ export function useBarcodeCamera({ videoRef, isScanning, onRead }) {
     let timer;
     const scan = async () => {
       try {
-        const [barcode] = await detectorRef.current.detect(videoRef.current);
+        const barcode = await readerRef.current(videoRef.current);
         if (isStopped) return;
-        if (barcode && read({ rawValue: barcode.rawValue, format: barcode.format }) !== false) {
-          return;
-        }
+        if (barcode && read(barcode) !== false) return;
       } catch {
         // A frame that couldn't be read (the video not playing yet): try the next one.
       }
