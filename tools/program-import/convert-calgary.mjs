@@ -4,8 +4,8 @@
 // blocks (5, 4, 3 and 2 days out) are days 1–4. Writes the program as JSON (for POST
 // /api/programs) and prints a table to check it by. Anything not understood stops the script.
 // Usage: node convert-calgary.mjs <unzipped folder> "<program name>" <program.json>
-import { writeFileSync } from "node:fs";
 import { openWorkbook, columnNumber, columnLetters } from "./xlsx.mjs";
+import { addRow, buildDays, writeProgram } from "./program.mjs";
 
 const [folder, programName, outPath] = process.argv.slice(2);
 if (!outPath || !programName) {
@@ -82,26 +82,6 @@ function groupsOf(setsText = "", repsText = "", intensityText = "", where) {
   throw new Error(`${where}: sets not understood: "${sets}"`);
 }
 
-const format = (group) => {
-  let text = `${group.sets}x${group.reps}`;
-  if (group.percent !== undefined) text += `@${group.percent}%`;
-  if (group.backoff !== undefined) text += `@-${group.backoff}%`;
-  if (group.rpe !== undefined) text += ` rpe${group.rpe}`;
-  return text;
-};
-/** Set groups as a scheme, alike groups in a row as one ("1x4 rpe8, 2x4 rpe8" is "3x4 rpe8"). */
-function schemeOf(groups) {
-  const merged = [];
-  for (const group of groups) {
-    const last = merged.at(-1);
-    const alike =
-      last && ["reps", "rpe", "percent", "backoff"].every((field) => last[field] === group[field]);
-    if (alike) last.sets += group.sets;
-    else merged.push({ ...group });
-  }
-  return merged.map(format).join(", ");
-}
-
 // weekly[day][week] = the day's exercises that week, in order: [{ name, groups }].
 const weekly = Array.from({ length: 4 }, () => Array.from({ length: WEEKS }, () => []));
 for (const [sheetName, firstWeek] of SHEETS) {
@@ -138,75 +118,10 @@ for (const [sheetName, firstWeek] of SHEETS) {
       const week = firstWeek - 1 + index;
       const where = `${sheetName} row ${rowNumber} week ${week + 1}`;
       const groups = groupsOf(at(letters, 0), at(letters, 1), at(letters, 2), where);
-      if (groups.length === 0) return;
-      const exercises = weekly[day][week];
-      // The same lift on the next row is the same exercise ("Competition Squat" and then its
-      // "(% of E1RM)" sets).
-      if (exercises.at(-1)?.name === name) exercises.at(-1).groups.push(...groups);
-      else if (exercises.some((exercise) => exercise.name === name)) {
-        throw new Error(`${where}: ${name} twice in a day`);
-      } else exercises.push({ name, groups });
+      addRow(weekly[day][week], name, groups, where);
     });
   }
 }
 
-/**
- * The order of a day's exercises over all weeks: every week's own order is kept (each exercise
- * before the next one that week), and otherwise the order they first come in.
- */
-function exerciseOrder(weekOrders) {
-  const first = new Map();
-  for (const order of weekOrders) {
-    for (const name of order) if (!first.has(name)) first.set(name, first.size);
-  }
-  const next = new Map([...first.keys()].map((name) => [name, new Set()]));
-  const waiting = new Map([...first.keys()].map((name) => [name, 0]));
-  for (const order of weekOrders) {
-    for (let i = 1; i < order.length; i += 1) {
-      if (next.get(order[i - 1]).has(order[i])) continue;
-      next.get(order[i - 1]).add(order[i]);
-      waiting.set(order[i], waiting.get(order[i]) + 1);
-    }
-  }
-  const ready = [...first.keys()].filter((name) => waiting.get(name) === 0);
-  const result = [];
-  while (ready.length > 0) {
-    ready.sort((a, b) => first.get(a) - first.get(b));
-    const name = ready.shift();
-    result.push(name);
-    for (const after of next.get(name)) {
-      waiting.set(after, waiting.get(after) - 1);
-      if (waiting.get(after) === 0) ready.push(after);
-    }
-  }
-  if (result.length < first.size) throw new Error("the weeks order a day's exercises differently");
-  return result;
-}
-
-const days = weekly.map((weeks) => {
-  const order = exerciseOrder(weeks.map((exercises) => exercises.map(({ name }) => name)));
-  const exercises = order.map((name) => ({
-    name,
-    supersetGroup: null,
-    weekSchemes: weeks.map((exercises) => {
-      const exercise = exercises.find((candidate) => candidate.name === name);
-      return exercise ? schemeOf(exercise.groups) : "";
-    }),
-  }));
-  return { name: "", exercises };
-});
-
-const program = { name: programName, weeks: WEEKS, trainingMaxPercent: 100, days };
-writeFileSync(outPath, JSON.stringify(program, null, 1));
-
-// The table to check by: per day and exercise, each week's scheme.
-for (const [d, day] of days.entries()) {
-  console.log(`\nDAN ${d + 1}`);
-  for (const exercise of day.exercises) {
-    console.log(`  ${exercise.name}`);
-    exercise.weekSchemes.forEach((scheme, w) => {
-      if (scheme) console.log(`    T${String(w + 1).padStart(2)}  ${scheme}`);
-    });
-  }
-}
-console.log(`\n${programName}: ${WEEKS} weeks, ${days.length} days, written to ${outPath}`);
+const days = buildDays(weekly);
+writeProgram({ name: programName, weeks: WEEKS, trainingMaxPercent: 100, days }, outPath);
