@@ -14,21 +14,25 @@ import {
   toInputText,
 } from "../utils/numbers";
 import Icon from "./Icon";
+import MacroFields from "./MacroFields";
+import Sheet from "./Sheet";
 import StepperField from "./StepperField";
 import SwitchRow from "./SwitchRow";
 import styles from "./BarcodeScanner.module.css";
 
 const AMOUNT_STEP = 10;
 const EMPTY_PRODUCT = { name: "", kcal: "", protein: "", carbs: "", fat: "", packageSize: "" };
-const PRODUCT_FIELDS = [
-  { key: "kcal", labelKey: "nutrition.kcalLabel" },
-  { key: "protein", labelKey: "nutrition.proteinLabel" },
-  { key: "carbs", labelKey: "nutrition.carbsLabel" },
-  { key: "fat", labelKey: "nutrition.fatLabel" },
-];
 
 // A found product: how much of it was eaten, what that holds, and adding it to the meal.
-function FoundProduct({ product, mealName, onAdd, onScanAgain, isFavourite, onSaveFavourite }) {
+function FoundProduct({
+  titleId,
+  product,
+  mealName,
+  onAdd,
+  onScanAgain,
+  isFavourite,
+  onSaveFavourite,
+}) {
   const { t, i18n } = useTranslation();
   const language = i18n.language;
   const id = useId();
@@ -80,7 +84,9 @@ function FoundProduct({ product, mealName, onAdd, onScanAgain, isFavourite, onSa
     <>
       <div className={styles.resultHeader}>
         <span className={styles.badgeFound}>{t("scanner.found")}</span>
-        <h3 className={styles.resultTitle}>{product.name}</h3>
+        <h3 id={titleId} className={styles.resultTitle}>
+          {product.name}
+        </h3>
         <p className={styles.resultDetail}>{detail}</p>
       </div>
       <StepperField
@@ -146,7 +152,7 @@ function FoundProduct({ product, mealName, onAdd, onScanAgain, isFavourite, onSa
 }
 
 // A barcode nobody has values for: the user types them from the package, and they are kept.
-function NewProduct({ barcode, suggestedName, onSaved, onScanAgain }) {
+function NewProduct({ titleId, barcode, suggestedName, onSaved, onScanAgain }) {
   const { t } = useTranslation();
   const id = useId();
   const [form, setForm] = useState({ ...EMPTY_PRODUCT, name: suggestedName ?? "" });
@@ -187,7 +193,7 @@ function NewProduct({ barcode, suggestedName, onSaved, onScanAgain }) {
     >
       <div className={styles.resultHeader}>
         <span className={styles.badgeMissing}>{t("scanner.notFound")}</span>
-        <h3 className={styles.resultTitle}>
+        <h3 id={titleId} className={styles.resultTitle}>
           {suggestedName || t("scanner.barcodeTitle", { barcode })}
         </h3>
         <p className={styles.resultDetail}>{t("scanner.notFoundText")}</p>
@@ -205,23 +211,7 @@ function NewProduct({ barcode, suggestedName, onSaved, onScanAgain }) {
         />
       </div>
       <span className={styles.groupLabel}>{t("scanner.per100Label")}</span>
-      <div className={styles.macroFields}>
-        {PRODUCT_FIELDS.map(({ key, labelKey }) => (
-          <div key={key} className={styles.field} data-field={key}>
-            <label className={styles.fieldLabel} htmlFor={`${id}${key}`}>
-              {t(labelKey)}
-            </label>
-            <input
-              id={`${id}${key}`}
-              className={styles.fieldInput}
-              inputMode="decimal"
-              autoComplete="off"
-              value={form[key]}
-              onChange={(event) => setForm({ ...form, [key]: event.target.value })}
-            />
-          </div>
-        ))}
-      </div>
+      <MacroFields values={form} onChange={setForm} />
       <div className={styles.field}>
         <label className={styles.fieldLabel} htmlFor={`${id}package`}>
           {t("scanner.packageLabel")}
@@ -257,15 +247,19 @@ function NewProduct({ barcode, suggestedName, onSaved, onScanAgain }) {
  * gives its values through the API, and the amount eaten goes into the meal. A product nobody
  * knows is typed in once and found from then on.
  *
- * It covers the whole phone screen (a dialog on a wider one). `onAdd(food)` adds the food to the
- * meal and resolves to what was saved, or null; `onTypeFood` leaves for the meal's own form.
+ * It covers the whole phone screen (a dialog on a wider one), and what a barcode finds comes up
+ * over it in a Sheet; closing that goes back to scanning. `onAdd(food)` adds the food to the meal
+ * and resolves to what was saved, or null; `onTypeFood` leaves for the meal's own form.
  */
 function BarcodeScanner({ mealName, onClose, onAdd, onTypeFood, isFavourite, onSaveFavourite }) {
   const { t } = useTranslation();
   const titleId = useId();
+  const resultTitleId = useId();
   const barcodeId = useId();
   const videoRef = useRef(null);
   const closeRef = useRef(null);
+  // Counts lookups, so an answer that comes after scanning went on is dropped.
+  const lookupRun = useRef(0);
   const [isTyping, setIsTyping] = useState(false);
   const [typedBarcode, setTypedBarcode] = useState("");
   const [typingProblem, setTypingProblem] = useState(null);
@@ -273,15 +267,18 @@ function BarcodeScanner({ mealName, onClose, onAdd, onTypeFood, isFavourite, onS
   const [lookup, setLookup] = useState(null);
 
   const lookUp = async (barcode) => {
+    const run = ++lookupRun.current;
     setLookup({ state: "looking", barcode });
     try {
       const answer = await fetchJson(`/api/food-products/${barcode}`);
+      if (run !== lookupRun.current) return;
       setLookup(
         answer.found
           ? { state: "found", product: answer.product }
           : { state: "missing", barcode, name: answer.name },
       );
     } catch (err) {
+      if (run !== lookupRun.current) return;
       setLookup({ state: "failed", barcode, message: errorMessage(err, t) });
     }
   };
@@ -318,6 +315,7 @@ function BarcodeScanner({ mealName, onClose, onAdd, onTypeFood, isFavourite, onS
   };
 
   const scanAgain = () => {
+    lookupRun.current += 1;
     setLookup(null);
     setTypedBarcode("");
     setIsTyping(false);
@@ -342,154 +340,157 @@ function BarcodeScanner({ mealName, onClose, onAdd, onTypeFood, isFavourite, onS
       }}
     >
       <div className={styles.dialog}>
-        <div className={styles.screen}>
-          <div className={styles.top}>
+        <div className={styles.top}>
+          <button
+            ref={closeRef}
+            type="button"
+            className={styles.roundButton}
+            aria-label={t("common.close")}
+            onClick={onClose}
+          >
+            <Icon name="close" />
+          </button>
+          <h2 id={titleId} className={styles.title}>
+            {t("scanner.title")}
+          </h2>
+          {torch ? (
             <button
-              ref={closeRef}
               type="button"
               className={styles.roundButton}
-              aria-label={t("common.close")}
-              onClick={onClose}
+              aria-label={t("scanner.light")}
+              aria-pressed={torch.on}
+              onClick={torch.toggle}
             >
-              <Icon name="close" />
+              <Icon name="bolt" />
             </button>
-            <h2 id={titleId} className={styles.title}>
-              {t("scanner.title")}
-            </h2>
-            {torch ? (
-              <button
-                type="button"
-                className={styles.roundButton}
-                aria-label={t("scanner.light")}
-                aria-pressed={torch.on}
-                onClick={torch.toggle}
-              >
-                <Icon name="bolt" />
-              </button>
-            ) : (
-              <span className={styles.roundSpacer} aria-hidden="true" />
+          ) : (
+            <span className={styles.roundSpacer} aria-hidden="true" />
+          )}
+        </div>
+        <span className={styles.meal}>{t("scanner.addingTo", { meal: mealName })}</span>
+
+        <div className={styles.middle}>
+          <div className={styles.viewfinder} hidden={!hasCamera}>
+            <video ref={videoRef} className={styles.video} playsInline muted />
+            <span className={styles.frame} aria-hidden="true" />
+            {status === "on" && lookup === null && !isTyping && (
+              <span className={styles.scanLine} aria-hidden="true" />
             )}
           </div>
-          <span className={styles.meal}>{t("scanner.addingTo", { meal: mealName })}</span>
-
-          <div className={styles.middle}>
-            <div className={styles.viewfinder} hidden={!hasCamera}>
-              <video ref={videoRef} className={styles.video} playsInline muted />
-              <span className={styles.frame} aria-hidden="true" />
-              {status === "on" && lookup === null && !isTyping && (
-                <span className={styles.scanLine} aria-hidden="true" />
-              )}
+          {hasCamera ? (
+            <div className={styles.hint}>
+              <strong className={styles.hintTitle}>{t("scanner.aim")}</strong>
+              <span className={styles.hintText}>{t("scanner.aimHint")}</span>
             </div>
-            {hasCamera ? (
-              <div className={styles.hint}>
-                <strong className={styles.hintTitle}>{t("scanner.aim")}</strong>
-                <span className={styles.hintText}>{t("scanner.aimHint")}</span>
-              </div>
-            ) : (
-              <p className={styles.cameraNote} role="status">
-                <Icon name="barcode" size={28} />
-                {t(`scanner.camera.${status}`)}
-              </p>
-            )}
-          </div>
-
-          <div className={styles.bottom}>
-            {isTyping || !hasCamera ? (
-              <form
-                className={styles.typed}
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  findTyped();
-                }}
-              >
-                <label className={styles.typedLabel} htmlFor={barcodeId}>
-                  {t("scanner.barcodeLabel")}
-                </label>
-                <div className={styles.typedRow}>
-                  <input
-                    id={barcodeId}
-                    className={styles.typedInput}
-                    inputMode="numeric"
-                    autoComplete="off"
-                    placeholder={t("scanner.barcodePlaceholder")}
-                    value={typedBarcode}
-                    onChange={(event) => {
-                      setTypedBarcode(event.target.value);
-                      setTypingProblem(null);
-                    }}
-                  />
-                  <button
-                    type="submit"
-                    className={styles.typedButton}
-                    disabled={typedBarcode.trim() === ""}
-                  >
-                    {t("scanner.find")}
-                  </button>
-                </div>
-                {typingProblem && (
-                  <p className={styles.typedProblem} role="alert">
-                    {typingProblem}
-                  </p>
-                )}
-              </form>
-            ) : (
-              <button type="button" className={styles.typeButton} onClick={() => setIsTyping(true)}>
-                {t("scanner.typeBarcode")}
-              </button>
-            )}
-            <button type="button" className={styles.linkButton} onClick={onTypeFood}>
-              {t("scanner.typeFood")}
-            </button>
-          </div>
+          ) : (
+            <p className={styles.cameraNote} role="status">
+              <Icon name="barcode" size={28} />
+              {t(`scanner.camera.${status}`)}
+            </p>
+          )}
         </div>
 
-        {lookup && (
-          <section className={styles.result} aria-live="polite">
-            <span className={styles.grabber} aria-hidden="true" />
-            {lookup.state === "looking" && (
-              <p className={styles.looking}>{t("scanner.looking", { barcode: lookup.barcode })}</p>
-            )}
-            {lookup.state === "found" && (
-              <FoundProduct
-                product={lookup.product}
-                mealName={mealName}
-                onAdd={add}
-                onScanAgain={scanAgain}
-                isFavourite={isFavourite}
-                onSaveFavourite={onSaveFavourite}
-              />
-            )}
-            {lookup.state === "missing" && (
-              <NewProduct
-                barcode={lookup.barcode}
-                suggestedName={lookup.name}
-                onSaved={(product) => setLookup({ state: "found", product })}
-                onScanAgain={scanAgain}
-              />
-            )}
-            {lookup.state === "failed" && (
-              <>
-                <div className={styles.resultHeader}>
-                  <span className={styles.badgeMissing}>{t("scanner.lookupFailedBadge")}</span>
-                  <p className={styles.resultDetail}>{lookup.message}</p>
-                </div>
-                <div className={styles.resultActions}>
-                  <button
-                    type="button"
-                    className={styles.primary}
-                    onClick={() => lookUp(lookup.barcode)}
-                  >
-                    {t("scanner.retry")}
-                  </button>
-                  <button type="button" className={styles.secondary} onClick={scanAgain}>
-                    {t("scanner.scanAgain")}
-                  </button>
-                </div>
-              </>
-            )}
-          </section>
-        )}
+        <div className={styles.bottom}>
+          {isTyping || !hasCamera ? (
+            <form
+              className={styles.typed}
+              onSubmit={(event) => {
+                event.preventDefault();
+                findTyped();
+              }}
+            >
+              <label className={styles.typedLabel} htmlFor={barcodeId}>
+                {t("scanner.barcodeLabel")}
+              </label>
+              <div className={styles.typedRow}>
+                <input
+                  id={barcodeId}
+                  className={styles.typedInput}
+                  inputMode="numeric"
+                  autoComplete="off"
+                  placeholder={t("scanner.barcodePlaceholder")}
+                  value={typedBarcode}
+                  onChange={(event) => {
+                    setTypedBarcode(event.target.value);
+                    setTypingProblem(null);
+                  }}
+                />
+                <button
+                  type="submit"
+                  className={styles.typedButton}
+                  disabled={typedBarcode.trim() === ""}
+                >
+                  {t("scanner.find")}
+                </button>
+              </div>
+              {typingProblem && (
+                <p className={styles.typedProblem} role="alert">
+                  {typingProblem}
+                </p>
+              )}
+            </form>
+          ) : (
+            <button type="button" className={styles.typeButton} onClick={() => setIsTyping(true)}>
+              {t("scanner.typeBarcode")}
+            </button>
+          )}
+          <button type="button" className={styles.linkButton} onClick={onTypeFood}>
+            {t("scanner.typeFood")}
+          </button>
+        </div>
       </div>
+
+      {lookup && (
+        <Sheet labelledBy={resultTitleId} closeLabel={t("scanner.scanAgain")} onClose={scanAgain}>
+          {lookup.state === "looking" && (
+            <p id={resultTitleId} className={styles.looking}>
+              {t("scanner.looking", { barcode: lookup.barcode })}
+            </p>
+          )}
+          {lookup.state === "found" && (
+            <FoundProduct
+              titleId={resultTitleId}
+              product={lookup.product}
+              mealName={mealName}
+              onAdd={add}
+              onScanAgain={scanAgain}
+              isFavourite={isFavourite}
+              onSaveFavourite={onSaveFavourite}
+            />
+          )}
+          {lookup.state === "missing" && (
+            <NewProduct
+              titleId={resultTitleId}
+              barcode={lookup.barcode}
+              suggestedName={lookup.name}
+              onSaved={(product) => setLookup({ state: "found", product })}
+              onScanAgain={scanAgain}
+            />
+          )}
+          {lookup.state === "failed" && (
+            <>
+              <div className={styles.resultHeader}>
+                <span className={styles.badgeMissing}>{t("scanner.lookupFailedBadge")}</span>
+                <p id={resultTitleId} className={styles.resultDetail}>
+                  {lookup.message}
+                </p>
+              </div>
+              <div className={styles.resultActions}>
+                <button
+                  type="button"
+                  className={styles.primary}
+                  onClick={() => lookUp(lookup.barcode)}
+                >
+                  {t("scanner.retry")}
+                </button>
+                <button type="button" className={styles.secondary} onClick={scanAgain}>
+                  {t("scanner.scanAgain")}
+                </button>
+              </div>
+            </>
+          )}
+        </Sheet>
+      )}
     </div>,
     document.body,
   );

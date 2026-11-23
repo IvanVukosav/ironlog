@@ -7,16 +7,11 @@ import { formatNumber, toInputText } from "../utils/numbers";
 import { sumMacros } from "../utils/nutritionState";
 import BarcodeScanner from "./BarcodeScanner";
 import Icon from "./Icon";
+import MacroFields from "./MacroFields";
 import styles from "./MealCard.module.css";
 
 // The forms hold what was typed, so their fields are strings.
 const EMPTY_FOOD = { name: "", kcal: "", protein: "", carbs: "", fat: "" };
-const MACRO_FIELDS = [
-  { key: "kcal", labelKey: "nutrition.kcalLabel" },
-  { key: "protein", labelKey: "nutrition.proteinLabel" },
-  { key: "carbs", labelKey: "nutrition.carbsLabel" },
-  { key: "fat", labelKey: "nutrition.fatLabel" },
-];
 
 // A saved food in the form, its numbers written the way the language writes them ("12,5").
 function formFromFood(food, language) {
@@ -42,31 +37,6 @@ function useCloseOnOutsidePress(isOpen, ref, setOpen) {
     document.addEventListener("mousedown", handlePress);
     return () => document.removeEventListener("mousedown", handlePress);
   }, [isOpen, ref, setOpen]);
-}
-
-// Kcal and the three macros, each under its label.
-function MacroFields({ values, onChange }) {
-  const { t } = useTranslation();
-  const id = useId();
-  return (
-    <div className={styles.macroFields}>
-      {MACRO_FIELDS.map(({ key, labelKey }) => (
-        <div key={key} className={styles.field} data-field={key}>
-          <label className={styles.fieldLabel} htmlFor={`${id}${key}`}>
-            {t(labelKey)}
-          </label>
-          <input
-            id={`${id}${key}`}
-            className={styles.fieldInput}
-            inputMode="decimal"
-            autoComplete="off"
-            value={values[key]}
-            onChange={(event) => onChange({ ...values, [key]: event.target.value })}
-          />
-        </div>
-      ))}
-    </div>
-  );
 }
 
 // Last time's meal of this name, offered while this one is still empty: one tap eats it again.

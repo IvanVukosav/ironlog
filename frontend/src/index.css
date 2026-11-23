@@ -29,6 +29,18 @@
   /* Text on an accent-filled button; every theme's background passes 4.5:1 on its accent. */
   --color-on-accent: var(--color-bg);
   --color-input-bg: var(--color-bg-elevated);
+  /* The barcode scanner's camera screen: dark in every theme, the way a camera is, so only
+     :root sets these. */
+  --camera-bg: #050607;
+  --camera-surface: #181b21;
+  --camera-line: #2e333c;
+  --camera-text: #f3f4f6;
+  --camera-dim: #a1a7b3;
+  --camera-placeholder: #7c8391;
+  --camera-accent: #5b9bff;
+  --camera-control: rgba(255, 255, 255, 0.12);
+  --camera-scan-line: #ff5a4f;
+  --camera-error: #ff8a80;
   --elevation-card: none;
   --elevation-dropdown: 0 12px 32px rgba(0, 0, 0, 0.45);
 

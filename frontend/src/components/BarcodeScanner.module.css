@@ -1,38 +1,23 @@
 /* Over the tab bar (95) and the rest timer (90), under the toasts (100), like a sheet. The
-   camera's screen is dark in every theme, the way a camera is; what was found comes up from the
-   bottom in the theme's own card. */
+   camera's screen takes the --camera-* colours, dark in every theme; what a barcode finds comes up
+   in a Sheet, in the theme's own card. */
 .overlay {
-  --scanner-bg: #050607;
-  --scanner-surface: #181b21;
-  --scanner-line: #2e333c;
-  --scanner-text: #f3f4f6;
-  --scanner-dim: #a1a7b3;
-  --scanner-accent: #5b9bff;
-
   position: fixed;
   inset: 0;
   z-index: 98;
   display: flex;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.5);
   font-family: var(--font-body);
 }
 
 .dialog {
-  position: relative;
   flex: 1;
   display: flex;
   flex-direction: column;
   min-height: 0;
   overflow: hidden;
-  background: var(--scanner-bg);
-  color: var(--scanner-text);
-}
-
-.screen {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
+  background: var(--camera-bg);
+  color: var(--camera-text);
 }
 
 .top {
@@ -52,14 +37,14 @@
   padding: 0;
   border: none;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.12);
-  color: var(--scanner-text);
+  background: var(--camera-control);
+  color: var(--camera-text);
   cursor: pointer;
 }
 
 .roundButton[aria-pressed="true"] {
-  background: var(--scanner-text);
-  color: var(--scanner-bg);
+  background: var(--camera-text);
+  color: var(--camera-bg);
 }
 
 .roundSpacer {
@@ -81,7 +66,7 @@
   margin-top: 4px;
   padding: 4px 12px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--camera-control);
   font-size: 0.75rem;
   font-weight: 600;
 }
@@ -104,7 +89,7 @@
   aspect-ratio: 16 / 10;
   border-radius: 16px;
   overflow: hidden;
-  background: #1a1d22;
+  background: var(--camera-surface);
 }
 
 .viewfinder[hidden] {
@@ -122,7 +107,7 @@
   inset: 0;
   border-radius: 16px;
   pointer-events: none;
-  --corner: linear-gradient(var(--scanner-accent), var(--scanner-accent));
+  --corner: linear-gradient(var(--camera-accent), var(--camera-accent));
   background:
     var(--corner) top left / 34px 4px no-repeat,
     var(--corner) top left / 4px 34px no-repeat,
@@ -141,8 +126,8 @@
   top: 50%;
   height: 2px;
   border-radius: 1px;
-  background: #ff5a4f;
-  box-shadow: 0 0 10px rgba(255, 90, 79, 0.8);
+  background: var(--camera-scan-line);
+  box-shadow: 0 0 10px var(--camera-scan-line);
   animation: sweep 2.4s ease-in-out infinite alternate;
 }
 
@@ -176,7 +161,7 @@
 }
 
 .hintText {
-  color: var(--scanner-dim);
+  color: var(--camera-dim);
   font-size: 0.8rem;
   line-height: 1.45;
 }
@@ -188,7 +173,7 @@
   align-items: center;
   gap: 12px;
   max-width: 300px;
-  color: var(--scanner-dim);
+  color: var(--camera-dim);
   font-size: 0.9rem;
   line-height: 1.45;
   text-align: center;
@@ -203,10 +188,10 @@
 
 .typeButton {
   min-height: 48px;
-  border: 1px solid var(--scanner-line);
+  border: 1px solid var(--camera-line);
   border-radius: 12px;
-  background: var(--scanner-surface);
-  color: var(--scanner-text);
+  background: var(--camera-surface);
+  color: var(--camera-text);
   font-family: inherit;
   font-size: 0.95rem;
   font-weight: 600;
@@ -217,7 +202,7 @@
   min-height: 44px;
   border: none;
   background: transparent;
-  color: var(--scanner-accent);
+  color: var(--camera-accent);
   font-family: inherit;
   font-size: 0.875rem;
   font-weight: 600;
@@ -231,7 +216,7 @@
 }
 
 .typedLabel {
-  color: var(--scanner-dim);
+  color: var(--camera-dim);
   font-size: 0.75rem;
   font-weight: 600;
 }
@@ -247,11 +232,11 @@
   min-width: 0;
   height: 48px;
   padding: 0 12px;
-  border: 1px solid var(--scanner-line);
+  border: 1px solid var(--camera-line);
   border-radius: 10px;
   outline: none;
-  background: var(--scanner-surface);
-  color: var(--scanner-text);
+  background: var(--camera-surface);
+  color: var(--camera-text);
   font-family: inherit;
   font-size: 1rem;
   font-variant-numeric: tabular-nums;
@@ -259,11 +244,11 @@
 }
 
 .typedInput:focus {
-  border-color: var(--scanner-accent);
+  border-color: var(--camera-accent);
 }
 
 .typedInput::placeholder {
-  color: #7c8391;
+  color: var(--camera-placeholder);
   letter-spacing: 0;
 }
 
@@ -273,8 +258,8 @@
   padding: 0 16px;
   border: none;
   border-radius: 10px;
-  background: var(--scanner-accent);
-  color: var(--scanner-bg);
+  background: var(--camera-accent);
+  color: var(--camera-bg);
   font-family: inherit;
   font-size: 0.95rem;
   font-weight: 600;
@@ -287,36 +272,11 @@
 }
 
 .typedProblem {
-  color: #ff8a80;
+  color: var(--camera-error);
   font-size: 0.8rem;
 }
 
-/* What the barcode found, up from the bottom in the theme's card. */
-.result {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  max-height: 88%;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  padding: 10px 20px calc(24px + env(safe-area-inset-bottom));
-  border-radius: 24px 24px 0 0;
-  background: var(--color-bg-card);
-  box-shadow: var(--elevation-dropdown);
-  color: var(--color-text);
-}
-
-.grabber {
-  align-self: center;
-  flex: none;
-  width: 40px;
-  height: 4px;
-  border-radius: 2px;
-  background: var(--color-border);
-}
+/* What the barcode found, in the Sheet. */
 
 .looking {
   padding: 16px 0 24px;
@@ -436,7 +396,8 @@
   font-size: 0.95rem;
 }
 
-/* A product typed from its package: a name, the values per 100 g, the package's size. */
+/* A product typed from its package: a name, the values per 100 g (MacroFields), the package's
+   size, in the same fields as Prehrana's own. */
 .newProduct {
   display: flex;
   flex-direction: column;
@@ -451,45 +412,15 @@
 }
 
 .field {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
+  composes: field from "./MacroFields.module.css";
 }
 
 .fieldLabel {
-  overflow: hidden;
-  color: var(--color-text-dim);
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  composes: fieldLabel from "./MacroFields.module.css";
 }
 
 .fieldInput {
-  composes: input from "../styles/shared.module.css";
-  width: 100%;
-  height: 44px;
-  padding-top: 0;
-  padding-bottom: 0;
-  font-variant-numeric: tabular-nums;
-}
-
-.macroFields {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.macroFields .fieldInput {
-  font-weight: 700;
-  text-align: center;
-}
-
-@media (max-width: 480px) {
-  .macroFields {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+  composes: fieldInput from "./MacroFields.module.css";
 }
 
 .problem {
@@ -510,9 +441,5 @@
     height: min(780px, calc(100dvh - 48px));
     border-radius: 20px;
     box-shadow: var(--elevation-dropdown);
-  }
-
-  .result {
-    border-radius: 20px 20px 0 0;
   }
 }
