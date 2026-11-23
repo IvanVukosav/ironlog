@@ -103,15 +103,12 @@ Prije toga treba spojiti `roadmap` u `main`. Prije prvog deploya:
   frontenda.
 - Naredba za pokretanje mora izvršiti `npx prisma migrate deploy`. Možda treba i
   `npx prisma generate`, jer npm iz Node 26 preskače Prismine install skripte.
-- Korijen servisa mora biti `backend`. Root `package.json` (Prisma 7) je višak i ne smije se
-  koristiti.
+- Korijen servisa mora biti `backend`.
 - `frontend/vercel.json` pretpostavlja da je korijen Vercel projekta `frontend`.
 - Nakon deploya napravi backup (Postavke → Backup i izvoz).
 
 ## 4. Sitni otvoreni nalazi
 
-- Tailwind paketi se ne koriste, a root `package.json` je višak. README piše da aplikacija koristi
-  Tailwind, Vercel i Railway, a ne koristi ih.
 - Zadnja oznaka datuma na grafu tjelesne težine na Početnoj nekad se vidi, a nekad ne. Recharts
   izmjeri tekst prije nego što se učita font.
 - Odmor koji završi dok je mobitel zaključan ne zapišti, jer stranica tada spava. Kad se vratiš,
