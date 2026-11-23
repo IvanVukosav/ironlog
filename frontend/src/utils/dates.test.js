@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   dateKeyOf,
+  dayBeforeKey,
   formatDayMonth,
   formatShortDate,
   formatWeekdayDate,
@@ -69,6 +70,14 @@ describe("toDateKey and dateKeyOf", () => {
   it("use the UTC day, not the local one", () => {
     // 23:30 UTC is already the next day in Croatia, but the stored day is still the 4th.
     expect(dateKeyOf(new Date("2026-11-04T23:30:00.000Z"))).toBe("2026-11-04");
+  });
+});
+
+describe("dayBeforeKey", () => {
+  it("steps back one day, over the start of a month and of a year", () => {
+    expect(dayBeforeKey("2026-11-23")).toBe("2026-11-22");
+    expect(dayBeforeKey("2026-03-01")).toBe("2026-02-28");
+    expect(dayBeforeKey("2026-01-01")).toBe("2025-12-31");
   });
 });
 

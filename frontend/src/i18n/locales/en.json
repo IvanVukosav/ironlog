@@ -406,7 +406,7 @@
     "deleteMeal": "Delete meal",
     "confirmDeleteMeal": "Delete meal \"{{name}}\" and all its items?",
     "foodLabel": "Food",
-    "foodNamePlaceholder": "Search saved foods or type a new one",
+    "foodNamePlaceholder": "Search or type a new one",
     "kcalLabel": "Calories (kcal)",
     "proteinLabel": "Protein (g)",
     "carbsLabel": "Carbs (g)",
@@ -421,8 +421,15 @@
     "copyPreviousDay": "Copy previous day",
     "nothingToCopy": "The previous day has no meals to copy",
     "recentItems": "Recent",
-    "savedItems": "Saved foods",
-    "saveAsFoodPrompt": "Save \"{{name}}\" as a food item?"
+    "savedItems": "Favourites",
+    "saveAsFoodPrompt": "Add \"{{name}}\" to Favourites?",
+    "likeYesterday": "Same as yesterday",
+    "likeLastTime": "Same as last time",
+    "copyMeal": "Copy",
+    "addFoodChip": "Add {{name}}, {{kcal}} kcal",
+    "editFavourites": "Edit",
+    "doneEditing": "Done",
+    "removeFavourite": "Remove {{name}} from Favourites"
   },
   "tdee": {
     "title": "Estimated expenditure (TDEE)",

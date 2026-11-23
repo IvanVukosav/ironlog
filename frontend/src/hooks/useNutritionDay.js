@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { fetchJson } from "../api";
 import { useToast } from "../context/useToast";
 import { useReportError } from "./useReportError";
+import { dayBeforeKey } from "../utils/dates";
+import { nameKey } from "../utils/mealSuggestions";
 import { toDecimalText } from "../utils/numbers";
 import {
   withItemAdded,
@@ -15,15 +17,10 @@ import {
 
 // Where a food added by name alone goes.
 export const DEFAULT_MEAL_NAME = "Ostalo";
-const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const NOTHING_TO_COPY = "Nothing to copy from that day";
 
 const post = (path, json) => fetchJson(path, { method: "POST", json });
 const remove = (path) => fetchJson(path, { method: "DELETE" });
-
-function previousDateKey(dateKey) {
-  return new Date(Date.parse(dateKey) - MS_PER_DAY).toISOString().split("T")[0];
-}
 
 // What the API gets for a food: the numbers as typed, a decimal comma read as a point. Grams
 // left empty are 0, so a food can be logged by its kcal alone.
@@ -51,6 +48,11 @@ export function useNutritionDay(date) {
   const { showError } = useToast();
   const reportError = useReportError();
   const [loaded, setLoaded] = useState({ date: null, day: null });
+  // Meals being made by name ("<date>|<name>" → the promise of the saved meal), so two foods
+  // tapped in quick succession into a meal not saved yet both go into one meal, not two. The
+  // day being made is shared the same way ({ date, promise }).
+  const mealsInMaking = useRef(new Map());
+  const dayInMaking = useRef(null);
   const isLoading = loaded.date !== date;
   const day = isLoading ? null : loaded.day;
 
@@ -82,12 +84,21 @@ export function useNutritionDay(date) {
       return answer;
     }, fail);
 
-  // The day as the server has it, made first if it isn't yet.
-  const ensureDay = async () => {
-    if (day) return day;
-    const created = await post("/api/nutrition/days", { date });
-    show(() => withMealLists(created));
-    return created;
+  // The day as the server has it, made first if it isn't yet. A day shown meanwhile (a meal
+  // made into it by another tap) is kept as it is.
+  const ensureDay = () => {
+    if (day) return Promise.resolve(day);
+    if (dayInMaking.current?.date !== date) {
+      const promise = post("/api/nutrition/days", { date }).then((created) => {
+        show((current) => current ?? withMealLists(created));
+        return created;
+      });
+      promise.catch(() => {
+        if (dayInMaking.current?.promise === promise) dayInMaking.current = null;
+      });
+      dayInMaking.current = { date, promise };
+    }
+    return dayInMaking.current.promise;
   };
 
   const addMeal = async (name) => {
@@ -102,13 +113,57 @@ export function useNutritionDay(date) {
   const addItem = (mealId, values) =>
     save(post(`/api/nutrition/meals/${mealId}/items`, toFoodValues(values)), withItemAdded);
 
+  // The day's meal of that name: the one it has, or one made for it (null if that failed).
+  const mealNamed = (name) => {
+    const existing = day?.meals.find((meal) => nameKey(meal.name) === nameKey(name));
+    if (existing) return Promise.resolve(existing);
+    const key = `${date}|${nameKey(name)}`;
+    if (!mealsInMaking.current.has(key)) {
+      const making = addMeal(name).then((meal) => {
+        if (!meal) mealsInMaking.current.delete(key);
+        return meal;
+      });
+      mealsInMaking.current.set(key, making);
+    }
+    return mealsInMaking.current.get(key);
+  };
+
+  // A food into a meal card, which may be one offered but not saved yet (no id).
+  const addItemToMeal = async (meal, values) => {
+    const saved = meal.id ? meal : await mealNamed(meal.name);
+    return saved ? addItem(saved.id, values) : null;
+  };
+
+  const deleteMeal = (mealId) => {
+    const meal = day?.meals.find((entry) => entry.id === mealId);
+    return save(remove(`/api/nutrition/meals/${mealId}`), (current) => {
+      // A meal of this name made earlier is gone now: the next food makes a new one.
+      if (meal) mealsInMaking.current.delete(`${date}|${nameKey(meal.name)}`);
+      return withoutMeal(current, mealId);
+    });
+  };
+
+  // Copies `fromDate`'s whole day into this one, or only its meal called `mealName`.
+  const copyFrom = (fromDate, mealName) =>
+    post("/api/nutrition/days/copy", { fromDate, toDate: date, mealName }).then(
+      (copied) => {
+        show(() => withMealLists(copied));
+        return copied;
+      },
+      (err) => {
+        if (err.message !== NOTHING_TO_COPY) return fail(err);
+        showError(t("nutrition.nothingToCopy"));
+        return null;
+      },
+    );
+
   return {
     day,
     isLoading,
     addMeal,
     addItem,
-    deleteMeal: (mealId) =>
-      save(remove(`/api/nutrition/meals/${mealId}`), (current) => withoutMeal(current, mealId)),
+    addItemToMeal,
+    deleteMeal,
     updateItem: (itemId, values) =>
       save(
         fetchJson(`/api/nutrition/items/${itemId}`, {
@@ -121,23 +176,11 @@ export function useNutritionDay(date) {
       save(remove(`/api/nutrition/items/${itemId}`), (current) => withoutItem(current, itemId)),
 
     // A food picked by name goes into the "Ostalo" meal, which is made when it isn't there.
-    quickAdd: async (food) => {
-      const existing = day?.meals.find((meal) => meal.name === DEFAULT_MEAL_NAME);
-      const meal = existing ?? (await addMeal(DEFAULT_MEAL_NAME));
-      return meal ? addItem(meal.id, food) : null;
-    },
+    quickAdd: (food) => addItemToMeal({ id: null, name: DEFAULT_MEAL_NAME }, food),
 
-    copyPreviousDay: () =>
-      post("/api/nutrition/days/copy", { fromDate: previousDateKey(date), toDate: date }).then(
-        (copied) => {
-          show(() => withMealLists(copied));
-          return copied;
-        },
-        (err) => {
-          if (err.message !== NOTHING_TO_COPY) return fail(err);
-          showError(t("nutrition.nothingToCopy"));
-          return null;
-        },
-      ),
+    copyPreviousDay: () => copyFrom(dayBeforeKey(date)),
+
+    // Last time's meal ({ name, date } from /api/nutrition/last-meals) eaten again today.
+    copyMeal: (previous) => copyFrom(previous.date.slice(0, 10), previous.name),
   };
 }

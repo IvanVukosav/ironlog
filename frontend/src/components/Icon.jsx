@@ -79,6 +79,17 @@ const ICONS = {
       <path d="M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1-1" />
     </>
   ),
+  // A five-pointed star: a favourite.
+  star: <path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9 1.1-6.2L3 9.6l6.2-.9z" />,
+  // Bars inside four corners: a barcode to scan.
+  barcode: (
+    <>
+      <path d="M4 7V5a1 1 0 0 1 1-1h2M17 4h2a1 1 0 0 1 1 1v2M20 17v2a1 1 0 0 1-1 1h-2M7 20H5a1 1 0 0 1-1-1v-2" />
+      <path d="M8 8v8M11 8v8M14 8v8M16.5 8v8" />
+    </>
+  ),
+  // A lightning bolt: the camera's light.
+  bolt: <path d="M13 2 4 14h7l-1 8 9-12h-7z" />,
 };
 
 function Icon({ name, size = 20 }) {

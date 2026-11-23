@@ -72,6 +72,198 @@
   composes: dropdownItem from "../styles/shared.module.css";
 }
 
+/* A meal offered from an earlier day has no menu yet; its kcal stays in line with the others. */
+.menuSpacer {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+}
+
+/* Last time's meal of this name, to eat again with one tap. */
+
+.previous {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--row-bg);
+  border-radius: var(--row-radius);
+  border-bottom: var(--row-divider);
+  font-family: var(--font-body);
+}
+
+.previousIcon {
+  display: flex;
+  flex-shrink: 0;
+  color: var(--color-accent);
+}
+
+.previousText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.previousTitle {
+  color: var(--color-text);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.previousDetail {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  color: var(--color-text-dim);
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.previousButton {
+  composes: button from "../styles/shared.module.css";
+  flex-shrink: 0;
+  min-height: 40px;
+}
+
+/* A card that isn't the open one: a quiet way to open it. */
+.openButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 44px;
+  background: transparent;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--row-radius);
+  color: var(--color-text-dim);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.openButton:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+/* Foods that go in with one tap: what was eaten lately, and the favourites. */
+
+.chipGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chipHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: -6px 0;
+}
+
+.chipLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-text-dim);
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* The same amber as the streak's flame, filled. */
+.star {
+  display: flex;
+  color: var(--color-streak);
+}
+
+.star svg {
+  fill: currentColor;
+}
+
+.chipEdit {
+  min-height: 32px;
+  padding: 0 4px;
+  background: transparent;
+  border: none;
+  color: var(--color-text-dim);
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.chipEdit:hover,
+.chipEdit[aria-pressed="true"] {
+  color: var(--color-accent);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  min-height: 40px;
+  padding: 0 12px;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.chip:hover {
+  border-color: var(--color-accent);
+}
+
+.chipPlus {
+  color: var(--color-accent);
+  font-weight: 700;
+}
+
+.chipName {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chipKcal {
+  flex-shrink: 0;
+  color: var(--color-text-dim);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Editing the favourites: a tap takes the food off the row. */
+.chipRemove {
+  border-style: dashed;
+}
+
+.chipRemove svg {
+  flex-shrink: 0;
+  color: var(--color-text-dim);
+}
+
+.chipRemove:hover svg {
+  color: var(--color-accent);
+}
+
 /* Logged foods: a row each, a click edits it. */
 
 .itemList {
@@ -285,6 +477,16 @@
   margin-top: 4px;
   max-height: 240px;
   overflow-y: auto;
+}
+
+.pickerSection {
+  padding: 8px 14px 4px;
+  color: var(--color-text-dim);
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 .pickerOption {

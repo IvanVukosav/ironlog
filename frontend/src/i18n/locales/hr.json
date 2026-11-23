@@ -414,7 +414,7 @@
     "deleteMeal": "Obriši obrok",
     "confirmDeleteMeal": "Obrisati obrok \"{{name}}\" i sve njegove namirnice?",
     "foodLabel": "Namirnica",
-    "foodNamePlaceholder": "Pretraži spremljene ili upiši novu",
+    "foodNamePlaceholder": "Pretraži ili upiši novu",
     "kcalLabel": "Kalorije (kcal)",
     "proteinLabel": "Bjelančevine (g)",
     "carbsLabel": "Ugljikohidrati (g)",
@@ -429,8 +429,15 @@
     "copyPreviousDay": "Kopiraj prethodni dan",
     "nothingToCopy": "Prethodni dan nema obroka za kopirati",
     "recentItems": "Nedavno",
-    "savedItems": "Spremljene namirnice",
-    "saveAsFoodPrompt": "Spremi \"{{name}}\" kao namirnicu?"
+    "savedItems": "Omiljeno",
+    "saveAsFoodPrompt": "Dodati \"{{name}}\" u Omiljeno?",
+    "likeYesterday": "Kao jučer",
+    "likeLastTime": "Kao zadnji put",
+    "copyMeal": "Kopiraj",
+    "addFoodChip": "Dodaj {{name}}, {{kcal}} kcal",
+    "editFavourites": "Uredi",
+    "doneEditing": "Gotovo",
+    "removeFavourite": "Makni {{name}} iz Omiljenog"
   },
   "tdee": {
     "title": "Procjena potrošnje (TDEE)",

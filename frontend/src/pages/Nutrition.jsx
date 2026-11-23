@@ -11,11 +11,22 @@ import { useDateParam } from "../hooks/useDateParam";
 import { useNutritionDay } from "../hooks/useNutritionDay";
 import { useReportError } from "../hooks/useReportError";
 import { formatWeekdayDate, todayKey } from "../utils/dates";
+import {
+  firstEmptyCardKey,
+  mealCards,
+  previousMeal,
+  recentFoodsFor,
+  searchableFoods,
+} from "../utils/mealSuggestions";
 import { formatNumber } from "../utils/numbers";
 import { sumMacros } from "../utils/nutritionState";
 import styles from "./Nutrition.module.css";
 
 const RECENT_ITEMS_LIMIT = 8;
+// One-tap foods in a meal, and how many foods its name field searches besides the favourites.
+const MEAL_CHIPS_LIMIT = 6;
+const MEAL_SEARCH_LIMIT = 30;
+const NOTHING_ELSE = [];
 const MAX_PERCENT = 100;
 const MACROS = [
   { key: "protein", labelKey: "nutrition.macroProtein", goalKey: "proteinGoal" },
@@ -60,16 +71,37 @@ function Nutrition() {
   const [mealName, setMealName] = useState("");
   const [foodItemTemplates, setFoodItemTemplates] = useState([]);
   const [recentItems, setRecentItems] = useState([]);
+  const [recentByMeal, setRecentByMeal] = useState([]);
+  // The meals of the days before `date`, kept with the date they were asked for.
+  const [lastMeals, setLastMeals] = useState({ date: null, meals: [] });
+  // The card open for adding food, for one date: none chosen follows the first empty meal, and
+  // anything done in a card keeps that one open, so it doesn't jump on once the meal has food.
+  const [openCard, setOpenCard] = useState({ date: null, key: null });
   const [quickAddName, setQuickAddName] = useState("");
   const [showQuickPicker, setShowQuickPicker] = useState(false);
   const quickAddRef = useRef(null);
 
   useEffect(() => {
     fetchJson("/api/food-item-templates").then(setFoodItemTemplates).catch(reportError);
-    fetchJson(`/api/nutrition/recent-items?limit=${RECENT_ITEMS_LIMIT}`)
+    fetchJson(`/api/nutrition/recent-items?limit=${MEAL_SEARCH_LIMIT}`)
       .then(setRecentItems)
       .catch(reportError);
+    fetchJson(`/api/nutrition/recent-by-meal?limit=${MEAL_SEARCH_LIMIT}`)
+      .then(setRecentByMeal)
+      .catch(reportError);
   }, [reportError]);
+
+  useEffect(() => {
+    let isStale = false;
+    fetchJson(`/api/nutrition/last-meals?before=${date}`)
+      .then((meals) => {
+        if (!isStale) setLastMeals({ date, meals });
+      })
+      .catch(reportError);
+    return () => {
+      isStale = true;
+    };
+  }, [date, reportError]);
 
   useEffect(() => {
     if (!showQuickPicker) return undefined;
@@ -106,15 +138,26 @@ function Nutrition() {
       .catch(reportError);
   };
 
+  const deleteFoodItemTemplate = (template) => {
+    fetchJson(`/api/food-item-templates/${template.id}`, { method: "DELETE" })
+      .then(() => setFoodItemTemplates((prev) => prev.filter((other) => other.id !== template.id)))
+      .catch(reportError);
+  };
+
   const quickAddQuery = quickAddName.trim().toLowerCase();
   const filteredQuickTemplates = quickAddQuery
     ? foodItemTemplates.filter((template) => template.name.toLowerCase().includes(quickAddQuery))
     : foodItemTemplates;
-  const filteredRecentItems = recentItems.filter((item) =>
-    item.name.toLowerCase().includes(quickAddQuery),
-  );
+  const filteredRecentItems = recentItems
+    .slice(0, RECENT_ITEMS_LIMIT)
+    .filter((item) => item.name.toLowerCase().includes(quickAddQuery));
 
   const meals = day?.meals ?? [];
+  // Until the earlier days of this date have come, only the day's own meals are shown.
+  const earlierMeals = lastMeals.date === date ? lastMeals.meals : NOTHING_ELSE;
+  const cards = isLoading ? [] : mealCards(meals, earlierMeals);
+  const openKey = (openCard.date === date ? openCard.key : null) ?? firstEmptyCardKey(cards);
+  const eaten = { recentByMeal, recentAll: recentItems, favourites: foodItemTemplates };
   const totals = sumMacros(meals.flatMap((meal) => meal.items));
   const kcalGoal = settings?.kcalGoal;
   const kcal = (value) => formatNumber(value, language, { maxDecimals: 0 });
@@ -169,7 +212,7 @@ function Nutrition() {
         />
       </section>
 
-      {!isLoading && meals.length === 0 && (
+      {!isLoading && cards.length === 0 && (
         <p className={styles.empty}>{t("nutrition.noEntries")}</p>
       )}
 
@@ -252,15 +295,22 @@ function Nutrition() {
         </button>
       </div>
 
-      {meals.length > 0 && (
+      {cards.length > 0 && (
         <div className={styles.mealList}>
-          {meals.map((meal) => (
+          {cards.map((meal) => (
             <MealCard
-              key={meal.id}
+              key={meal.key}
               meal={meal}
+              date={date}
+              isOpen={meal.key === openKey}
+              onOpen={() => setOpenCard({ date, key: meal.key })}
               actions={actions}
-              foodItemTemplates={foodItemTemplates}
-              onSaveTemplate={saveFoodItemTemplate}
+              favourites={foodItemTemplates}
+              recentFoods={recentFoodsFor(meal, { ...eaten, limit: MEAL_CHIPS_LIMIT })}
+              searchFoods={searchableFoods(meal, { ...eaten, limit: MEAL_SEARCH_LIMIT })}
+              previous={meal.items.length === 0 ? previousMeal(meal, earlierMeals) : null}
+              onSaveFavourite={saveFoodItemTemplate}
+              onDeleteFavourite={deleteFoodItemTemplate}
             />
           ))}
         </div>

@@ -43,6 +43,13 @@ export function dateKeyOf(date) {
   return toDateKey(date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate());
 }
 
+// The key of the day before the one given: "2026-11-01" for "2026-11-02".
+export function dayBeforeKey(dateKey) {
+  const date = new Date(dateKey);
+  date.setUTCDate(date.getUTCDate() - 1);
+  return dateKeyOf(date);
+}
+
 // Whether `text` is such a key of a day that exists ("2026-02-30" is not one).
 export function isDateKey(text) {
   if (typeof text !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(text)) return false;
