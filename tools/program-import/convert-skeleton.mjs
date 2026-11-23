@@ -10,7 +10,8 @@ const [extractPath, programName, outPath] = process.argv.slice(2);
 if (!outPath || !programName) {
   throw new Error('usage: node convert-skeleton.mjs <extract.json> "<name>" <program.json>');
 }
-const { weeks, names } = JSON.parse(readFileSync(extractPath, "utf8").replace(/^﻿/, ""));
+// trimStart also drops the BOM a file saved by PowerShell may start with.
+const { weeks, names } = JSON.parse(readFileSync(extractPath, "utf8").trimStart());
 const WEEKS = weeks.length;
 
 // One line (a bullet) of a prescription as set groups: { sets, reps, rpe, percent, backoff }.

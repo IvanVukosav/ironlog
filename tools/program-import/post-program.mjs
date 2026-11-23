@@ -4,7 +4,8 @@
 import { readFileSync } from "node:fs";
 
 const [path, api = "http://localhost:3001"] = process.argv.slice(2);
-const program = JSON.parse(readFileSync(path, "utf8").replace(/^﻿/, ""));
+// trimStart also drops the BOM a file saved by PowerShell may start with.
+const program = JSON.parse(readFileSync(path, "utf8").trimStart());
 const headers = { "Content-Type": "application/json" };
 
 async function call(route, options = {}) {

@@ -17,7 +17,8 @@ registerHooks({
 });
 const scheme = await import("../../frontend/src/utils/programScheme.js");
 
-const program = JSON.parse(readFileSync(process.argv[2], "utf8").replace(/^﻿/, ""));
+// trimStart also drops the BOM a file saved by PowerShell may start with.
+const program = JSON.parse(readFileSync(process.argv[2], "utf8").trimStart());
 const problems = [];
 let count = 0;
 program.days.forEach((day, d) =>
