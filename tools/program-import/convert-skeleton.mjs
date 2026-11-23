@@ -13,8 +13,11 @@ if (!outPath || !programName) {
 // trimStart also drops the BOM a file saved by PowerShell may start with.
 const { weeks, names } = JSON.parse(readFileSync(extractPath, "utf8").trimStart());
 const WEEKS = weeks.length;
+// How many myo-rep mini-sets are planned after an activation set (see groupsOf).
+const MYO_MINI_SETS = 3;
 
-// One line (a bullet) of a prescription as set groups: { sets, reps, rpe, percent, backoff }.
+// One line (a bullet) of a prescription as set groups: { sets, reps, rpe, percent, backoff }, or
+// { setsOfPrevious } for a line that only says how many times the line before is done.
 function groupsOf(line) {
   const text = line
     .replace(/\s+/g, " ")
@@ -29,10 +32,21 @@ function groupsOf(line) {
   let m;
   if (text === "") return [];
   // "5 reps @ 7 (79% of 1RM)", "10 reps @ RPE 7", "1 rep @ RPE 8 (90-93% 1RM)",
-  // "4 reps @ RPE 8 (84%) x 3 sets of 4", "3 reps @ RPE 9 x 1 set"
+  // "4 reps @ RPE 8 (84%) x 3 sets of 4", "3 reps @ RPE 9 x 1 set",
+  // "6 Reps @ 8 RPE (79%) x 2 Sets", and a range of reps, which takes its top (as "2-3 sets"
+  // takes 3): "14-16 Reps @ 8 RPE" is 16 reps
   const repsAtRpe =
-    /^(\d+) reps? @ ?(?:RPE )?(\d+(?:\.\d+)?)(?: \([^)]*\))?(?: x (\d+) sets?(?: of \d+)?)?$/i;
-  if ((m = repsAtRpe.exec(text))) return [{ sets: n(m[3] ?? 1), reps: n(m[1]), rpe: n(m[2]) }];
+    /^(\d+)(?:-(\d+))? reps? @ ?(?:RPE )?(\d+(?:\.\d+)?)(?: RPE)?(?: \([^)]*\))?(?: x (\d+) sets?(?: of \d+)?)?$/i;
+  if ((m = repsAtRpe.exec(text))) {
+    return [{ sets: n(m[4] ?? 1), reps: n(m[2] ?? m[1]), rpe: n(m[3]) }];
+  }
+  // 4-Day Hypertrophy's myo-reps: after the activation set ("14-16 Reps @ 8 RPE"), mini-sets of
+  // "3-5 Reps" with its weight, aiming for 5, until one comes out a rep short of the first. Planned
+  // as MYO_MINI_SETS sets of the top of the range, with no intensity: their weight is the
+  // activation set's, filled in on the day.
+  if ((m = /^(\d+)-(\d+) reps?$/i.exec(text))) return [{ sets: MYO_MINI_SETS, reps: n(m[2]) }];
+  // "8 reps @ 8 RPE (74%)" and then "3 sets": the line before, 3 times.
+  if ((m = /^(\d+) sets?$/i.exec(text))) return [{ setsOfPrevious: n(m[1]) }];
   // 12 Week Strength's week 13 maxes: "1 @ 8 (93%)", "1 @ 9 (96%)", "1 @ 10 (100%)"
   if ((m = /^(\d+) @ (\d+(?:\.\d+)?)(?: \([^)]*\))?$/.exec(text))) {
     return [{ sets: 1, reps: n(m[1]), rpe: n(m[2]) }];
@@ -82,10 +96,13 @@ const format = (group) => {
   return text;
 };
 
-/** A prescription as a scheme; "None" (the slot has nothing that week) is "". */
+// A slot with nothing that week: "None", or "N/A" (4-Day Hypertrophy's week 8).
+const isNothing = (text) => /^(none|n\/a)$/i.test(text.trim());
+
+/** A prescription as a scheme; a slot with nothing that week is "". */
 function schemeOf(prescription) {
   const text = prescription.replace(/\r/g, "").trim();
-  if (text === "" || /^none$/i.test(text)) return "";
+  if (text === "" || isNothing(text)) return "";
   // Bullets ("•") start lines; a bullet's text may go on over a line break.
   const lines = text.includes("•") ? text.split("•") : text.split("\n");
   // Alike groups in a row are one ("1x8 rpe8" and "2x8 rpe8" are "3x8 rpe8"), as the editor
@@ -93,6 +110,11 @@ function schemeOf(prescription) {
   const groups = [];
   for (const group of lines.flatMap(groupsOf)) {
     const last = groups.at(-1);
+    if (group.setsOfPrevious !== undefined) {
+      if (last?.sets !== 1) throw new Error(`"${group.setsOfPrevious} sets" with no set before it`);
+      last.sets = group.setsOfPrevious;
+      continue;
+    }
     const alike =
       last && ["reps", "rpe", "percent", "backoff"].every((field) => last[field] === group[field]);
     if (alike) last.sets += group.sets;
@@ -101,18 +123,28 @@ function schemeOf(prescription) {
   return groups.map(format).join(", ");
 }
 
-// The same lift written another way gets one name, the one 12 Week Strength (imported first) has,
-// so its e1RM (looked up by the exact name) is found across weeks and programs.
+// The same lift written another way gets one name, the one a program imported earlier has (12 Week
+// Strength, then Bridge 3.0), so its e1RM (looked up by the exact name) is found across weeks and
+// programs. Also a typo or two in the sheets.
 const SAME_LIFT = {
   "Squat with Belt": "Squat with belt",
   "Squat w/ belt": "Squat with belt",
   "Deadlift w/ belt": "Deadlift with belt",
   "Deadlift with Belt": "Deadlift with belt",
   "Touch n Go bench": "Touch and Go Bench",
+  "Press with belt": "Overhead Press with belt",
+  "Bench with 1-Sec Pause": "1 count paused bench",
+  "2ct paused bench": "2ct paused Bench",
+  "2 count paused squat": "2ct paused squat",
+  "2 count paused deadlift": "2ct Paused DL",
+  "Close grip bench press": "Close Grip Bench",
+  "2ct paused belt squat, 2ct paused leg press or split squat (reps per each leg)":
+    "2ct paused belt squat, 2ct paused leg press, or split squat (reps per each leg)",
+  "DB Flat bench or Feet up bench (if no DB's_": "DB Flat bench or Feet up bench (if no DB's)",
 };
 // A name as the sheet has it on its first line, without the footnote "1" some carry.
 const nameOf = (raw) => {
-  const name = raw.split(/\r?\n/)[0].trim().replace(/ 1$/, "");
+  const name = raw.split(/\r?\n/)[0].replace(/\s+/g, " ").trim().replace(/ 1$/, "");
   return SAME_LIFT[name] ?? name;
 };
 
@@ -126,7 +158,7 @@ const days = names
       for (let week = 0; week < WEEKS; week += 1) {
         const name = nameOf(dayNames[week][slot]);
         const scheme = schemeOf(weeks[week].slots[slotIndex]);
-        if (!name || /^none$/i.test(name) || scheme === "") continue;
+        if (!name || isNothing(name) || scheme === "") continue;
         if (!byName.has(name)) byName.set(name, Array(WEEKS).fill(""));
         byName.get(name)[week] = scheme;
       }
