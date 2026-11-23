@@ -1,4 +1,4 @@
-# Nastavak: što je ostalo (22. 11. 2026.)
+# Nastavak: što je ostalo (23. 11. 2026.)
 
 Bilješka za nastavak rada na drugom računalu. Sve je na grani `roadmap` i pushano je. Grana nije
 spojena u `main` i nema PR-a: https://github.com/IvanVukosav/ironlog/pull/new/roadmap
@@ -29,40 +29,46 @@ npm run dev                 # aplikacija na :5173
   podatke, na poslu u Postavkama otvori „Backup i izvoz” i kod „Backup (JSON)” klikni Preuzmi.
   Kod kuće tu datoteku vrati s „Vrati iz backupa”. Vraćanje **zamjenjuje sve** podatke kod kuće.
 
-## 1. Uvoz programa (u tijeku)
+## 1. Uvoz programa
 
-**Uvezeni:** 12 Week Strength i Bridge 3.0, samo u bazu na poslovnom računalu. Kod kuće ih
-ponovno uvezi iz tablica, po minutu po programu. Može i backupom, kako piše gore. Upute su u
+**Uvezeno je svih 12 dogovorenih programa** (RTS, Calgary Barbell, BBM, Bridge, TSA), ali samo u
+bazu na poslovnom računalu. Kod kuće ih ponovno uvezi skriptama, po minutu po programu, ili
+backupom, kako piše gore. Upute su u
 [tools/program-import/README.md](../tools/program-import/README.md).
 
-**Ostale tablice, po rasporedu:**
+| Program                        | Datoteka                                                   | Skripta                |
+| ------------------------------ | ---------------------------------------------------------- | ---------------------- |
+| 12 Week Strength               | 12 Week Strength - Kilos.xlsx (`sheet22.xml`, 13 tjedana)  | `convert-skeleton`     |
+| Bridge 3.0                     | Bridge 3.0 - Kilos.xlsx (`sheet17.xml`, 8)                 | `convert-skeleton`     |
+| 4-Day Hypertrophy              | BBM legacy \ 4-Day Hypertrophy - Kilos.xlsx (`sheet17.xml`, 7) | `convert-skeleton` |
+| HLM 2.0                        | BBM - HLM-V2.0.xlsx                                        | `convert-bbm-program`  |
+| 12 Week Press                  | BBM legacy \ 12wk Press v2.xlsx                            | `convert-bbm-program`  |
+| Calgary Barbell 16 Week        | Calgary Barbell 16 week \ 16 Week Complete Program.xlsx    | `convert-calgary`      |
+| TSA 9 Week Intermediate        | TSA 9 Week Intermediate Program.xlsx                       | `convert-tsa`          |
+| RTS Intermediate 9 Week        | RTS \ RTS ,Mike T,generilized intermidiate….docx           | `convert-rts`          |
+| RTS 10 Week Cycle              | RTS \ Rts 10 Weeks Cycle.pdf                               | `convert-rts-text`     |
+| Project Momentum 2016          | RTS \ Project Momentum 2016.docx                           | `convert-rts-text`     |
+| Project Momentum 2017 Cycle 1 i 2 | RTS \ Project Momentum 2017.pdf (ciklus 1, pa 2)        | `convert-rts-text`     |
 
-- **Isti list PROGRAMMING SKELETON kao Bridge 3.0.** Za njih bi `convert-skeleton.mjs` trebao
-  raditi, uz pokoji novi uzorak teksta. Prvo provjeri retke: ovi predlošci imaju i list EXERCISE
-  SELECTION, pa nazivi možda nisu u retcima 118, 173, 228 i 282.
-  - BBM legacy: 4-Day Hypertrophy (8 tjedana; list je vidljiv)
-  - Digital training templates (list je skriven):
-    - Strength I, Strength II, Strength III i Strengthlifting II, po 13 tjedana
-    - Hypertrophy I, Hypertrophy II, Powerbuilding II i General S&C, po 16 tjedana
-    - Time Crunch I, 8 tjedana
-    - Beginner Template, 32 tjedna u 3 faze; svaka faza ima svoj izbor vježbi
-- **Drugi BBM predložak**, sa skrivenim listovima PROGRAM, SCHEDULE, TABLES i LISTS. Treba nova
-  skripta za izvlačenje.
-  - BBM 12 Week Strength Finished v2 (13 tjedana). Možda je isti program kao već uvezeni 12 Week
-    Strength, pa ih prvo usporedi.
-  - BBM HLM v2.0 (8 tjedana)
-  - 12wk Press v2 (12 tjedana i MEET WEEK)
-- **Vlastiti raspored**, pa svaka treba svoju skriptu:
-  - Calgary Barbell 16 week: listovi Weeks 1-4, 5-8, 9-11, 12-15 i Taper Week
-  - TSA 9 Week Intermediate: cijeli program je na listu TRAINING
-  - Intermediate Strength (Brazos Valley Barbell): listovi Week 1–8, deload u 4. i 8. tjednu
-  - Barbell Medicine Bridge v2.0: starija verzija Bridgea. Bridge 3.0 je već uvezen, pa ovu
-    vjerojatno preskoči.
-- **RTS:** postoje samo docx i pdf (Project Momentum 2016 i 2017, generalized intermediate
-  9 week i 10 weeks cycle). Program treba izvući iz teksta.
+**Nije uvezeno:**
 
-Za uvoz su dogovoreni RTS, Calgary Barbell, BBM, Bridge i TSA. Za Digital training templates
-treba odlučiti hoće li se i oni uvoziti.
+- BBM 12 Week Strength Finished v2 je isti program kao 12 Week Strength, ali s nepopunjenim
+  nazivima iz predloška („sb 1 week 1”).
+- Barbell Medicine Bridge v2.0 je starija verzija Bridgea, iz mape legacy programa.
+- Još nije odlučeno uvoze li se Digital training templates (10 BBM tablica s istim listom
+  PROGRAMMING SKELETON) i Intermediate Strength (Brazos Valley Barbell).
+
+**Što treba znati o uvezenima:**
+
+- Kod varijacija u Calgaryjevim tjednima 1-4 i kod TSA-ovog pauziranog mrtvog dizanja postotak
+  se u izvorniku računa od maksimuma natjecateljskog lifta. Iron Log ga računa od e1RM-a te iste
+  vježbe, pa će „≈ kg” biti preniska kad ta vježba dobije svoj e1RM. Rješenje bi bila mogućnost
+  da vježba u programu uzima e1RM drugog lifta.
+- Mini setovi myo-repova nemaju kilažu. Upisuje se na dan, ista kao kod aktivacijskog seta.
+- RTS-ovi load drop i repeat setovi nemaju zadan broj, pa su planirani s rezervom. Kad je dosta,
+  staneš, a neodrađeni se brišu na Završi.
+- Izostavljeno je samo ono što se ne može zapisati kao setovi: RTS-ova zagrijavanja bez kilaže,
+  „55%x__ @8 for NL=30”, Ab Wheel „One set @9, then half the reps”, GPP i tempo.
 
 ## 2. Aplikacija na internetu (nije odobreno, košta)
 
