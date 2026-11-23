@@ -25,7 +25,7 @@ export function columnLetters(number) {
   return letters;
 }
 
-/** The workbook in `folder`: { sheets: [{ name, file }], cells(sheetName) }. */
+/** The workbook in `folder`: { sheets: [{ name, file }], cells, formulas, source }. */
 export function openWorkbook(folder) {
   const read = (path) => readFileSync(join(folder, path), "utf8");
   const targets = Object.fromEntries(
@@ -44,22 +44,48 @@ export function openWorkbook(folder) {
       )
     : [];
 
-  /** A sheet's non-empty cell values as text, by reference: { B7: "Competition Squat", … }. */
-  function cells(sheetName) {
+  // Each sheet read once: its values (as last worked out) and formulas, by reference.
+  const parsed = new Map();
+  function parse(sheetName) {
+    if (parsed.has(sheetName)) return parsed.get(sheetName);
     const sheet = sheets.find((s) => s.name === sheetName);
     if (!sheet) throw new Error(`no sheet "${sheetName}"`);
     const values = {};
+    const formulas = {};
     const xml = read(sheet.file);
     for (const cell of xml.matchAll(/<c r="([A-Z]+\d+)"([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g)) {
       const [, ref, attrs, inner = ""] = cell;
       const type = /t="([^"]+)"/.exec(attrs)?.[1];
       const raw = /<v>([\s\S]*?)<\/v>/.exec(inner)?.[1];
       const inline = /<is>[\s\S]*?<t[^>]*>([\s\S]*?)<\/t>/.exec(inner)?.[1];
+      const formula = /<f[^>]*>([\s\S]*?)<\/f>/.exec(inner)?.[1];
       const value = raw === undefined ? inline : type === "s" ? shared[Number(raw)] : decode(raw);
       if (value !== undefined && value.trim() !== "") values[ref] = value;
+      if (formula) formulas[ref] = decode(formula);
     }
-    return values;
+    const result = { values, formulas };
+    parsed.set(sheetName, result);
+    return result;
   }
 
-  return { sheets, cells };
+  /** A sheet's non-empty cell values as text, by reference: { B7: "Competition Squat", … }. */
+  const cells = (sheetName) => parse(sheetName).values;
+  /** A sheet's formulas (without "="), by reference: { E25: "PROGRAM!K12", … }. */
+  const formulas = (sheetName) => parse(sheetName).formulas;
+
+  /**
+   * A cell's value from where it comes from: a formula that only points at another cell
+   * ("PROGRAM!K12", "'WEEK 1'!$B$3") is followed to that cell, since a saved workbook's worked-out
+   * values can be out of date. Any other formula's value is taken as saved.
+   */
+  function source(sheetName, ref, depth = 0) {
+    const formula = formulas(sheetName)[ref]?.trim();
+    const pointer = formula && /^(?:'([^']+)'|([^'!]+))!\$?([A-Z]+)\$?(\d+)$/.exec(formula);
+    if (pointer && depth < 10) {
+      return source(pointer[1] ?? pointer[2], pointer[3] + pointer[4], depth + 1);
+    }
+    return cells(sheetName)[ref] ?? "";
+  }
+
+  return { sheets, cells, formulas, source };
 }
