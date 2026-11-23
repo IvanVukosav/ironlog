@@ -402,7 +402,6 @@
     "defaultMeal": "Other",
     "dayTotal": "Total",
     "noEntries": "Nothing logged for this day yet.",
-    "quickAddPlaceholder": "Add a food item by name",
     "mealNamePlaceholder": "Meal name",
     "addMeal": "Add meal",
     "mealOptions": "Options for {{name}}",

@@ -15,7 +15,8 @@ import {
   withoutMeal,
 } from "../utils/nutritionState";
 
-// Where a food added by name alone goes.
+// The meal that Prehrana's old field for a food by name filled. Days logged with it still have
+// one, shown in the page's language.
 export const DEFAULT_MEAL_NAME = "Ostalo";
 const NOTHING_TO_COPY = "Nothing to copy from that day";
 
@@ -174,9 +175,6 @@ export function useNutritionDay(date) {
       ),
     deleteItem: (itemId) =>
       save(remove(`/api/nutrition/items/${itemId}`), (current) => withoutItem(current, itemId)),
-
-    // A food picked by name goes into the "Ostalo" meal, which is made when it isn't there.
-    quickAdd: (food) => addItemToMeal({ id: null, name: DEFAULT_MEAL_NAME }, food),
 
     copyPreviousDay: () => copyFrom(dayBeforeKey(date)),
 

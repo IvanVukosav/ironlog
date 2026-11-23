@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { fetchJson } from "../api";
 import DatePicker from "../components/DatePicker";
@@ -22,7 +22,6 @@ import { formatNumber } from "../utils/numbers";
 import { sumMacros } from "../utils/nutritionState";
 import styles from "./Nutrition.module.css";
 
-const RECENT_ITEMS_LIMIT = 8;
 // One-tap foods in a meal, and how many foods its name field searches besides the favourites.
 const MEAL_CHIPS_LIMIT = 6;
 const MEAL_SEARCH_LIMIT = 30;
@@ -77,9 +76,6 @@ function Nutrition() {
   // The card open for adding food, for one date: none chosen follows the first empty meal, and
   // anything done in a card keeps that one open, so it doesn't jump on once the meal has food.
   const [openCard, setOpenCard] = useState({ date: null, key: null });
-  const [quickAddName, setQuickAddName] = useState("");
-  const [showQuickPicker, setShowQuickPicker] = useState(false);
-  const quickAddRef = useRef(null);
 
   useEffect(() => {
     fetchJson("/api/food-item-templates").then(setFoodItemTemplates).catch(reportError);
@@ -103,27 +99,9 @@ function Nutrition() {
     };
   }, [date, reportError]);
 
-  useEffect(() => {
-    if (!showQuickPicker) return undefined;
-    const handleClickOutside = (event) => {
-      if (quickAddRef.current && !quickAddRef.current.contains(event.target)) {
-        setShowQuickPicker(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [showQuickPicker]);
-
   const addMeal = async () => {
     const name = mealName.trim();
     if (name && (await actions.addMeal(name))) setMealName("");
-  };
-
-  const quickAdd = async (food) => {
-    if (await actions.quickAdd(food)) {
-      setQuickAddName("");
-      setShowQuickPicker(false);
-    }
   };
 
   const saveFoodItemTemplate = (food) => {
@@ -143,14 +121,6 @@ function Nutrition() {
       .then(() => setFoodItemTemplates((prev) => prev.filter((other) => other.id !== template.id)))
       .catch(reportError);
   };
-
-  const quickAddQuery = quickAddName.trim().toLowerCase();
-  const filteredQuickTemplates = quickAddQuery
-    ? foodItemTemplates.filter((template) => template.name.toLowerCase().includes(quickAddQuery))
-    : foodItemTemplates;
-  const filteredRecentItems = recentItems
-    .slice(0, RECENT_ITEMS_LIMIT)
-    .filter((item) => item.name.toLowerCase().includes(quickAddQuery));
 
   const meals = day?.meals ?? [];
   // Until the earlier days of this date have come, only the day's own meals are shown.
@@ -217,59 +187,6 @@ function Nutrition() {
       )}
 
       <div className={styles.addRow}>
-        <div className={styles.quickAdd} ref={quickAddRef}>
-          <input
-            type="text"
-            className={styles.searchInput}
-            aria-label={t("nutrition.quickAddPlaceholder")}
-            placeholder={t("nutrition.quickAddPlaceholder")}
-            autoComplete="off"
-            value={quickAddName}
-            onChange={(event) => {
-              setQuickAddName(event.target.value);
-              setShowQuickPicker(true);
-            }}
-            onFocus={() => setShowQuickPicker(true)}
-            onKeyDown={(event) => {
-              if (event.key === "Escape") setShowQuickPicker(false);
-            }}
-          />
-          {showQuickPicker &&
-            (filteredQuickTemplates.length > 0 || filteredRecentItems.length > 0) && (
-              <div className={styles.picker}>
-                {filteredRecentItems.length > 0 && (
-                  <>
-                    <div className={styles.pickerSection}>{t("nutrition.recentItems")}</div>
-                    {filteredRecentItems.map((item) => (
-                      <button
-                        type="button"
-                        key={`recent-${item.name}`}
-                        className={styles.pickerOption}
-                        onClick={() => quickAdd(item)}
-                      >
-                        {item.name}
-                        <span className={styles.pickerKcal}>{`${kcal(item.kcal)} kcal`}</span>
-                      </button>
-                    ))}
-                  </>
-                )}
-                {filteredQuickTemplates.length > 0 && filteredRecentItems.length > 0 && (
-                  <div className={styles.pickerSection}>{t("nutrition.savedItems")}</div>
-                )}
-                {filteredQuickTemplates.map((template) => (
-                  <button
-                    type="button"
-                    key={template.id}
-                    className={styles.pickerOption}
-                    onClick={() => quickAdd(template)}
-                  >
-                    {template.name}
-                    <span className={styles.pickerKcal}>{`${kcal(template.kcal)} kcal`}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-        </div>
         <form
           className={styles.addMeal}
           onSubmit={(event) => {

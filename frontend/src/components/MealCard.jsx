@@ -190,7 +190,7 @@ function MealCard({
   const pickerRef = useRef(null);
   const menuRef = useRef(null);
   const nameInputRef = useRef(null);
-  // The meal the app makes for food added by name is saved as "Ostalo"; it is shown in the
+  // The meal the app once made for food added by name is saved as "Ostalo"; it is shown in the
   // page's language. Meals named by hand are shown as named.
   const mealName = meal.name === DEFAULT_MEAL_NAME ? t("nutrition.defaultMeal") : meal.name;
 

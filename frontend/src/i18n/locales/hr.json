@@ -410,7 +410,6 @@
     "defaultMeal": "Ostalo",
     "dayTotal": "Ukupno",
     "noEntries": "Za ovaj dan još nema unosa.",
-    "quickAddPlaceholder": "Dodaj namirnicu po nazivu",
     "mealNamePlaceholder": "Ime obroka",
     "addMeal": "Dodaj obrok",
     "mealOptions": "Opcije za {{name}}",
