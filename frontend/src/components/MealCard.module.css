@@ -450,6 +450,34 @@
   font-weight: 600;
 }
 
+/* The food's name, and beside it the barcode scanner. */
+.nameRow {
+  display: flex;
+  gap: 8px;
+}
+
+.nameRow .nameInput {
+  flex: 1;
+  min-width: 0;
+}
+
+.scanButton {
+  composes: input from "../styles/shared.module.css";
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.scanButton:hover {
+  color: var(--color-accent);
+}
+
 .macroFields {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

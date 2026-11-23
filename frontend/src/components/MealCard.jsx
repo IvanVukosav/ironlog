@@ -5,6 +5,7 @@ import { dateKeyOf, dayBeforeKey, formatShortDate, todayKey } from "../utils/dat
 import { foodsMatching, nameKey } from "../utils/mealSuggestions";
 import { formatNumber, toInputText } from "../utils/numbers";
 import { sumMacros } from "../utils/nutritionState";
+import BarcodeScanner from "./BarcodeScanner";
 import Icon from "./Icon";
 import styles from "./MealCard.module.css";
 
@@ -185,8 +186,10 @@ function MealCard({
   const [editingItemId, setEditingItemId] = useState(null);
   const [editFood, setEditFood] = useState(EMPTY_FOOD);
   const [isEditingFavourites, setIsEditingFavourites] = useState(false);
+  const [isScanning, setIsScanning] = useState(false);
   const pickerRef = useRef(null);
   const menuRef = useRef(null);
+  const nameInputRef = useRef(null);
   // The meal the app makes for food added by name is saved as "Ostalo"; it is shown in the
   // page's language. Meals named by hand are shown as named.
   const mealName = meal.name === DEFAULT_MEAL_NAME ? t("nutrition.defaultMeal") : meal.name;
@@ -402,21 +405,36 @@ function MealCard({
             <label className={styles.fieldLabel} htmlFor={`${nameId}add`}>
               {t("nutrition.foodLabel")}
             </label>
-            <input
-              id={`${nameId}add`}
-              className={`${styles.fieldInput} ${styles.nameInput}`}
-              placeholder={t("nutrition.foodNamePlaceholder")}
-              autoComplete="off"
-              value={food.name}
-              onChange={(event) => {
-                setFood({ ...food, name: event.target.value });
-                setShowPicker(true);
-              }}
-              onFocus={() => setShowPicker(true)}
-              onKeyDown={(event) => {
-                if (event.key === "Escape") setShowPicker(false);
-              }}
-            />
+            <div className={styles.nameRow}>
+              <input
+                ref={nameInputRef}
+                id={`${nameId}add`}
+                className={`${styles.fieldInput} ${styles.nameInput}`}
+                placeholder={t("nutrition.foodNamePlaceholder")}
+                autoComplete="off"
+                value={food.name}
+                onChange={(event) => {
+                  setFood({ ...food, name: event.target.value });
+                  setShowPicker(true);
+                }}
+                onFocus={() => setShowPicker(true)}
+                onKeyDown={(event) => {
+                  if (event.key === "Escape") setShowPicker(false);
+                }}
+              />
+              <button
+                type="button"
+                className={styles.scanButton}
+                aria-label={t("scanner.open")}
+                title={t("scanner.open")}
+                onClick={() => {
+                  setShowPicker(false);
+                  setIsScanning(true);
+                }}
+              >
+                <Icon name="barcode" size={22} />
+              </button>
+            </div>
             {showPicker && hasPicks && (
               <div className={styles.picker}>
                 {pickerRecent.length > 0 && (
@@ -506,6 +524,21 @@ function MealCard({
             }
           />
         </div>
+      )}
+
+      {isScanning && (
+        <BarcodeScanner
+          mealName={mealName}
+          onClose={() => setIsScanning(false)}
+          onAdd={addChosenFood}
+          onTypeFood={() => {
+            setIsScanning(false);
+            // After the scanner has given focus back to its button.
+            requestAnimationFrame(() => nameInputRef.current?.focus());
+          }}
+          isFavourite={isFavourite}
+          onSaveFavourite={onSaveFavourite}
+        />
       )}
     </section>
   );

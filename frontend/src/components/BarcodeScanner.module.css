@@ -1,0 +1,518 @@
+/* Over the tab bar (95) and the rest timer (90), under the toasts (100), like a sheet. The
+   camera's screen is dark in every theme, the way a camera is; what was found comes up from the
+   bottom in the theme's own card. */
+.overlay {
+  --scanner-bg: #050607;
+  --scanner-surface: #181b21;
+  --scanner-line: #2e333c;
+  --scanner-text: #f3f4f6;
+  --scanner-dim: #a1a7b3;
+  --scanner-accent: #5b9bff;
+
+  position: fixed;
+  inset: 0;
+  z-index: 98;
+  display: flex;
+  background: rgba(0, 0, 0, 0.6);
+  font-family: var(--font-body);
+}
+
+.dialog {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--scanner-bg);
+  color: var(--scanner-text);
+}
+
+.screen {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: calc(12px + env(safe-area-inset-top)) 12px 8px;
+}
+
+.roundButton {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--scanner-text);
+  cursor: pointer;
+}
+
+.roundButton[aria-pressed="true"] {
+  background: var(--scanner-text);
+  color: var(--scanner-bg);
+}
+
+.roundSpacer {
+  flex: none;
+  width: 44px;
+  height: 44px;
+}
+
+.title {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.meal {
+  align-self: center;
+  margin-top: 4px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.middle {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 16px 24px;
+}
+
+/* The camera's picture in a frame with accent corners, and a line while it reads. */
+.viewfinder {
+  position: relative;
+  width: min(100%, 320px);
+  aspect-ratio: 16 / 10;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #1a1d22;
+}
+
+.viewfinder[hidden] {
+  display: none;
+}
+
+.video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.frame {
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  pointer-events: none;
+  --corner: linear-gradient(var(--scanner-accent), var(--scanner-accent));
+  background:
+    var(--corner) top left / 34px 4px no-repeat,
+    var(--corner) top left / 4px 34px no-repeat,
+    var(--corner) top right / 34px 4px no-repeat,
+    var(--corner) top right / 4px 34px no-repeat,
+    var(--corner) bottom left / 34px 4px no-repeat,
+    var(--corner) bottom left / 4px 34px no-repeat,
+    var(--corner) bottom right / 34px 4px no-repeat,
+    var(--corner) bottom right / 4px 34px no-repeat;
+}
+
+.scanLine {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  top: 50%;
+  height: 2px;
+  border-radius: 1px;
+  background: #ff5a4f;
+  box-shadow: 0 0 10px rgba(255, 90, 79, 0.8);
+  animation: sweep 2.4s ease-in-out infinite alternate;
+}
+
+@keyframes sweep {
+  from {
+    transform: translateY(-48px);
+  }
+  to {
+    transform: translateY(48px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scanLine {
+    animation: none;
+  }
+}
+
+.hint {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  max-width: 320px;
+  text-align: center;
+}
+
+.hintTitle {
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.hintText {
+  color: var(--scanner-dim);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+/* No camera to read with: why, over the field for the barcode's digits. */
+.cameraNote {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  max-width: 300px;
+  color: var(--scanner-dim);
+  font-size: 0.9rem;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 20px calc(24px + env(safe-area-inset-bottom));
+}
+
+.typeButton {
+  min-height: 48px;
+  border: 1px solid var(--scanner-line);
+  border-radius: 12px;
+  background: var(--scanner-surface);
+  color: var(--scanner-text);
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.linkButton {
+  min-height: 44px;
+  border: none;
+  background: transparent;
+  color: var(--scanner-accent);
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.typed {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.typedLabel {
+  color: var(--scanner-dim);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.typedRow {
+  display: flex;
+  gap: 8px;
+}
+
+/* 16px text, so a phone doesn't zoom in on the field. */
+.typedInput {
+  flex: 1;
+  min-width: 0;
+  height: 48px;
+  padding: 0 12px;
+  border: 1px solid var(--scanner-line);
+  border-radius: 10px;
+  outline: none;
+  background: var(--scanner-surface);
+  color: var(--scanner-text);
+  font-family: inherit;
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+
+.typedInput:focus {
+  border-color: var(--scanner-accent);
+}
+
+.typedInput::placeholder {
+  color: #7c8391;
+  letter-spacing: 0;
+}
+
+.typedButton {
+  flex: none;
+  min-width: 80px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 10px;
+  background: var(--scanner-accent);
+  color: var(--scanner-bg);
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.typedButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.typedProblem {
+  color: #ff8a80;
+  font-size: 0.8rem;
+}
+
+/* What the barcode found, up from the bottom in the theme's card. */
+.result {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-height: 88%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 10px 20px calc(24px + env(safe-area-inset-bottom));
+  border-radius: 24px 24px 0 0;
+  background: var(--color-bg-card);
+  box-shadow: var(--elevation-dropdown);
+  color: var(--color-text);
+}
+
+.grabber {
+  align-self: center;
+  flex: none;
+  width: 40px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--color-border);
+}
+
+.looking {
+  padding: 16px 0 24px;
+  color: var(--color-text-dim);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.resultHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.badgeFound,
+.badgeMissing {
+  align-self: flex-start;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.badgeFound {
+  background: color-mix(in srgb, var(--color-success) 14%, transparent);
+  color: var(--color-success);
+}
+
+.badgeMissing {
+  background: color-mix(in srgb, var(--color-streak) 14%, transparent);
+  color: var(--color-streak);
+}
+
+.resultTitle {
+  margin-top: 6px;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+
+.resultDetail {
+  color: var(--color-text-dim);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.choice {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.choice[aria-pressed="true"] {
+  border-color: var(--color-accent);
+  background: rgba(var(--color-accent-rgb), 0.14);
+  color: var(--color-accent);
+}
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 10px;
+  border-radius: 12px;
+  background: var(--row-bg);
+}
+
+.tileLabel {
+  color: var(--color-text-dim);
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.tileValue {
+  font-size: 1.05rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.resultActions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.primary {
+  composes: button from "../styles/shared.module.css";
+  min-height: 48px;
+  font-size: 0.95rem;
+}
+
+.secondary {
+  composes: button buttonSecondary from "../styles/shared.module.css";
+  min-height: 48px;
+  font-size: 0.95rem;
+}
+
+/* A product typed from its package: a name, the values per 100 g, the package's size. */
+.newProduct {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.groupLabel {
+  margin-bottom: -4px;
+  color: var(--color-text);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.fieldLabel {
+  overflow: hidden;
+  color: var(--color-text-dim);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fieldInput {
+  composes: input from "../styles/shared.module.css";
+  width: 100%;
+  height: 44px;
+  padding-top: 0;
+  padding-bottom: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.macroFields {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.macroFields .fieldInput {
+  font-weight: 700;
+  text-align: center;
+}
+
+@media (max-width: 480px) {
+  .macroFields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.problem {
+  color: var(--color-streak);
+  font-size: 0.8rem;
+}
+
+/* Wider screens: the scanner is a phone-sized window in the middle. */
+@media (min-width: 641px) {
+  .overlay {
+    align-items: center;
+    justify-content: center;
+  }
+
+  .dialog {
+    flex: none;
+    width: min(420px, calc(100vw - 48px));
+    height: min(780px, calc(100dvh - 48px));
+    border-radius: 20px;
+    box-shadow: var(--elevation-dropdown);
+  }
+
+  .result {
+    border-radius: 20px 20px 0 0;
+  }
+}
