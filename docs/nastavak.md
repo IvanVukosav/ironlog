@@ -1,7 +1,7 @@
 # Nastavak: što je ostalo (23. 11. 2026.)
 
-Bilješka za nastavak rada na drugom računalu. Sve je na grani `roadmap` i pushano je. Grana nije
-spojena u `main` i nema PR-a: https://github.com/IvanVukosav/ironlog/pull/new/roadmap
+Bilješka za nastavak rada na drugom računalu. Sve je na grani `roadmap`. Grana nije spojena u
+`main` i nema PR-a: https://github.com/IvanVukosav/ironlog/pull/new/roadmap
 
 ## Pokretanje kod kuće
 
@@ -12,7 +12,7 @@ git pull
 
 cd backend
 npm install
-npx prisma migrate deploy   # nove migracije; zadnja je backoff_sets
+npx prisma migrate deploy   # nove migracije; zadnja je food_products
 npm start                   # API na :3001
 
 # u drugom terminalu
@@ -22,9 +22,9 @@ npm run dev                 # aplikacija na :5173
 ```
 
 - **Ne pokreći `npx prisma format`.** Prepisao bi cijeli ručno poravnati `schema.prisma`.
-- **Testovi:** `npm test` u `frontend` (212 unit testova, Vitest) i `npm test` u `backend` (25).
-- **E2E provjere** (34 provjere u headless Chromeu) postoje samo na poslovnom računalu, u
-  privremenoj mapi. Nisu u repou.
+- **Testovi:** `npm test` u `frontend` (237 unit testova, Vitest) i `npm test` u `backend` (35).
+- **E2E provjere** (38 skupina u headless Chromeu, s brzim unosom i skenerom) postoje samo na
+  poslovnom računalu, u privremenoj mapi. Nisu u repou.
 - **Podaci s posla.** Baza (`backend/prisma/dev.db`) nije u gitu. Da bi kod kuće imao iste
   podatke, na poslu u Postavkama otvori „Backup i izvoz” i kod „Backup (JSON)” klikni Preuzmi.
   Kod kuće tu datoteku vrati s „Vrati iz backupa”. Vraćanje **zamjenjuje sve** podatke kod kuće.
@@ -70,7 +70,25 @@ backupom, kako piše gore. Upute su u
 - Izostavljeno je samo ono što se ne može zapisati kao setovi: RTS-ova zagrijavanja bez kilaže,
   „55%x__ @8 for NL=30”, Ab Wheel „One set @9, then half the reps”, GPP i tempo.
 
-## 2. Aplikacija na internetu (nije odobreno, košta)
+## 2. Prehrana: brži unos i skener barkoda (23. 11.)
+
+Napravljeno po mockupu Brzi unos, Skener i Proizvod:
+
+- Novi dan sam ponudi obroke iz zadnjeg dana, prazne. Prazan obrok nudi „Kao jučer” (ili „Kao
+  zadnji put”) i Kopiraj. Otvoren je jedan obrok, s gumbima Nedavno i Omiljeno.
+- Gumb s barkodom pokraj polja Namirnica otvara skener. Proizvod dolazi iz Open Food Facts preko
+  backenda i pamti se u tablici `FoodProduct`. Proizvod kojeg nema upišeš jednom.
+
+Što treba znati:
+
+- **Kamera** čita barkod samo kad je stranica na https adresi (ili `localhost`) i u pregledniku
+  koji sam čita barkodove, a to je Chrome na Androidu. Na računalu (Chrome na Windowsima) i na
+  iPhoneu skener odmah nudi upis broja ispod barkoda.
+- Za kameru i na tim preglednicima trebao bi paket `zxing-wasm` (oko 1 MB, učitava se tek kad se
+  skener otvori). Instalacija nije odobrena, pa ga nema.
+- `OPEN_FOOD_FACTS_URL` na backendu služi samo testovima: usmjerava traženje na zamjenski server.
+
+## 3. Aplikacija na internetu (nije odobreno, košta)
 
 Prijedlog je bio:
 
@@ -89,7 +107,7 @@ Prije toga treba spojiti `roadmap` u `main`. Prije prvog deploya:
 - `frontend/vercel.json` pretpostavlja da je korijen Vercel projekta `frontend`.
 - Nakon deploya napravi backup (Postavke → Backup i izvoz).
 
-## 3. Sitni otvoreni nalazi
+## 4. Sitni otvoreni nalazi
 
 - Tailwind paketi se ne koriste, a root `package.json` je višak. README piše da aplikacija koristi
   Tailwind, Vercel i Railway, a ne koristi ih.
