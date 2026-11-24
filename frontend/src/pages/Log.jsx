@@ -28,7 +28,7 @@ import { DEFAULT_E1RM_FORMULA } from "../utils/oneRepMax";
 import { formatWeekdayDate, todayKey } from "../utils/dates";
 import { MUSCLE_GROUPS, muscleGroupLabel } from "../utils/muscleGroups";
 import { formatNumber } from "../utils/numbers";
-import { repeatChoices, repeatedExercises } from "../utils/repeatWorkout";
+import { repeatedExercises } from "../utils/repeatWorkout";
 import { withSetChanged } from "../utils/workoutState";
 import styles from "./Log.module.css";
 
@@ -58,7 +58,8 @@ function Log() {
   const [showProgramLoader, setShowProgramLoader] = useState(false);
   // "Ponovi trening": the past workouts it offers (not this one), whether their list is open, and
   // whether the one picked is being loaded.
-  const repeatable = repeatChoices(useTrainedWorkouts(), workout?.id ?? null);
+  const trained = useTrainedWorkouts();
+  const repeatable = trained.workouts.filter((past) => past.id !== workout?.id);
   const [showRepeat, setShowRepeat] = useState(false);
   const [isRepeating, setIsRepeating] = useState(false);
   const [showWorkoutMenu, setShowWorkoutMenu] = useState(false);
@@ -739,9 +740,12 @@ function Log() {
             {showRepeat && (
               <RepeatWorkoutSheet
                 workouts={repeatable}
+                hasMore={trained.hasMore}
+                isLoadingMore={trained.isLoadingMore}
                 isPlan={isLiveDay}
                 isBusy={isRepeating}
                 onPick={repeatHere}
+                onLoadMore={trained.loadMore}
                 onClose={() => setShowRepeat(false)}
               />
             )}

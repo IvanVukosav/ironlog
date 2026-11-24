@@ -632,6 +632,8 @@
     "workingSets_one": "{{count}} radni set",
     "workingSets_few": "{{count}} radna seta",
     "workingSets_other": "{{count}} radnih setova",
+    "showOlder": "Prikaži starije",
+    "loadingOlder": "Učitavam…",
     "repeatToday": "Ponovi danas"
   },
   "calendar": {

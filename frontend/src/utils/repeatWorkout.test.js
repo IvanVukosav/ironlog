@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { REPEAT_CHOICES, repeatChoices, repeatedExercises, workingSetCount } from "./repeatWorkout";
+import { repeatedExercises, workingSetCount } from "./repeatWorkout";
 
 const set = (values) => ({
   weight: 100,
@@ -111,21 +111,5 @@ describe("repeatedExercises", () => {
 describe("workingSetCount", () => {
   it("counts done sets that are neither warm-ups nor drop sets", () => {
     expect(workingSetCount(push)).toBe(3);
-  });
-});
-
-describe("repeatChoices", () => {
-  const trained = Array.from({ length: REPEAT_CHOICES + 1 }, (_, index) => ({ id: index + 1 }));
-
-  it("offers at most REPEAT_CHOICES workouts, newest first as they came", () => {
-    expect(repeatChoices(trained, null).map((workout) => workout.id)).toEqual(
-      Array.from({ length: REPEAT_CHOICES }, (_, index) => index + 1),
-    );
-  });
-
-  it("leaves out the workout being filled in", () => {
-    const ids = repeatChoices(trained, 2).map((workout) => workout.id);
-    expect(ids).not.toContain(2);
-    expect(ids).toHaveLength(REPEAT_CHOICES);
   });
 });

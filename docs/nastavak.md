@@ -22,7 +22,7 @@ npm run dev                 # aplikacija na :5173
 ```
 
 - **Ne pokreći `npx prisma format`.** Prepisao bi cijeli ručno poravnati `schema.prisma`.
-- **Testovi:** `npm test` u `frontend` (243 unit testa, Vitest) i `npm test` u `backend` (35).
+- **Testovi:** `npm test` u `frontend` (241 unit test, Vitest) i `npm test` u `backend` (35).
 - **E2E provjere** (24 skripte u headless Chromeu, 42 pokretanja na računalu i mobitelu)
   postoje samo na poslovnom računalu, u privremenoj mapi. Nisu u repou.
 - **Podaci s posla.** Baza (`backend/prisma/dev.db`) nije u gitu. Da bi kod kuće imao iste
@@ -93,12 +93,13 @@ Napravljeno po mockupu Brzi unos, Skener i Proizvod:
 Napravljeno po mockupu:
 
 - Gumb **Ponovi trening** stoji na Početnoj (uz Započni po programu i Svoj trening) i u
-  Treningu (uz Učitaj predložak i Učitaj program). Otvara popis zadnjih 10 odrađenih treninga.
-  Odabrani postaje plan za danas: iste vježbe, kilaže, ponavljanja, RPE, zagrijavanje, drop
-  setovi, supersetovi i naziv.
-- Prošli trening ima u izborniku ⋯ **Ponovi danas**, za treninge starije od zadnjih 10.
+  Treningu (uz Učitaj predložak i Učitaj program). Otvara popis svih odrađenih treninga,
+  najnoviji gore, po 20 odjednom (Prikaži starije učita sljedećih 20). Odabrani postaje plan
+  za danas: iste vježbe, kilaže, ponavljanja, RPE, zagrijavanje, drop setovi, supersetovi i
+  naziv.
+- Prošli trening ima u izborniku ⋯ **Ponovi danas**, pa se trening može ponoviti i iz Kalendara.
 - Ponovljeni trening nije dio programa, pa program ne ide dalje.
-- Popis dolazi s `GET /api/workouts/trained?limit=`. Migracije nema.
+- Popis dolazi s `GET /api/workouts/trained?limit=&after=`. Migracije nema.
 
 ## 4. Aplikacija na internetu (nije odobreno, košta)
 

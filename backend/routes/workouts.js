@@ -40,13 +40,16 @@ router.get("/", async (req, res) => {
   res.json(workouts);
 });
 
-// The latest trained workouts, newest first, each with only its done sets (and the exercises that
-// have any): what "Ponovi trening" offers to do again. `limit` is how many, at most MAX_TRAINED.
+// The trained workouts, newest first, each with only its done sets (and the exercises that have
+// any): what "Ponovi trening" offers to do again. `limit` is how many at a time, at most
+// MAX_TRAINED; `after` (a workout's id, the last one shown) answers the ones older than it.
 router.get("/trained", async (req, res) => {
   const limit = Math.min(parsePositiveInt(req.query.limit, "limit"), MAX_TRAINED);
+  const after = req.query.after === undefined ? null : parseId(req.query.after);
   const workouts = await prisma.workout.findMany({
     where: TRAINED_WORKOUT,
     take: limit,
+    ...(after ? { cursor: { id: after }, skip: 1 } : {}),
     orderBy: [{ date: "desc" }, { id: "desc" }],
     include: {
       exercises: {

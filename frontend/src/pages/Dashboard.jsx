@@ -13,7 +13,7 @@ import { DEFAULT_E1RM_FORMULA, findBestSetByE1rm } from "../utils/oneRepMax";
 import { addWeightTrend, weeklyTrendChange } from "../utils/weightTrend";
 import { dateKeyOf, formatDayMonth, formatWeekdayDate, todayKey } from "../utils/dates";
 import { formatNumber, formatSet, formatVolume } from "../utils/numbers";
-import { repeatChoices, repeatedExercises } from "../utils/repeatWorkout";
+import { repeatedExercises } from "../utils/repeatWorkout";
 import Icon from "../components/Icon";
 import MacroDonut from "../components/MacroDonut";
 import MuscleGroupVolumeChart from "../components/MuscleGroupVolumeChart";
@@ -135,7 +135,7 @@ function Dashboard() {
   // Asked for only once today turns out to have no workout yet.
   const nextDay = useNextProgramDay(formula, workout === null);
   // "Ponovi trening": the past workouts it offers, and whether their list is open.
-  const repeatable = repeatChoices(useTrainedWorkouts(), null);
+  const trained = useTrainedWorkouts();
   const [showRepeat, setShowRepeat] = useState(false);
 
   useEffect(() => {
@@ -403,14 +403,14 @@ function Dashboard() {
                     <Icon name="pencil" size={18} />
                     {t("dashboard.startOwnWorkout")}
                   </button>
-                  {repeatable.length > 0 && repeatButton}
+                  {trained.workouts.length > 0 && repeatButton}
                 </div>
               </>
             )}
             {workout === null && nextDay === null && (
               <>
                 <p className={styles.dim}>{t("dashboard.noWorkoutToday")}</p>
-                {repeatable.length > 0 ? (
+                {trained.workouts.length > 0 ? (
                   <div className={styles.startButtons}>
                     <button
                       type="button"
@@ -436,10 +436,13 @@ function Dashboard() {
             )}
             {showRepeat && (
               <RepeatWorkoutSheet
-                workouts={repeatable}
+                workouts={trained.workouts}
+                hasMore={trained.hasMore}
+                isLoadingMore={trained.isLoadingMore}
                 isPlan
                 isBusy={isStarting}
                 onPick={startRepeat}
+                onLoadMore={trained.loadMore}
                 onClose={() => setShowRepeat(false)}
               />
             )}

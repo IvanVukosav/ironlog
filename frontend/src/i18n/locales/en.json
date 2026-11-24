@@ -618,6 +618,8 @@
     "close": "Close the list of workouts",
     "workingSets_one": "{{count}} working set",
     "workingSets_other": "{{count}} working sets",
+    "showOlder": "Show older",
+    "loadingOlder": "Loading…",
     "repeatToday": "Repeat today"
   },
   "calendar": {

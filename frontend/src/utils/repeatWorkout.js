@@ -1,15 +1,7 @@
 // "Ponovi trening": a past workout started again as a plan.
 
-// How many past workouts the list offers.
-export const REPEAT_CHOICES = 10;
-
-/**
- * The past workouts to offer, newest first: the trained ones (from /api/workouts/trained, which
- * asks for one more than REPEAT_CHOICES) without the workout being filled in, `excludeId`.
- */
-export function repeatChoices(trained, excludeId) {
-  return trained.filter((workout) => workout.id !== excludeId).slice(0, REPEAT_CHOICES);
-}
+// How many past workouts the list loads at a time ("Prikaži starije" loads the next ones).
+export const REPEAT_PAGE = 20;
 
 /**
  * A workout's exercises as they are loaded again (the body of POST .../exercises/bulk): in the

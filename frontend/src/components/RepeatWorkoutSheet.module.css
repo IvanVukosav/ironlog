@@ -71,6 +71,12 @@
   font-weight: 600;
 }
 
+/* "Prikaži starije": the next older workouts, under the list. */
+.moreButton {
+  composes: button buttonSecondary from "../styles/shared.module.css";
+  min-height: 44px;
+}
+
 .detail {
   overflow: hidden;
   color: var(--color-text-dim);
