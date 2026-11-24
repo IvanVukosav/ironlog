@@ -4,6 +4,7 @@ import ExerciseCard from "../components/ExerciseCard";
 import DatePicker from "../components/DatePicker";
 import Icon from "../components/Icon";
 import ProgramLoader from "../components/ProgramLoader";
+import RepeatWorkoutSheet from "../components/RepeatWorkoutSheet";
 import WorkoutStatus from "../components/WorkoutStatus";
 import WorkoutSummary from "../components/WorkoutSummary";
 import { fetchJson } from "../api";
@@ -14,6 +15,7 @@ import { useDateParam } from "../hooks/useDateParam";
 import { useDragReorder } from "../hooks/useDragReorder";
 import { usePendingChanges } from "../hooks/useOutbox";
 import { useReportError } from "../hooks/useReportError";
+import { useTrainedWorkouts } from "../hooks/useTrainedWorkouts";
 import { useWorkout } from "../hooks/useWorkout";
 import {
   countSets,
@@ -26,6 +28,7 @@ import { DEFAULT_E1RM_FORMULA } from "../utils/oneRepMax";
 import { formatWeekdayDate, todayKey } from "../utils/dates";
 import { MUSCLE_GROUPS, muscleGroupLabel } from "../utils/muscleGroups";
 import { formatNumber } from "../utils/numbers";
+import { repeatChoices, repeatedExercises } from "../utils/repeatWorkout";
 import { withSetChanged } from "../utils/workoutState";
 import styles from "./Log.module.css";
 
@@ -53,6 +56,11 @@ function Log() {
   const [saveTemplateName, setSaveTemplateName] = useState(null);
   const [programs, setPrograms] = useState([]);
   const [showProgramLoader, setShowProgramLoader] = useState(false);
+  // "Ponovi trening": the past workouts it offers (not this one), whether their list is open, and
+  // whether the one picked is being loaded.
+  const repeatable = repeatChoices(useTrainedWorkouts(), workout?.id ?? null);
+  const [showRepeat, setShowRepeat] = useState(false);
+  const [isRepeating, setIsRepeating] = useState(false);
   const [showWorkoutMenu, setShowWorkoutMenu] = useState(false);
   // The workout whose notes box was opened from the menu; a workout with notes always shows it.
   const [notesOpenFor, setNotesOpenFor] = useState(null);
@@ -244,6 +252,45 @@ function Log() {
     if (!workout.name && dayName) actions.updateWorkout({ name: dayName });
   };
 
+  // A past workout's exercises and sets added to this one: a plan from today on, done sets on a
+  // day filled in afterwards. A workout without a name takes the past one's.
+  const repeatHere = async (past) => {
+    setIsRepeating(true);
+    const loaded = await actions.loadProgramDay(null, repeatedExercises(past, !isLiveDay));
+    setIsRepeating(false);
+    if (!loaded) return;
+    setShowRepeat(false);
+    if (!workout.name && past.name) actions.updateWorkout({ name: past.name });
+  };
+
+  // The workout on screen (a past day's) done again today, as a plan: added to today's workout,
+  // or made into it with this one's name. Then today opens.
+  const repeatToday = async () => {
+    const exercises = repeatedExercises(workout, false);
+    try {
+      const [existing] = await fetchJson(`/api/workouts?date=${today}`);
+      const target =
+        existing ??
+        (await fetchJson("/api/workouts", {
+          method: "POST",
+          json: { date: today, name: workout.name },
+        }));
+      await fetchJson(`/api/workouts/${target.id}/exercises/bulk`, {
+        method: "POST",
+        json: { exercises },
+      });
+      if (existing && !existing.name && workout.name) {
+        await fetchJson(`/api/workouts/${existing.id}`, {
+          method: "PATCH",
+          json: { name: workout.name },
+        });
+      }
+      setDate(today);
+    } catch (err) {
+      reportError(err);
+    }
+  };
+
   const deleteWorkoutTemplate = (templateId) => {
     fetchJson(`/api/workout-templates/${templateId}`, { method: "DELETE" })
       .then(() =>
@@ -346,6 +393,15 @@ function Log() {
                     onClick={fromWorkoutMenu(() => setSaveTemplateName(""))}
                   >
                     {t("log.saveAsTemplate")}
+                  </button>
+                )}
+                {date < today && repeatedExercises(workout, false).length > 0 && (
+                  <button
+                    type="button"
+                    className={styles.menuItem}
+                    onClick={fromWorkoutMenu(repeatToday)}
+                  >
+                    {t("repeat.repeatToday")}
                   </button>
                 )}
                 <button
@@ -575,7 +631,7 @@ function Log() {
                   </div>
                 )}
               </div>
-              {(workoutTemplates.length > 0 || programs.length > 0) && (
+              {(workoutTemplates.length > 0 || programs.length > 0 || repeatable.length > 0) && (
                 <div className={styles.loaders}>
                   {workoutTemplates.length > 0 && (
                     <div className={styles.templatePicker} ref={templatePickerRef}>
@@ -623,6 +679,16 @@ function Log() {
                       {t("log.loadProgram")}
                     </button>
                   )}
+                  {repeatable.length > 0 && (
+                    <button
+                      type="button"
+                      className={styles.secondaryButton}
+                      aria-haspopup="dialog"
+                      onClick={() => setShowRepeat(true)}
+                    >
+                      {t("repeat.button")}
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -668,6 +734,15 @@ function Log() {
                 formula={formula}
                 onLoad={loadProgramDay}
                 onClose={() => setShowProgramLoader(false)}
+              />
+            )}
+            {showRepeat && (
+              <RepeatWorkoutSheet
+                workouts={repeatable}
+                isPlan={isLiveDay}
+                isBusy={isRepeating}
+                onPick={repeatHere}
+                onClose={() => setShowRepeat(false)}
               />
             )}
           </div>

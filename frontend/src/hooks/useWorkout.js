@@ -221,7 +221,8 @@ export function useWorkout(date) {
         json: { workoutId: workout.id, planned },
         change: onWorkout(withExercisesAdded),
       }),
-    // `program` is { id, week, day }; the answer is the whole workout with the day's sets in it.
+    // `program` is { id, week, day }, or null for sets from elsewhere (a past workout done again);
+    // the answer is the whole workout with the sets in it.
     loadProgramDay: (program, exercises) =>
       run({
         method: "POST",

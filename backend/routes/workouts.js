@@ -10,9 +10,11 @@ const {
   parseSetChange,
   parseOptionalDateTime,
 } = require("../utils/validate");
-const { TRAINED_WORKOUT } = require("../utils/doneSets");
+const { DONE_SET, TRAINED_WORKOUT } = require("../utils/doneSets");
 
 const RANGE_GETTERS = { month: getMonthRange, year: getYearRange };
+// The most workouts /trained answers with.
+const MAX_TRAINED = 50;
 const WORKOUT_INCLUDE = {
   exercises: {
     orderBy: { order: "asc" },
@@ -34,6 +36,25 @@ router.get("/", async (req, res) => {
   const workouts = await prisma.workout.findMany({
     where: date ? { date: getDayRange(parseDateKey(date)) } : undefined,
     include: WORKOUT_INCLUDE,
+  });
+  res.json(workouts);
+});
+
+// The latest trained workouts, newest first, each with only its done sets (and the exercises that
+// have any): what "Ponovi trening" offers to do again. `limit` is how many, at most MAX_TRAINED.
+router.get("/trained", async (req, res) => {
+  const limit = Math.min(parsePositiveInt(req.query.limit, "limit"), MAX_TRAINED);
+  const workouts = await prisma.workout.findMany({
+    where: TRAINED_WORKOUT,
+    take: limit,
+    orderBy: [{ date: "desc" }, { id: "desc" }],
+    include: {
+      exercises: {
+        where: { sets: { some: DONE_SET } },
+        orderBy: { order: "asc" },
+        include: { sets: { where: DONE_SET, orderBy: { order: "asc" } } },
+      },
+    },
   });
   res.json(workouts);
 });

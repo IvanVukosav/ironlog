@@ -1,0 +1,80 @@
+.title {
+  color: var(--color-text);
+  font-size: 1.15rem;
+  font-weight: var(--heading-weight);
+}
+
+.hint {
+  margin-top: 4px;
+  color: var(--color-text-dim);
+  font-size: 0.85rem;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--row-gap);
+  list-style: none;
+}
+
+/* A past workout: its name and day, and under them what it held. */
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  min-height: 56px;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  border-radius: var(--row-radius);
+  background: var(--row-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  text-align: left;
+  cursor: pointer;
+}
+
+.row:hover:not(:disabled) {
+  border-color: var(--color-accent);
+}
+
+.row:focus-visible {
+  outline: none;
+  box-shadow: var(--input-focus-ring);
+}
+
+.row:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.name {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.date {
+  flex-shrink: 0;
+  color: var(--color-text-dim);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.detail {
+  overflow: hidden;
+  color: var(--color-text-dim);
+  font-size: 0.8rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

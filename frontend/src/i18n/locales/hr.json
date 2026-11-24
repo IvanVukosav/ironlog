@@ -623,6 +623,17 @@
     "recentWorkouts": "Zadnji treninzi",
     "noWorkouts": "Još nema treninga."
   },
+  "repeat": {
+    "button": "Ponovi trening",
+    "title": "Ponovi trening",
+    "hintPlan": "Odabrani trening postaje plan: iste vježbe, kilaže i ponavljanja, koje odrađuješ kvačicama.",
+    "hintDone": "Vježbe i setovi odabranog treninga upisuju se u ovaj dan kao odrađeni.",
+    "close": "Zatvori popis treninga",
+    "workingSets_one": "{{count}} radni set",
+    "workingSets_few": "{{count}} radna seta",
+    "workingSets_other": "{{count}} radnih setova",
+    "repeatToday": "Ponovi danas"
+  },
   "calendar": {
     "previousMonth": "Prethodni mjesec",
     "nextMonth": "Sljedeći mjesec",

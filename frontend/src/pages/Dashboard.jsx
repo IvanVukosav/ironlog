@@ -6,15 +6,18 @@ import { fetchJson } from "../api";
 import { useReportError } from "../hooks/useReportError";
 import { useDayLabel } from "../hooks/useDayLabel";
 import { useNextProgramDay } from "../hooks/useNextProgramDay";
+import { useTrainedWorkouts } from "../hooks/useTrainedWorkouts";
 import { useSettings } from "../context/useSettings";
 import { AXIS_TICK, CHART_COLORS, TOOLTIP_STYLE } from "../utils/chartTheme";
 import { DEFAULT_E1RM_FORMULA, findBestSetByE1rm } from "../utils/oneRepMax";
 import { addWeightTrend, weeklyTrendChange } from "../utils/weightTrend";
 import { dateKeyOf, formatDayMonth, formatWeekdayDate, todayKey } from "../utils/dates";
 import { formatNumber, formatSet, formatVolume } from "../utils/numbers";
+import { repeatChoices, repeatedExercises } from "../utils/repeatWorkout";
 import Icon from "../components/Icon";
 import MacroDonut from "../components/MacroDonut";
 import MuscleGroupVolumeChart from "../components/MuscleGroupVolumeChart";
+import RepeatWorkoutSheet from "../components/RepeatWorkoutSheet";
 import SegmentedControl from "../components/SegmentedControl";
 import styles from "./Dashboard.module.css";
 
@@ -131,6 +134,9 @@ function Dashboard() {
   const logLink = (dateKey) => `/log?date=${dateKey}`;
   // Asked for only once today turns out to have no workout yet.
   const nextDay = useNextProgramDay(formula, workout === null);
+  // "Ponovi trening": the past workouts it offers, and whether their list is open.
+  const repeatable = repeatChoices(useTrainedWorkouts(), null);
+  const [showRepeat, setShowRepeat] = useState(false);
 
   useEffect(() => {
     fetchJson(`/api/workouts?date=${today}`)
@@ -165,34 +171,44 @@ function Dashboard() {
       });
   };
 
-  // The program's next day as today's workout: named after the day, its sets a plan to tick off.
-  const startProgramDay = async () => {
+  // Today's workout made with `exercises` in it as a plan to tick off, named `name`, and tagged
+  // with its program day when `program` ({ id, week, day }) is given; then Trening opens.
+  const startPlan = async (name, program, exercises) => {
     setIsStarting(true);
     let created = null;
     try {
       created = await fetchJson("/api/workouts", {
         method: "POST",
-        json: { date: today, name: nextDay.dayName || null },
+        json: { date: today, name: name || null },
       });
       await fetchJson(`/api/workouts/${created.id}/exercises/bulk`, {
         method: "POST",
-        json: {
-          program: { id: nextDay.program.id, week: nextDay.week, day: nextDay.day },
-          exercises: nextDay.exercises.map(({ name, sets, supersetGroup }) => ({
-            name,
-            supersetGroup,
-            sets: sets.map((set) => ({ ...set, isDone: false })),
-          })),
-        },
+        json: { program, exercises },
       });
       navigate(logLink(today));
     } catch (err) {
       setIsStarting(false);
+      setShowRepeat(false);
       // A workout made before the plan failed to load is still today's: offer it, not a second.
       if (created) setWorkout(created);
       reportError(err);
     }
   };
+
+  // The program's next day as today's workout: named after the day.
+  const startProgramDay = () =>
+    startPlan(
+      nextDay.dayName,
+      { id: nextDay.program.id, week: nextDay.week, day: nextDay.day },
+      nextDay.exercises.map(({ name, sets, supersetGroup }) => ({
+        name,
+        supersetGroup,
+        sets: sets.map((set) => ({ ...set, isDone: false })),
+      })),
+    );
+
+  // A past workout done again today: the same name, exercises and sets, outside any program.
+  const startRepeat = (past) => startPlan(past.name, null, repeatedExercises(past, false));
 
   const saveKcalGoal = () => {
     const parsed = parseInt(kcalGoalInput);
@@ -259,6 +275,19 @@ function Dashboard() {
 
   const latestPr = getLatestPr(prs, formula);
   const { latestTrend, weeklyChange } = bodyweightChart;
+
+  // Beside the ways to start today's workout, when there is a past one to do again.
+  const repeatButton = (
+    <button
+      type="button"
+      className={styles.startOwnButton}
+      disabled={isStarting}
+      onClick={() => setShowRepeat(true)}
+    >
+      <Icon name="repeat" size={18} />
+      {t("repeat.button")}
+    </button>
+  );
 
   return (
     <div className={styles.page}>
@@ -374,21 +403,45 @@ function Dashboard() {
                     <Icon name="pencil" size={18} />
                     {t("dashboard.startOwnWorkout")}
                   </button>
+                  {repeatable.length > 0 && repeatButton}
                 </div>
               </>
             )}
             {workout === null && nextDay === null && (
               <>
                 <p className={styles.dim}>{t("dashboard.noWorkoutToday")}</p>
-                <button
-                  type="button"
-                  className={styles.primaryButton}
-                  disabled={isStarting}
-                  onClick={startWorkout}
-                >
-                  {t("dashboard.startWorkout")}
-                </button>
+                {repeatable.length > 0 ? (
+                  <div className={styles.startButtons}>
+                    <button
+                      type="button"
+                      className={styles.startProgramButton}
+                      disabled={isStarting}
+                      onClick={startWorkout}
+                    >
+                      {t("dashboard.startWorkout")}
+                    </button>
+                    {repeatButton}
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    className={styles.primaryButton}
+                    disabled={isStarting}
+                    onClick={startWorkout}
+                  >
+                    {t("dashboard.startWorkout")}
+                  </button>
+                )}
               </>
+            )}
+            {showRepeat && (
+              <RepeatWorkoutSheet
+                workouts={repeatable}
+                isPlan
+                isBusy={isStarting}
+                onPick={startRepeat}
+                onClose={() => setShowRepeat(false)}
+              />
             )}
           </section>
         )}

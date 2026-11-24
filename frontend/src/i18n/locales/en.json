@@ -610,6 +610,16 @@
     "recentWorkouts": "Recent workouts",
     "noWorkouts": "No workouts yet."
   },
+  "repeat": {
+    "button": "Repeat a workout",
+    "title": "Repeat a workout",
+    "hintPlan": "The workout you pick becomes the plan: the same exercises, weights and reps, ticked off as you go.",
+    "hintDone": "The exercises and sets of the workout you pick go into this day as done.",
+    "close": "Close the list of workouts",
+    "workingSets_one": "{{count}} working set",
+    "workingSets_other": "{{count}} working sets",
+    "repeatToday": "Repeat today"
+  },
   "calendar": {
     "previousMonth": "Previous month",
     "nextMonth": "Next month",
