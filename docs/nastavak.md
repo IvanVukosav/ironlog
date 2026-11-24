@@ -62,8 +62,7 @@ backupom, kako piše gore. Upute su u
 
 - Kod varijacija u Calgaryjevim tjednima 1-4 i kod TSA-ovog pauziranog mrtvog dizanja postotak
   se u izvorniku računa od maksimuma natjecateljskog lifta. Iron Log ga računa od e1RM-a te iste
-  vježbe, pa će „≈ kg” biti preniska kad ta vježba dobije svoj e1RM. Rješenje bi bila mogućnost
-  da vježba u programu uzima e1RM drugog lifta.
+  vježbe, pa će „≈ kg” biti preniska kad ta vježba dobije svoj e1RM.
 - Mini setovi myo-repova nemaju kilažu. Upisuje se na dan, ista kao kod aktivacijskog seta.
 - RTS-ovi load drop i repeat setovi nemaju zadan broj, pa su planirani s rezervom. Kad je dosta,
   staneš, a neodrađeni se brišu na Završi.
