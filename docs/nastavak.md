@@ -1,4 +1,4 @@
-# Nastavak: što je ostalo (23. 11. 2026.)
+# Nastavak: što je ostalo (24. 11. 2026.)
 
 Bilješka za nastavak rada na drugom računalu. Sve je na grani `roadmap`. Grana nije spojena u
 `main` i nema PR-a: https://github.com/IvanVukosav/ironlog/pull/new/roadmap
@@ -22,9 +22,9 @@ npm run dev                 # aplikacija na :5173
 ```
 
 - **Ne pokreći `npx prisma format`.** Prepisao bi cijeli ručno poravnati `schema.prisma`.
-- **Testovi:** `npm test` u `frontend` (237 unit testova, Vitest) i `npm test` u `backend` (35).
-- **E2E provjere** (38 skupina u headless Chromeu, s brzim unosom i skenerom) postoje samo na
-  poslovnom računalu, u privremenoj mapi. Nisu u repou.
+- **Testovi:** `npm test` u `frontend` (243 unit testa, Vitest) i `npm test` u `backend` (35).
+- **E2E provjere** (24 skripte u headless Chromeu, 42 pokretanja na računalu i mobitelu)
+  postoje samo na poslovnom računalu, u privremenoj mapi. Nisu u repou.
 - **Podaci s posla.** Baza (`backend/prisma/dev.db`) nije u gitu. Da bi kod kuće imao iste
   podatke, na poslu u Postavkama otvori „Backup i izvoz” i kod „Backup (JSON)” klikni Preuzmi.
   Kod kuće tu datoteku vrati s „Vrati iz backupa”. Vraćanje **zamjenjuje sve** podatke kod kuće.
@@ -88,7 +88,19 @@ Napravljeno po mockupu Brzi unos, Skener i Proizvod:
 - Prehrana je izgubila polje „Dodaj namirnicu po nazivu”: namirnica se dodaje u svoj obrok.
 - `OPEN_FOOD_FACTS_URL` na backendu služi samo testovima: usmjerava traženje na zamjenski server.
 
-## 3. Aplikacija na internetu (nije odobreno, košta)
+## 3. Ponovi trening (24. 11.)
+
+Napravljeno po mockupu:
+
+- Gumb **Ponovi trening** stoji na Početnoj (uz Započni po programu i Svoj trening) i u
+  Treningu (uz Učitaj predložak i Učitaj program). Otvara popis zadnjih 10 odrađenih treninga.
+  Odabrani postaje plan za danas: iste vježbe, kilaže, ponavljanja, RPE, zagrijavanje, drop
+  setovi, supersetovi i naziv.
+- Prošli trening ima u izborniku ⋯ **Ponovi danas**, za treninge starije od zadnjih 10.
+- Ponovljeni trening nije dio programa, pa program ne ide dalje.
+- Popis dolazi s `GET /api/workouts/trained?limit=`. Migracije nema.
+
+## 4. Aplikacija na internetu (nije odobreno, košta)
 
 Prijedlog je bio:
 
@@ -106,7 +118,7 @@ Prije toga treba spojiti `roadmap` u `main`. Prije prvog deploya:
 - `frontend/vercel.json` pretpostavlja da je korijen Vercel projekta `frontend`.
 - Nakon deploya napravi backup (Postavke → Backup i izvoz).
 
-## 4. Sitni otvoreni nalazi
+## 5. Sitni otvoreni nalazi
 
 - Zadnja oznaka datuma na grafu tjelesne težine na Početnoj nekad se vidi, a nekad ne. Recharts
   izmjeri tekst prije nego što se učita font.
