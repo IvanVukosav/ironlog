@@ -1,4 +1,4 @@
-# Nastavak: što je ostalo (24. 11. 2026.)
+# Nastavak: što je ostalo (25. 11. 2026.)
 
 Bilješka za nastavak rada na drugom računalu. Sve je na grani `roadmap`. Grana nije spojena u
 `main` i nema PR-a: https://github.com/IvanVukosav/ironlog/pull/new/roadmap
@@ -23,8 +23,9 @@ npm run dev                 # aplikacija na :5173
 
 - **Ne pokreći `npx prisma format`.** Prepisao bi cijeli ručno poravnati `schema.prisma`.
 - **Testovi:** `npm test` u `frontend` (241 unit test, Vitest) i `npm test` u `backend` (35).
-- **E2E provjere** (24 skripte u headless Chromeu, 42 pokretanja na računalu i mobitelu)
-  postoje samo na poslovnom računalu, u privremenoj mapi. Nisu u repou.
+- **E2E provjere** (24 skripte u headless Chromeu, 42 pokretanja na računalu i mobitelu) su u
+  [tools/e2e](../tools/e2e/README.md). README objašnjava kako pokrenuti testni backend i sve
+  provjere.
 - **Podaci s posla.** Baza (`backend/prisma/dev.db`) nije u gitu. Da bi kod kuće imao iste
   podatke, na poslu u Postavkama otvori „Backup i izvoz” i kod „Backup (JSON)” klikni Preuzmi.
   Kod kuće tu datoteku vrati s „Vrati iz backupa”. Vraćanje **zamjenjuje sve** podatke kod kuće.

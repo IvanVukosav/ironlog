@@ -1,0 +1,9 @@
+# Made by the runs: Chrome profiles, screenshots, downloads, the scanner's fake camera video, and
+# the test database with its production build.
+chrome-profile-*/
+shots/
+downloads-*/
+*.y4m
+e2e.db
+e2e.db-journal
+dist-e2e/
